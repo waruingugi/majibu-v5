@@ -1,0 +1,94 @@
+# env files store config stuff
+.env
+env.sh
+.env/
+.venv
+venv/
+env/
+ENV/
+
+__pycache__
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.DS_Store
+*.pyc
+
+# celery
+celerybeat-schedule
+celerybeat.pid
+
+# Zipped files
+*.gz
+
+# Dump files
+dump.rdb
+
+# Sqlite database file
+db.sqlite3
+
+# Test results
+htmlcov/
+
+# Ignore local files
+local_settings.py
+local_wsgi.py
+
+# Ignore word documents
+*.doc
+
+# Ignore coverage files
+*.coverage
+htmlcov/
+
+# Ignore ngrok.exe
+ngrok.exe
+
+# Ignore Log files
+*.log
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Ignore .vscode custom settings
