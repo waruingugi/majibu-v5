@@ -1,13 +1,16 @@
 from pydantic import BaseModel
 from datetime import datetime
-from app.users.constants import UserTypes
 
+from app.core.helpers import _validate_phone_number
+from app.users.constants import UserTypes
 from app.db.serializer import InDBBaseSerializer
 
 
 class UserBaseSerializer(BaseModel):
     phone: str
     user_type: str | None = UserTypes.PLAYER.value
+
+    _validate_phone_number = _validate_phone_number
 
 
 class UserCreateSerializer(UserBaseSerializer):

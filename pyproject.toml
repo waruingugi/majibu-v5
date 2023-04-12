@@ -19,6 +19,8 @@ fastapi-sqlalchemy-filter = "^0.2.5"
 fastapi-pagination = "^0.12.1"
 asyncpg = "^0.27.0"
 phonenumbers = "^8.13.8"
+phone-gen = "^2.2.25"
+pytest = "^7.3.0"
 
 
 [tool.poetry.group.dev.dependencies]
