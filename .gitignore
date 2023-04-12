@@ -1,6 +1,8 @@
 # env files store config stuff
 .env
 env.sh
+env.*
+.env.test
 .env/
 .venv
 venv/
