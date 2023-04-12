@@ -23,8 +23,6 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: PostgresDsn
     ASYNC_SQLALCHEMY_DATABASE_URI: PostgresDsn
 
-    SUPERUSER_FIRST_NAME: str
-    SUPERUSER_LAST_NAME: str
     SUPERUSER_PHONE: str
 
     REDIS_HOST: str = "localhost"
