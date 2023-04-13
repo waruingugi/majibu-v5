@@ -4,8 +4,16 @@ from fastapi import Request
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi import HTTPException
 from fastapi import status
+from fastapi.templating import Jinja2Templates
+
 from typing import Optional
 from typing import Dict
+from os.path import dirname, join
+
+current_dir = dirname(__file__)
+template_dir = join(current_dir, "templates")
+
+templates = Jinja2Templates(directory=template_dir)
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2):

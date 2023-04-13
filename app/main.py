@@ -3,8 +3,10 @@ from typing import Annotated
 from fastapi import Depends, FastAPI
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
+from app.auth import api as auth_api
 
 app = FastAPI()
+app.include_router(auth_api.router)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
