@@ -1,0 +1,221 @@
+.navbar-brand {
+  font-family: Montserrat, sans-serif;
+  font-weight: bold;
+  letter-spacing: 1px;
+  font-size: 22px;
+  line-height: 26px;
+  color: #f0134d !important;
+}
+
+body {
+  font-family: Montserrat, sans-serif;
+  font-size: 18px !important;
+}
+
+#content-card {
+  -webkit-box-shadow: 0px 9px 25px -3px rgba(0,0,0,0.35);
+  -moz-box-shadow: 0px 9px 25px -3px rgba(0,0,0,0.35);
+  box-shadow: 0px 9px 25px -3px rgba(0,0,0,0.35);
+  border-radius: 8px;
+}
+
+#content-full-height {
+  min-height: 110vh !important;
+  background-image: url(../../assets/img/confetti.svg);
+  background-attachment: fixed;
+  background-position: center;
+}
+
+#btn-preferred:hover {
+  background-color: #D20D42;
+}
+
+#btn-preferred:focus {
+  background-color: #D20D42;
+  box-shadow: 0 0 0 .3rem rgba(210,13,66,0.6);
+}
+
+#btn-preferred {
+  border: 2px #F01330;
+  background-color: #f0134d;
+  white-space: normal;
+  color: #FCFCFC;
+}
+
+#version-badge {
+  visibility: hidden;
+}
+
+@media (min-width: 768px) {
+  #version-badge {
+    visibility: visible;
+    font-size: 50%;
+    margin-top: -0.7rem !important;
+    margin-left: -0.7rem;
+    padding: 4px;
+  }
+}
+
+#small-img-container, #large-img-container {
+  background-image: url("loser.png");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+#large-img-container {
+  width: 400px;
+  height: 300px;
+  float: right;
+}
+
+@media (min-width: 992px) {
+  #intro-content {
+    height: 80vh;
+  }
+}
+
+#intro-section {
+  text-align: center;
+  background-color: #000839;
+  color: white;
+  background-image: url("football-bg-image.png");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+@media (max-width: 990px) {
+  #large-img-container {
+    display: none;
+  }
+}
+
+#profit-image-container {
+  display: block;
+  height: 250px;
+  width: 70%;
+  margin: auto;
+}
+
+@media (min-width: 992px) {
+  #profit-image-container {
+    margin: 10px 15px 10px 0;
+    float: left;
+    height: 230px;
+    width: 250px;
+  }
+}
+
+#small-img-container {
+  width: 300px;
+  display: block;
+  height: 250px;
+  margin: auto;
+}
+
+@media (min-width: 992px) {
+  #small-img-container {
+    display: none;
+  }
+}
+
+#card-features:hover {
+  transform: scale(1.05);
+}
+
+#card-features {
+  transition: all .2s ease-in-out;
+  -webkit-box-shadow: 0px 9px 25px -3px rgba(0,0,0,0.35);
+  -moz-box-shadow: 0px 9px 25px -3px rgba(0,0,0,0.35);
+  box-shadow: 0px 9px 25px -3px rgba(0,0,0,0.35);
+}
+
+#image-card {
+  width: 40%;
+  display: block;
+  margin: auto;
+  padding: 10px;
+}
+
+.animate__animated.animate__headShake, .animate__animated.animate__flash, .animate__animated.animate__pulse {
+  animation-duration: 6s;
+  animation-iteration-count: infinite;
+}
+
+.custom-button-light {
+  background-color: #fff;
+  border-color: #d3d3d3;
+}
+
+.custom-button-light:hover {
+  background-color: #F2F4F6;
+  transform: scale(1.005);
+}
+
+.custom-button-light:focus {
+  background-color: #F2F4F6;
+  transform: scale(1.005);
+}
+
+.text-danger {
+  color: #f0134d !important;
+}
+
+@media (min-width: 992px) {
+  #content-card {
+    padding: 5px 8px;
+  }
+}
+
+.btn {
+  font-size: 17px;
+}
+
+.score-history-table {
+  font-size: 14px;
+  text-align: center;
+  margin-top: 4px;
+  border-radius: 8px;
+  font-family: monospace;
+}
+
+.wallet-history-table {
+  font-size: 14px;
+  margin-top: 4px;
+  border-radius: 8px;
+  padding-right: .5rem!important;
+  padding-left: .5rem!important;
+}
+
+@media (min-width: 992px) {
+  .score-history-table {
+    font-size: 18px;
+  }
+}
+
+.score-basic-info, .wallet-date {
+  font-size: 10px;
+  font-weight: lighter;
+}
+
+@media (min-width: 992px) {
+  .score-basic-info, .wallet-date {
+    font-size: 12px;
+  }
+}
+
+.partner-details {
+  line-height: 8px;
+  font-size: 85%;
+}
+
+.wallet-history-table table {
+  margin-bottom: 0.5rem !important;
+}
+
+.btn {
+  font-size: 16px;
+}
+
