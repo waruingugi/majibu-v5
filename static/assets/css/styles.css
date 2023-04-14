@@ -8,7 +8,7 @@
 }
 
 body {
-  font-family: Montserrat, sans-serif;
+  font-family: Montserrat, sans-serif !important;
   font-size: 18px !important;
 }
 

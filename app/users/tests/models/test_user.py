@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.test_utils.utils import random_phone
+from app.core.tests.test_utils import random_phone
 from app.users.constants import UserTypes
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer

@@ -11,6 +11,3 @@ def db() -> Generator:
     Base.metadata.create_all(bind=get_engine())
     with SessionLocal() as db:
         yield db
-
-    # Destroy the database after tests
-    Base.metadata.drop_all(bind=get_engine())
