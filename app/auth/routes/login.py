@@ -1,8 +1,8 @@
-from fastapi import Request, APIRouter, Form
+from fastapi import Request, APIRouter, Depends
 from fastapi.responses import HTMLResponse
-from typing import Annotated
 
 from app.auth.utils import templates
+from app.auth.serializers.auth import FormatPhoneSerializer
 
 router = APIRouter()
 
@@ -13,7 +13,12 @@ async def get_phone_verification(request: Request):
 
 
 @router.post("/validate-phone/", response_class=HTMLResponse)
-async def post_phone_verificationin(request: Request, phone: Annotated[str, Form()]):
+async def post_phone_verificationin(
+    request: Request, phone_in: FormatPhoneSerializer = Depends()
+):
+    if phone_in.is_valid():
+        pass
+
     return templates.TemplateResponse("login.html", {"request": request})
 
 

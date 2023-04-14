@@ -1,5 +1,6 @@
 from app.exceptions.custom import HttpErrorException
 from app.errors.custom import ErrorCodes
+from app.core.raw_logger import logger
 
 from http import HTTPStatus
 from phonenumbers import parse as parse_phone_number
@@ -16,6 +17,8 @@ PHONE_NUMBER_TYPES = PhoneNumberType.MOBILE, PhoneNumberType.FIXED_LINE_OR_MOBIL
 
 def validate_phone_number(phone: str) -> str:
     """Validate str can be parsed into phone number"""
+    logger.info(f"Validating phone number {phone}")
+
     invalid_phone_number_exception = HttpErrorException(
         status_code=HTTPStatus.BAD_REQUEST,
         error_code=ErrorCodes.INVALID_PHONENUMBER.name,
@@ -24,11 +27,13 @@ def validate_phone_number(phone: str) -> str:
     try:
         parsed_phone = parse_phone_number(phone)
     except NumberParseException:
+        logger.info(f"Failed to parse phone number {phone}")
         raise invalid_phone_number_exception
 
     if number_type(parsed_phone) not in PHONE_NUMBER_TYPES or not is_valid_number(
         parsed_phone
     ):
+        logger.info(f"Invalid phone number {phone}")
         raise invalid_phone_number_exception
 
     return phone

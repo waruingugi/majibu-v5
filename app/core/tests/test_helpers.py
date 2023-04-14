@@ -10,7 +10,7 @@ class TestPhoneValidation:
         result = validate_phone_number(TestPhoneValidation.phone)
         assert result == TestPhoneValidation.phone
 
-    def test_raise_error_for_invalid_country(self, subtests):
+    def test_raise_error_for_invalid_country(self):
         for i in range(1, 4):
             with pytest.raises(HttpErrorException):
                 phone = TestPhoneValidation.phone[i:]
