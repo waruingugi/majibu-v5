@@ -30,7 +30,7 @@ class FormatPhoneSerializer(BaseFormSerializer):
         )
 
     @root_validator(skip_on_failure=False)
-    def clean(cls, values):
+    def validate_form_data(cls, values):
         """Run form validations here"""
         field_errors = values["field_errors"]
 

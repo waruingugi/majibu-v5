@@ -17,10 +17,14 @@ async def post_phone_verificationin(
     request: Request, phone_in: FormatPhoneSerializer = Depends()
 ):
     if phone_in.is_valid():
+        # Save to redis
         pass
 
     return templates.TemplateResponse("login.html", {"request": request})
 
+
+# Send notifications module: Hostpinnacle
+# Callback
 
 # Validate phone no
 # On post, create OTP, send OTP
