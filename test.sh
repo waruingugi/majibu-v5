@@ -2,4 +2,4 @@
 
 export $(grep -v '^#' .env.test | xargs)
 
-pytest
+pytest --log-cli-level INFO

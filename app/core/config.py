@@ -23,7 +23,10 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: PostgresDsn
     ASYNC_SQLALCHEMY_DATABASE_URI: PostgresDsn
 
-    SUPERUSER_PHONE: str
+    HOST_PINNACLE_SENDER_ID: str
+    HOST_PINNACLE_PASSWORD: str
+    HOST_PINNACLE_USER_ID: str
+    HOST_PINNACLE_SMS_BASE_URL: str
 
     REDIS_HOST: str = "localhost"
     REDIS_PASSWORD: str | None
@@ -31,6 +34,8 @@ class Settings(BaseSettings):
     REDIS_DB: int = 0
 
     DEFAULT_COUNTRY_ISO2_CODE: str = "KE"
+
+    SUPERUSER_PHONE: str
 
     class Config:
         env_file = ".env"
