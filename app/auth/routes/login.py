@@ -24,6 +24,10 @@ async def post_phone_verificationin(
 
 
 # Send notifications module: Hostpinnacle
+# Test notifications model -> user, test notification dao
+# Add notification to check spam folder
+# Create notifications dao
+# Under dao send sms func
 # Callback
 
 # Validate phone no
