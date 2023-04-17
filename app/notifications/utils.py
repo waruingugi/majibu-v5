@@ -80,15 +80,15 @@ class HostPinnacleSms:
                     )
                     return {
                         "id": response_json["transactionId"],
-                        "status": response_json["code"],
+                        "status": response_json["status"],
                         "reason": response_json["reason"],
+                        "status_code": response_json["statusCode"],
                     }
 
         except RetryError as e:
             logger.exception(
                 f"Exception {e} while sending HOST_PINNACLE SMS to {recipient}"
             )
-        finally:
             return {}
 
 
