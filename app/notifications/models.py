@@ -15,4 +15,4 @@ class Notification(Base):
     recipient = mapped_column(String, nullable=False)
     user_id = mapped_column(String, ForeignKey("user.id"), nullable=True, default=None)
 
-    user = relationship("User")
+    user = relationship("User", backref="notification")

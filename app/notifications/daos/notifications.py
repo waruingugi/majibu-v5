@@ -21,9 +21,9 @@ class NotificationsDao(
     ) -> Notification:
         db_obj = self.create(db, obj_in=obj_in)
 
-        if obj_in.channel == NotificationChannels.SMS:
+        if obj_in.channel == NotificationChannels.SMS.value:
             # Handle HostPinnacle sms notifications
-            if db_obj.provider == NotificationProviders.HOST_PINNACLE:
+            if obj_in.provider == NotificationProviders.HOST_PINNACLE.value:
                 self.send_hpk_sms(db, db_obj=db_obj)
 
         return db_obj
@@ -43,3 +43,6 @@ class NotificationsDao(
             self.update(
                 db, db_obj=db_obj, obj_in={"status": NotificationStatuses.FAILED.value}
             )
+
+
+notifications_dao = NotificationsDao(Notification)
