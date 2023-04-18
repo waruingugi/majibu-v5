@@ -17,7 +17,7 @@ class TestHostPinnacleSms(unittest.TestCase):
     def test_make_send_payment_request_raises_an_error(self):
         with patch("app.notifications.utils.requests") as mock_request:
             mock_request.post.side_effect = Exception("Test Exception raised!")
-            response = HPKSms.send_quick_sms(recipient=self.phone, message="test")
+            response = HPKSms.send_quick_sms(phone=self.phone, message="test")
             self.assertEqual({}, response)
 
     @patch("app.notifications.utils.requests")
@@ -41,7 +41,7 @@ class TestHostPinnacleSms(unittest.TestCase):
 
         self.mock_response.json.return_value = mock_response
         mock_requests.post.return_value = self.mock_response
-        response = HPKSms.send_quick_sms(recipient=self.phone, message="test")
+        response = HPKSms.send_quick_sms(phone=self.phone, message="test")
 
         successful_response = {
             "id": mock_response["transactionId"],

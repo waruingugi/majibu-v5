@@ -12,7 +12,7 @@ class Notification(Base):
     message = mapped_column(String, nullable=False)
     channel = mapped_column(String, nullable=False)
     provider = mapped_column(String, nullable=False)
-    recipient = mapped_column(String, nullable=False)
+    phone = mapped_column(String, nullable=False)
     user_id = mapped_column(String, ForeignKey("user.id"), nullable=True, default=None)
 
     user = relationship("User", backref="notification")

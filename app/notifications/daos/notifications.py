@@ -30,7 +30,7 @@ class NotificationsDao(
 
     def send_hpk_sms(self, db: Session, db_obj: Notification) -> None:
         response = HPKSms.send_quick_sms(
-            recipient=db_obj.recipient,
+            phone=db_obj.phone,
             message=db_obj.message,
         )
 

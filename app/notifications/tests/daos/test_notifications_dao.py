@@ -24,7 +24,7 @@
 #     data_in = CreateNotificationSerializer(
 #         type="OTP",
 #         message="0976 is your OTP",
-#         recipient=settings.SUPERUSER_PHONE[1:],
+#         phone=settings.SUPERUSER_PHONE[1:],
 #         provider="HOST_PINNACLE",
 #         channel="SMS"
 #     )

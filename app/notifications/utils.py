@@ -5,7 +5,7 @@ from functools import partial
 import logging
 import phonenumbers
 import requests
-from typing import Dict, Any
+from typing import Dict
 from tenacity import (
     Retrying,
     RetryError,
@@ -59,9 +59,9 @@ class HostPinnacleSms:
         parsed_phone = phonenumbers.parse(phone)
         return f"{parsed_phone.country_code}{parsed_phone.national_number}"
 
-    def send_quick_sms(self, *, recipient: str, message: str) -> Dict[str, Any]:
+    def send_quick_sms(self, *, phone: str, message: str) -> Dict | None:
         """Send single quick sms"""
-        self.sms_payload["mobile"] = self.format_phone_number(recipient)
+        self.sms_payload["mobile"] = self.format_phone_number(phone)
         self.sms_payload["msg"] = message
 
         try:
@@ -76,7 +76,7 @@ class HostPinnacleSms:
 
                     response_json = response.json()
                     logger.info(
-                        f"Sent HOST_PINNACLE SMS to {recipient}, message: {message}"
+                        f"Sent HOST_PINNACLE SMS to {phone}, message: {message}"
                     )
                     return {
                         "id": response_json["transactionId"],
@@ -87,7 +87,7 @@ class HostPinnacleSms:
 
         except RetryError as e:
             logger.exception(
-                f"Exception {e} while sending HOST_PINNACLE SMS to {recipient}"
+                f"Exception {e} while sending HOST_PINNACLE SMS to {phone}"
             )
             return {}
 

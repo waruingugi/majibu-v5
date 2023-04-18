@@ -1,5 +1,6 @@
 from pydantic import BaseModel, validator
 
+from app.core.helpers import _validate_phone_number
 from app.notifications.constants import (
     NotificationChannels,
     NotificationProviders,
@@ -59,12 +60,14 @@ class NotificationBaseSerializer(BaseModel):
     channel: str
     provider: str
     message: str
-    recipient: str
+    phone: str
     type: str
+    user_id: str | None = None
 
     _validate_notification_type = _validate_notification_type
     _validate_notification_channel = _validate_notification_channel
     _validate_notification_provider = _validate_notification_provider
+    _validate_phone_number = _validate_phone_number
 
 
 class CreateNotificationSerializer(NotificationBaseSerializer):
