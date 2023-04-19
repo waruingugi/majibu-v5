@@ -2,7 +2,7 @@ from typing import Generator
 import pytest
 
 from app.db.session import SessionLocal, get_engine
-from app.db.base_class import Base
+from app.db.base import Base
 
 
 @pytest.fixture(scope="session")
