@@ -1,6 +1,7 @@
 from pydantic import BaseModel, validator
 
 from app.core.helpers import _validate_phone_number
+from app.core.config import settings
 from app.notifications.constants import (
     NotificationChannels,
     NotificationProviders,
@@ -58,7 +59,7 @@ _validate_notification_provider = validator("provider", pre=True, allow_reuse=Tr
 
 class NotificationBaseSerializer(BaseModel):
     channel: str
-    provider: str
+    provider: str | None = settings.DEFAULT_SMS_PROVIDER
     message: str
     phone: str
     type: str

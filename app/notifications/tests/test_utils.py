@@ -1,12 +1,12 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from app.core.tests.test_utils import random_phone
+from app.core.config import settings
 from app.notifications.utils import HPKSms
 
 
 class TestHostPinnacleSms(unittest.TestCase):
-    phone = random_phone()
+    phone = settings.SUPERUSER_PHONE
     mock_response = MagicMock()
 
     def test_hpk_formats_phone_correctly(self):
@@ -44,7 +44,6 @@ class TestHostPinnacleSms(unittest.TestCase):
         response = HPKSms.send_quick_sms(phone=self.phone, message="test")
 
         successful_response = {
-            "id": mock_response["transactionId"],
             "status_code": "200",
             "status": "success",
             "reason": "success",
