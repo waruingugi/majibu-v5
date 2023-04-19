@@ -28,6 +28,12 @@ class Settings(BaseSettings):
     HOST_PINNACLE_USER_ID: str
     HOST_PINNACLE_SMS_BASE_URL: str
 
+    MOBI_TECH_API_KEY: str
+    MOBI_TECH_SMS_BASE_URL: str
+    MOBI_TECH_SENDER_NAME: str
+
+    DEFAULT_SMS_PROVIDER: str
+
     REDIS_HOST: str = "localhost"
     REDIS_PASSWORD: str | None
     REDIS_PORT: int = 6379

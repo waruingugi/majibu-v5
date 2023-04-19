@@ -5,7 +5,7 @@ from app.users.constants import UserTypes
 
 
 class User(Base):
-    phone = mapped_column(String, nullable=False, index=True)
+    phone = mapped_column(String, nullable=False, unique=True)
     is_active = mapped_column(Boolean, default=True)
     user_type = mapped_column(String, default=UserTypes.PLAYER.value)
     last_login = mapped_column(DateTime, nullable=True)

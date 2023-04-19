@@ -5,9 +5,11 @@ from app.db.session import SessionLocal, get_engine
 from app.db.base_class import Base
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def db() -> Generator:
     # Create the db to be used in tests
     Base.metadata.create_all(bind=get_engine())
     with SessionLocal() as db:
         yield db
+
+    Base.metadata.drop_all(bind=get_engine())
