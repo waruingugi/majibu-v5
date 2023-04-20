@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     MOBI_TECH_SMS_BASE_URL: str
     MOBI_TECH_SENDER_NAME: str
 
+    TOTP_EXPIRY_TIME: int = 300  # Time in seconds
+    TOTP_LENGTH: int = 4
+
     DEFAULT_SMS_PROVIDER: str
 
     REDIS_HOST: str = "localhost"

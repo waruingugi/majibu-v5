@@ -13,7 +13,7 @@ async def get_phone_verification(request: Request):
 
 
 @router.post("/validate-phone/", response_class=HTMLResponse)
-async def post_phone_verificationin(
+async def post_phone_verification(
     request: Request, phone_in: FormatPhoneSerializer = Depends()
 ):
     if phone_in.is_valid():

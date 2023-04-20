@@ -25,6 +25,8 @@ tenacity = "^8.2.2"
 jinja2 = "^3.1.2"
 python-multipart = "^0.0.6"
 pytest-mock = "^3.10.0"
+pyotp = "^2.8.0"
+pytest-mock-resources = {extras = ["redis"], version = "^2.6.11"}
 
 
 [tool.poetry.group.dev.dependencies]

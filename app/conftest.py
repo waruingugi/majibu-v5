@@ -2,7 +2,11 @@ from typing import Generator
 import pytest
 
 from app.db.session import SessionLocal, get_engine
+from pytest_mock_resources import create_redis_fixture
 from app.db.base import Base
+
+
+redis = create_redis_fixture(scope="session")
 
 
 @pytest.fixture(scope="session")
