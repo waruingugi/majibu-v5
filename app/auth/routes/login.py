@@ -1,10 +1,13 @@
 from fastapi import Request, APIRouter, Depends
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.core.deps import get_db
 
 from app.core.config import templates
-from app.auth.serializers.auth import FormatPhoneSerializer, CreateTOTPSerializer
+from app.auth.serializers.auth import (  # noqa
+    FormatPhoneSerializer,
+    CreateTOTPSerializer,
+)
 from app.auth.otp import create_otp  # noqa
 from app.notifications.daos.notifications import notifications_dao  # noqa
 
@@ -28,19 +31,26 @@ async def post_phone_verification(
     if phone_in.is_valid():
         """Save the phone to the session.
         This ensures the same user proceeds to the verification page."""
-        request.session["phone"] = phone_in.phone
-        create_otp_data = CreateTOTPSerializer(phone=phone_in.phone)  # noqa
+        # session = request.cookies.get("session")
+        # create_otp_data = CreateTOTPSerializer(phone=phone_in.phone)  # noqa
 
         # notifiaction_in = create_otp(create_otp_data)
         # notifications_dao.send_notification(db, obj_in=notifiaction_in)
+        redirect_url = request.url_for("get_otp_verification", phone=phone_in.phone)
+        return RedirectResponse(redirect_url, status_code=302)
 
-    return templates.TemplateResponse("login.html", {"request": request})
-
-
-@router.get("/validate-otp/", response_class=HTMLResponse)
-async def get_otp_verification(request: Request):
     return templates.TemplateResponse(
-        "login.html", {"request": request, "phone": request.session["phone"]}
+        f"{template_prefix}login.html", {"request": request}
+    )
+
+
+@router.get("/validate-otp/{phone}", response_class=HTMLResponse)
+async def get_otp_verification(
+    request: Request,
+    phone: str | None = None,
+):
+    return templates.TemplateResponse(
+        f"{template_prefix}verification.html", {"request": request, "phone": phone}
     )
 
 
