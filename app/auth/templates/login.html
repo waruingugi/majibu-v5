@@ -1,81 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "templates/layout.html" %}
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>Majibu | {{ title }}</title>
+{% block content %}
+    {% include "templates/navbar.html" %}
 
-    <link rel="stylesheet" href="{{ url_for('static', path='assets/bootstrap/css/bootstrap.min.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', path='assets/css/animate.min.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', path='assets/css/styles.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', path='assets/bootstrap/css/bootstrap.min.css') }}" />
-
-
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat&display=swap">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@6.6.6/css/flag-icons.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-</head>
-
-<body>
-    <nav class="navbar navbar-light navbar-expand-md grey lighten-5">
-        <div class="container-fluid"><a class="navbar-brand" href="#">Majibu</a><span class="badge bg-primary" id="version-badge">Beta</span><button data-bs-toggle="collapse" class="navbar-toggler" data-bs-target="#navcol-1"><span class="visually-hidden">Toggle navigation</span><span class="navbar-toggler-icon"></span></button>
-            <div class="collapse navbar-collapse" id="navcol-1"></div>
-        </div>
-    </nav>
-    <section id="content-full-height" class="bg-light py-5">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-5">
-                    <div class="card mt-5" id="content-card">
-                        <div class="card-body">
-                            <h4 class="text-center text-danger">Drama Free Access...</h4>
-                            <hr class="mt-0">
-                            <p class="text-center mb-0">Please enter your phone number to proceed</p>
-                            <form role="form" method="POST">
-                                <div class="input-group mb-3 mt-1">
-                                    <span class="input-group-text bg-light">
-                                        <span class="fi fi-ke me-1"></span>+254</span>
-                                        <input class="form-control" type="tel" name="phone" placeholder="0702366722" autocomplete="off" required="" inputmode="tel" maxlength="10" title="Example: 0702504812" pattern="[0-9]+">
-                                    </div>
-                                <button class="btn btn-primary d-block w-100 py-2" id="btn-preferred" type="submit">Continue
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 0 512 512" width="1em" height="1em" fill="currentColor" class="ms-2 animate__animated animate__headShake">
-                                        <!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
-                                        <path d="M438.6 278.6l-160 160C272.4 444.9 264.2 448 256 448s-16.38-3.125-22.62-9.375c-12.5-12.5-12.5-32.75 0-45.25L338.8 288H32C14.33 288 .0016 273.7 .0016 256S14.33 224 32 224h306.8l-105.4-105.4c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0l160 160C451.1 245.9 451.1 266.1 438.6 278.6z"></path>
-                                    </svg>
-                                </button>
-                            </form>
+        <section id="content-full-height" class="bg-light py-5">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-5">
+                        <div class="card mt-5" id="content-card">
+                            <div class="card-body">
+                                <h4 class="text-center text-danger">Drama Free Access...</h4>
+                                <hr class="mt-0">
+                                <p class="text-center mb-0">Please enter your phone number to proceed</p>
+                                <form role="form" method="POST">
+                                    <div class="input-group mb-3 mt-1">
+                                        <span class="input-group-text bg-light">
+                                            <span class="fi fi-ke me-1"></span>+254</span>
+                                            <input class="form-control" type="tel" name="phone" placeholder="0702366722" autocomplete="off" required="" inputmode="tel" maxlength="10" title="Example: 0702504812" pattern="[0-9]+">
+                                        </div>
+                                    <button class="btn btn-primary d-block w-100 py-2" id="btn-preferred" type="submit">Continue
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 0 512 512" width="1em" height="1em" fill="currentColor" class="ms-2 animate__animated animate__headShake">
+                                            <!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                            <path d="M438.6 278.6l-160 160C272.4 444.9 264.2 448 256 448s-16.38-3.125-22.62-9.375c-12.5-12.5-12.5-32.75 0-45.25L338.8 288H32C14.33 288 .0016 273.7 .0016 256S14.33 224 32 224h306.8l-105.4-105.4c-12.5-12.5-12.5-32.75 0-45.25s32.75-12.5 45.25 0l160 160C451.1 245.9 451.1 266.1 438.6 278.6z"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-    <footer class="align-items-md-end text-center bg-dark pt-4 text-secondary">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col">
-                    <h1 class="text-white">Majibu</h1>
-                </div>
-            </div>
-            <div class="row justify-content-center">
-                <div class="col">
-                    <h5>Educate | Entertain | Earn</h5>
-                </div>
-            </div>
-            <div class="row justify-content-center">
-                <div class="col">
-                    <p>Copyright © Majibu (Beta) - All Rights Reserved | By RORO INNOVATIONS<br></p>
-                    <p>Email: <a href="mailto:support@majibu.co.ke">support@majibu.co.ke</a><br></p>
-                </div>
-            </div>
-        </div>
-    </footer>
+        </section>
 
-    <link rel="stylesheet" href="{{ url_for('static', path='assets/js/jquery.min.js') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', path='assets/bootstrap/js/bootstrap.min.js') }}" />
+        {% include 'templates/footer.html' %}
 
-</body>
-
-</html>
+{% endblock %}

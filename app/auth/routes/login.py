@@ -3,17 +3,20 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from app.core.deps import get_db
 
-from app.auth.utils import templates
+from app.core.config import templates
 from app.auth.serializers.auth import FormatPhoneSerializer, CreateTOTPSerializer
 from app.auth.otp import create_otp  # noqa
 from app.notifications.daos.notifications import notifications_dao  # noqa
 
 router = APIRouter()
+template_prefix = "auth/templates/"
 
 
 @router.get("/validate-phone/", response_class=HTMLResponse)
 async def get_phone_verification(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(
+        f"{template_prefix}login.html", {"request": request}
+    )
 
 
 @router.post("/validate-phone/", response_class=HTMLResponse)

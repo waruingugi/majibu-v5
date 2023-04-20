@@ -2,8 +2,18 @@ from functools import lru_cache
 from pydantic import BaseSettings, PostgresDsn
 from typing import cast
 from redis import Redis
+from fastapi.templating import Jinja2Templates
+
+from os.path import dirname
+import app
 
 
+# Template configurations
+project_dir = dirname(app.__file__)
+templates = Jinja2Templates(directory=project_dir)
+
+
+# Settings
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Majibu"
     API_VERSION: str = "0.1.0"
