@@ -1,7 +1,6 @@
 import pyotp
 from typing import Dict
 import json
-from redis import Redis
 
 from app.auth.serializers.auth import CreateTOTPSerializer
 from app.db.base_class import generate_uuid
@@ -40,7 +39,7 @@ class TOTP:
         return pyotp.random_base32()
 
 
-def create_otp(data_in: CreateTOTPSerializer, redis: Redis = redis):
+def create_otp(data_in: CreateTOTPSerializer):
     """Create One Time Password for user"""
     logger.info(f"Creating OTP for {data_in.phone}")
     totp_data: Dict[str, str] = {
