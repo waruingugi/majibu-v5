@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Majibu | {{ title }}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', path='assets/bootstrap/css/bootstrap.min.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='assets/css/animate.min.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='assets/css/styles.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='assets/bootstrap/css/bootstrap.min.css') }}" />
+
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat&display=swap">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@6.6.6/css/flag-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+
+<body>
+    {% block content %}
+    <!-- body content -->
+    {% endblock %}
+
+    {% block scripts %}
+        
+    {% endblock %}
+
+    <link rel="stylesheet" href="{{ url_for('static', path='assets/js/jquery.min.js') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', path='assets/bootstrap/js/bootstrap.min.js') }}" />
+
+</body>
+
+</html>
