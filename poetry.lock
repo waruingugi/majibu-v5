@@ -391,7 +391,7 @@ sqlalchemy = "*"
 name = "filelock"
 version = "3.11.0"
 description = "A platform independent file lock."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -984,36 +984,6 @@ pytest = ">=5.0"
 dev = ["pre-commit", "pytest-asyncio", "tox"]
 
 [[package]]
-name = "pytest-mock-resources"
-version = "2.6.11"
-description = "A pytest plugin for easily instantiating reproducible mock resources."
-category = "main"
-optional = false
-python-versions = ">=3.7,<4"
-files = [
-    {file = "pytest_mock_resources-2.6.11-py3-none-any.whl", hash = "sha256:0b324ff5a7163632972f5eab3cb7d8c8c3c7cded45c8cf362383cdab2dd3bbc4"},
-    {file = "pytest_mock_resources-2.6.11.tar.gz", hash = "sha256:a4814aa67702de1aa63b28d7c3c55e300cd35d854d32d050468331bcd5b46239"},
-]
-
-[package.dependencies]
-filelock = {version = "*", optional = true, markers = "extra == \"docker\" or extra == \"postgres\" or extra == \"postgres-binary\" or extra == \"postgres-async\" or extra == \"redshift\" or extra == \"mongo\" or extra == \"moto\" or extra == \"redis\" or extra == \"mysql\""}
-pytest = ">=1.0"
-python-on-whales = {version = ">=0.22.0", optional = true, markers = "extra == \"docker\" or extra == \"postgres\" or extra == \"postgres-binary\" or extra == \"postgres-async\" or extra == \"redshift\" or extra == \"mongo\" or extra == \"moto\" or extra == \"redis\" or extra == \"mysql\""}
-redis = {version = "*", optional = true, markers = "extra == \"redis\""}
-sqlalchemy = ">1.0,<1.4.0 || >1.4.0,<1.4.1 || >1.4.1,<1.4.2 || >1.4.2,<1.4.3 || >1.4.3,<1.4.4 || >1.4.4,<1.4.5 || >1.4.5,<1.4.6 || >1.4.6,<1.4.7 || >1.4.7,<1.4.8 || >1.4.8,<1.4.9 || >1.4.9,<1.4.10 || >1.4.10,<1.4.11 || >1.4.11,<1.4.12 || >1.4.12,<1.4.13 || >1.4.13,<1.4.14 || >1.4.14,<1.4.15 || >1.4.15,<1.4.16 || >1.4.16,<1.4.17 || >1.4.17,<1.4.18 || >1.4.18,<1.4.19 || >1.4.19,<1.4.20 || >1.4.20,<1.4.21 || >1.4.21,<1.4.22 || >1.4.22,<1.4.23 || >1.4.23"
-
-[package.extras]
-docker = ["filelock", "python-on-whales (>=0.22.0)"]
-mongo = ["filelock", "pymongo", "python-on-whales (>=0.22.0)"]
-moto = ["boto3", "filelock", "python-on-whales (>=0.22.0)"]
-mysql = ["filelock", "pymysql (>=1.0)", "python-on-whales (>=0.22.0)"]
-postgres = ["filelock", "psycopg2", "python-on-whales (>=0.22.0)"]
-postgres-async = ["asyncpg", "filelock", "python-on-whales (>=0.22.0)"]
-postgres-binary = ["filelock", "psycopg2-binary", "python-on-whales (>=0.22.0)"]
-redis = ["filelock", "python-on-whales (>=0.22.0)", "redis"]
-redshift = ["boto3", "filelock", "moto", "python-on-whales (>=0.22.0)", "sqlparse"]
-
-[[package]]
 name = "python-dotenv"
 version = "1.0.0"
 description = "Read key-value pairs from a .env file and set them as environment variables"
@@ -1042,25 +1012,6 @@ files = [
 
 [package.extras]
 dev = ["atomicwrites (==1.2.1)", "attrs (==19.2.0)", "coverage (==6.5.0)", "hatch", "invoke (==1.7.3)", "more-itertools (==4.3.0)", "pbr (==4.3.0)", "pluggy (==1.0.0)", "py (==1.11.0)", "pytest (==7.2.0)", "pytest-cov (==4.0.0)", "pytest-timeout (==2.1.0)", "pyyaml (==5.1)"]
-
-[[package]]
-name = "python-on-whales"
-version = "0.60.1"
-description = "A Docker client for Python, designed to be fun and intuitive!"
-category = "main"
-optional = false
-python-versions = ">=3.7, <4"
-files = [
-    {file = "python-on-whales-0.60.1.tar.gz", hash = "sha256:ab20196a8955438d00e291995153e5c64346e88b6c0524f468b5ce4b61ab9bef"},
-    {file = "python_on_whales-0.60.1-py3-none-any.whl", hash = "sha256:8675c52c4931b6410444df0e886a2ad8be5db494beff9237dee0ae41a8f0c92b"},
-]
-
-[package.dependencies]
-pydantic = ">=1.5,<2"
-requests = "*"
-tqdm = "*"
-typer = ">=0.4.1"
-typing-extensions = "*"
 
 [[package]]
 name = "pyyaml"
@@ -1335,48 +1286,6 @@ files = [
 ]
 
 [[package]]
-name = "tqdm"
-version = "4.65.0"
-description = "Fast, Extensible Progress Meter"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "tqdm-4.65.0-py3-none-any.whl", hash = "sha256:c4f53a17fe37e132815abceec022631be8ffe1b9381c2e6e30aa70edc99e9671"},
-    {file = "tqdm-4.65.0.tar.gz", hash = "sha256:1871fb68a86b8fb3b59ca4cdd3dcccbc7e6d613eeed31f4c332531977b89beb5"},
-]
-
-[package.dependencies]
-colorama = {version = "*", markers = "platform_system == \"Windows\""}
-
-[package.extras]
-dev = ["py-make (>=0.1.0)", "twine", "wheel"]
-notebook = ["ipywidgets (>=6)"]
-slack = ["slack-sdk"]
-telegram = ["requests"]
-
-[[package]]
-name = "typer"
-version = "0.7.0"
-description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
-category = "main"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "typer-0.7.0-py3-none-any.whl", hash = "sha256:b5e704f4e48ec263de1c0b3a2387cd405a13767d2f907f44c1a08cbad96f606d"},
-    {file = "typer-0.7.0.tar.gz", hash = "sha256:ff797846578a9f2a201b53442aedeb543319466870fbe1c701eab66dd7681165"},
-]
-
-[package.dependencies]
-click = ">=7.1.1,<9.0.0"
-
-[package.extras]
-all = ["colorama (>=0.4.3,<0.5.0)", "rich (>=10.11.0,<13.0.0)", "shellingham (>=1.3.0,<2.0.0)"]
-dev = ["autoflake (>=1.3.1,<2.0.0)", "flake8 (>=3.8.3,<4.0.0)", "pre-commit (>=2.17.0,<3.0.0)"]
-doc = ["cairosvg (>=2.5.2,<3.0.0)", "mdx-include (>=1.4.1,<2.0.0)", "mkdocs (>=1.1.2,<2.0.0)", "mkdocs-material (>=8.1.4,<9.0.0)", "pillow (>=9.3.0,<10.0.0)"]
-test = ["black (>=22.3.0,<23.0.0)", "coverage (>=6.2,<7.0)", "isort (>=5.0.6,<6.0.0)", "mypy (==0.910)", "pytest (>=4.4.0,<8.0.0)", "pytest-cov (>=2.10.0,<5.0.0)", "pytest-sugar (>=0.9.4,<0.10.0)", "pytest-xdist (>=1.32.0,<4.0.0)", "rich (>=10.11.0,<13.0.0)", "shellingham (>=1.3.0,<2.0.0)"]
-
-[[package]]
 name = "typing-extensions"
 version = "4.5.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
@@ -1448,4 +1357,4 @@ test = ["covdefaults (>=2.2.2)", "coverage (>=7.1)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "3711c143a34f2dcbab377f27402d83f43f348ef5bb1595ce43067c3cef5c483a"
+content-hash = "7ffd8a920286c6035810e9e7c233754b21385ba1f1d834f7aafd3540c997b198"
