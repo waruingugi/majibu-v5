@@ -1,4 +1,4 @@
-from pydantic import validator, root_validator
+from pydantic import validator, root_validator, BaseModel
 from pydantic.dataclasses import dataclass
 from fastapi import Form
 from typing import List
@@ -43,13 +43,6 @@ class FormatPhoneSerializer(BaseFormSerializer):
             values["field_errors"] = field_errors
             return values
 
-    # def is_valid(self):
-    #     """Do form validations here"""
-    #     self.errors: List = []
-    #     try:
-    #         validate_phone_number(self.phone)
-    #     except Exception as e:
-    #         self.errors.append(e.error_message) # type: ignore
-    #         logger.info(f"An exception occured in the form validation: {e.error_message}") # type: ignore
-    #     finally:
-    #         return True if not self.errors else False
+
+class CreateTOTPSerializer(BaseModel):
+    phone: str

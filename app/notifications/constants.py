@@ -7,6 +7,7 @@ class NotificationChannels(str, Enum):
 
 class NotificationProviders(str, Enum):
     HOST_PINNACLE = "HOST_PINNACLE"
+    MOBI_TECH = "MOBI_TECH"
 
 
 class NotificationTypes(str, Enum):

@@ -1,0 +1,32 @@
+{% extends "templates/layout.html" %}
+
+{% block content %}
+    {% include "templates/navbar.html" %}
+
+    <section id="content-full-height" class="py-4 bg-light">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-5">
+                    <div class="card mt-5" id="content-card">
+                        <div class="card-body">
+                            <h4 class="text-center text-danger">Verification</h4>
+                            <hr class="mt-0">
+                            <p class="text-center mb-0">Enter the verification code sent to {{ phone }}</p>
+                            <form role="form" method="POST">
+                                <div class="form-group mb-3 mt-1">
+                                    <input class="form-control text-center w-100" type="text" placeholder="__    __    __   __" name="verification" required="" minlength="4" maxlength="4" pattern="\d*" inputmode="numeric" autocomplete="one-time-code">
+                                    <small class="text-secondary"><a href="{{ url_for('get_phone_verification') }}">Send another code</a></small>
+                                </div>
+                                <button class="btn btn-primary d-block w-100" id="btn-preferred" type="submit">Confirm</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    {% include 'templates/footer.html' %}
+
+{% endblock %}

@@ -123,7 +123,7 @@ class MobiTechTechnologiesSms:
             # Retry x times before failing
             for attempt in retry_on_sms_failure:
                 with attempt:
-                    logger.info(f"Sending MOBI_TECH SMS to {phone}, message: {message}")
+                    logger.info(f"Sending MobiTech SMS to {phone}, message: {message}")
 
                     response = requests.post(
                         url=f"{self.sms_base_url}/sms/sendsms",
@@ -132,7 +132,7 @@ class MobiTechTechnologiesSms:
                     )
 
                     response_json = response.json()[0]
-                    logger.info(f"MOBITECH response: {response_json}")
+                    logger.info(f"MobiTech response: {response_json}")
 
                     return {
                         "status": (

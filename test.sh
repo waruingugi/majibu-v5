@@ -2,4 +2,5 @@
 
 export $(grep -v '^#' .env.test | xargs)
 
-pytest --log-cli-level WARNING -vv
+echo "Running tests $1"
+pytest --log-cli-level WARNING -vv $1
