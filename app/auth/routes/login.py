@@ -8,8 +8,9 @@ from app.auth.serializers.auth import (  # noqa
     FormatPhoneSerializer,
     CreateOTPSerializer,
     OTPSerializer,
+    ValidateOTPSerializer,
 )
-from app.auth.otp import create_otp  # noqa
+from app.auth.otp import create_otp, validate_otp  # noqa
 from app.notifications.daos.notifications import notifications_dao  # noqa
 
 router = APIRouter()
@@ -18,6 +19,7 @@ template_prefix = "auth/templates/"
 
 @router.get("/validate-phone/", response_class=HTMLResponse)
 async def get_phone_verification(request: Request):
+    """Get login html"""
     return templates.TemplateResponse(
         f"{template_prefix}login.html", {"request": request}
     )
@@ -29,6 +31,7 @@ async def post_phone_verification(
     db: Session = Depends(get_db),
     phone_in: FormatPhoneSerializer = Depends(),
 ):
+    """Receive POST to validate phone number"""
     if phone_in.is_valid():
         create_otp_data = CreateOTPSerializer(phone=phone_in.phone)  # noqa
 
@@ -49,6 +52,7 @@ async def get_otp_verification(
     request: Request,
     phone: str,
 ):
+    """Get verification template"""
     return templates.TemplateResponse(
         f"{template_prefix}verification.html", {"request": request, "phone": phone}
     )
@@ -60,20 +64,22 @@ async def post_otp_verification(
     phone: str,
     otp_in: OTPSerializer = Depends(),
 ):
+    """Receive POST and validates OTP is valid"""
+    data = ValidateOTPSerializer(otp=otp_in.otp, phone=phone)
+
+    if validate_otp(data):
+        pass
+
     return templates.TemplateResponse(
         f"{template_prefix}verification.html", {"request": request}
     )
 
 
-# DAO
-
-# Validate phone no
-# On post, create OTP, send OTP
-# save number to redis
-# Save otp secret, e.t.c to redis
-# Redirect to verify otp
-# On OTP post, fetch redis
 # If valid, generate access token
+# Get or create user
+# TokenDao, TokenSerializers
+# Ecommerce security get_access_token
+# Response
 # Throttling
 # redirect to home page
 # If not valid, return to validation page
