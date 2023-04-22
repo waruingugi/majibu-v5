@@ -14,4 +14,4 @@ redis-server --daemonize yes
 # sudo /etc/init.d/redis-server stop
 
 python app/backend_pre_start.py
-uvicorn usgi:app --reload --host 127.0.0.1
+uvicorn usgi:app --reload --host 127.0.0.1 --port 9000

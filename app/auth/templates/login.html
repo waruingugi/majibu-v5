@@ -12,6 +12,13 @@
                                 <h4 class="text-center text-danger">Drama Free Access...</h4>
                                 <hr class="mt-0">
                                 <p class="text-center mb-0">Please enter your phone number to proceed</p>
+                                {% if field_errors %}
+                                    <ul class="list-unstyled small text-danger">
+                                    {% for error in field_errors %}
+                                        <li class="small">* {{ error }}</li>
+                                    {% endfor %}
+                                    </ul>
+                                {% endif %}
                                 <form role="form" method="POST">
                                     <div class="input-group mb-3 mt-1">
                                         <span class="input-group-text bg-light">
