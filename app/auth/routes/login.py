@@ -6,7 +6,7 @@ from app.core.deps import get_db
 from app.core.config import templates
 from app.auth.serializers.auth import (  # noqa
     FormatPhoneSerializer,
-    CreateTOTPSerializer,
+    CreateOTPSerializer,
     OTPSerializer,
 )
 from app.auth.otp import create_otp  # noqa
@@ -30,7 +30,7 @@ async def post_phone_verification(
     phone_in: FormatPhoneSerializer = Depends(),
 ):
     if phone_in.is_valid():
-        create_otp_data = CreateTOTPSerializer(phone=phone_in.phone)  # noqa
+        create_otp_data = CreateOTPSerializer(phone=phone_in.phone)  # noqa
 
         notifiaction_in = create_otp(create_otp_data)
         notifications_dao.send_notification(db, obj_in=notifiaction_in)
@@ -39,14 +39,15 @@ async def post_phone_verification(
         return RedirectResponse(redirect_url, status_code=302)
 
     return templates.TemplateResponse(
-        f"{template_prefix}login.html", {"request": request}
+        f"{template_prefix}login.html",
+        {"request": request, "field_errors": phone_in.field_errors},
     )
 
 
 @router.get("/validate-otp/{phone}", response_class=HTMLResponse)
 async def get_otp_verification(
     request: Request,
-    phone: str | None = None,
+    phone: str,
 ):
     return templates.TemplateResponse(
         f"{template_prefix}verification.html", {"request": request, "phone": phone}
@@ -54,7 +55,9 @@ async def get_otp_verification(
 
 
 @router.post("/validate-otp/{phone}", response_class=HTMLResponse)
-async def post_otp_verification(request: Request, otp_in: OTPSerializer = Depends()):
+async def post_otp_verification(
+    request: Request, phone: str, otp_in: OTPSerializer = Depends()
+):
     if otp_in.is_valid():
         pass
 
