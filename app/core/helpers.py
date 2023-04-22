@@ -11,6 +11,7 @@ from phonenumbers import (
     number_type,
 )
 from pydantic import validator
+from hashlib import md5
 
 PHONE_NUMBER_TYPES = PhoneNumberType.MOBILE, PhoneNumberType.FIXED_LINE_OR_MOBILE
 
@@ -42,3 +43,8 @@ def validate_phone_number(phone: str) -> str:
 _validate_phone_number = validator("phone", pre=True, allow_reuse=True)(
     validate_phone_number
 )
+
+
+def md5_hash(value: str) -> str:
+    """Convert string value into hash"""
+    return md5(value.encode()).hexdigest()
