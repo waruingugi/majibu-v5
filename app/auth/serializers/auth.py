@@ -51,8 +51,9 @@ class FormatPhoneSerializer(BaseFormSerializer):
             return values
 
 
+@dataclass
 class OTPSerializer(BaseFormSerializer):
-    otp: str = Form(max_length=4, min_length=4, regex=r"^([\S\d]+)$")
+    otp: str = Form(max_length=settings.TOTP_LENGTH, min_length=settings.TOTP_LENGTH)
 
 
 class CreateOTPSerializer(BaseModel):

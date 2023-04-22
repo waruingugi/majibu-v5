@@ -56,11 +56,10 @@ async def get_otp_verification(
 
 @router.post("/validate-otp/{phone}", response_class=HTMLResponse)
 async def post_otp_verification(
-    request: Request, phone: str, otp_in: OTPSerializer = Depends()
+    request: Request,
+    phone: str,
+    otp_in: OTPSerializer = Depends(),
 ):
-    if otp_in.is_valid():
-        pass
-
     return templates.TemplateResponse(
         f"{template_prefix}verification.html", {"request": request}
     )
@@ -75,5 +74,6 @@ async def post_otp_verification(
 # Redirect to verify otp
 # On OTP post, fetch redis
 # If valid, generate access token
+# Throttling
 # redirect to home page
 # If not valid, return to validation page

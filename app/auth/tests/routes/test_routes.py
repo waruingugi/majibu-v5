@@ -37,3 +37,11 @@ def test_get_otp_verification(client: TestClient):
     response = client.get("/auth/validate-otp/" + settings.SUPERUSER_PHONE)
     assert response.status_code == 200
     assert response.template.name == "auth/templates/verification.html"
+
+
+def test_post_otp_verification(client: TestClient):
+    response = client.post(
+        "/auth/validate-otp/" + settings.SUPERUSER_PHONE, data={"otp": "0987"}
+    )
+    assert response.status_code == 200
+    assert response.template.name == "auth/templates/verification.html"
