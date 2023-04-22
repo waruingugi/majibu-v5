@@ -7,6 +7,7 @@ from app.core.config import templates
 from app.auth.serializers.auth import (  # noqa
     FormatPhoneSerializer,
     CreateTOTPSerializer,
+    OTPSerializer,
 )
 from app.auth.otp import create_otp  # noqa
 from app.notifications.daos.notifications import notifications_dao  # noqa
@@ -29,13 +30,11 @@ async def post_phone_verification(
     phone_in: FormatPhoneSerializer = Depends(),
 ):
     if phone_in.is_valid():
-        """Save the phone to the session.
-        This ensures the same user proceeds to the verification page."""
-        # session = request.cookies.get("session")
-        # create_otp_data = CreateTOTPSerializer(phone=phone_in.phone)  # noqa
+        create_otp_data = CreateTOTPSerializer(phone=phone_in.phone)  # noqa
 
-        # notifiaction_in = create_otp(create_otp_data)
-        # notifications_dao.send_notification(db, obj_in=notifiaction_in)
+        notifiaction_in = create_otp(create_otp_data)
+        notifications_dao.send_notification(db, obj_in=notifiaction_in)
+
         redirect_url = request.url_for("get_otp_verification", phone=phone_in.phone)
         return RedirectResponse(redirect_url, status_code=302)
 
@@ -54,7 +53,17 @@ async def get_otp_verification(
     )
 
 
-# redirect
+@router.post("/validate-otp/{phone}", response_class=HTMLResponse)
+async def post_otp_verification(request: Request, otp_in: OTPSerializer = Depends()):
+    if otp_in.is_valid():
+        pass
+
+    return templates.TemplateResponse(
+        f"{template_prefix}verification.html", {"request": request}
+    )
+
+
+# DAO
 
 # Validate phone no
 # On post, create OTP, send OTP
