@@ -12,6 +12,10 @@ from app.auth.serializers.auth import (  # noqa
 )
 from app.auth.otp import create_otp, validate_otp  # noqa
 from app.notifications.daos.notifications import notifications_dao  # noqa
+from app.users.daos.user import user_dao
+from app.users.serializers.user import UserCreateSerializer
+from app.errors.custom import ErrorCodes
+
 
 router = APIRouter()
 template_prefix = "auth/templates/"
@@ -33,13 +37,20 @@ async def post_phone_verification(
 ):
     """Receive POST to validate phone number"""
     if phone_in.is_valid():
-        create_otp_data = CreateOTPSerializer(phone=phone_in.phone)  # noqa
+        user = user_dao.get_or_create(db, UserCreateSerializer(phone=phone_in.phone))
+        # user = user_dao.update(db, db_obj=user, obj_in={"is_active": False})
+        user_is_active = user_dao.is_active(user)
 
-        notifiaction_in = create_otp(create_otp_data)
-        notifications_dao.send_notification(db, obj_in=notifiaction_in)
+        if user_is_active:
+            create_otp_data = CreateOTPSerializer(phone=phone_in.phone)  # noqa
 
-        redirect_url = request.url_for("get_otp_verification", phone=phone_in.phone)
-        return RedirectResponse(redirect_url, status_code=302)
+            notifiaction_in = create_otp(create_otp_data)
+            notifications_dao.send_notification(db, obj_in=notifiaction_in)
+
+            redirect_url = request.url_for("get_otp_verification", phone=phone_in.phone)
+            return RedirectResponse(redirect_url, status_code=302)
+        else:
+            phone_in.field_errors.append(ErrorCodes.INACTIVE_ACCOUNT.value)
 
     return templates.TemplateResponse(
         f"{template_prefix}login.html",

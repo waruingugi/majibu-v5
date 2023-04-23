@@ -30,7 +30,7 @@ def test_notification_model_relates_to_user_model(db: Session) -> None:
     """Test created notification instance relates to user"""
     phone = settings.SUPERUSER_PHONE
     user_in = UserCreateSerializer(phone=phone)
-    user = user_dao.create(db, obj_in=user_in)
+    user = user_dao.get_or_create(db, obj_in=user_in)
 
     data_in = CreateNotificationSerializer(
         type="OTP",

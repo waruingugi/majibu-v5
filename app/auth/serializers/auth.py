@@ -11,7 +11,7 @@ from app.core.config import settings
 
 @dataclass
 class BaseFormSerializer:
-    field_errors: List[str] | None
+    field_errors: List[str]
 
     def is_valid(self):
         return True if not self.field_errors else False
@@ -41,6 +41,7 @@ class FormatPhoneSerializer(BaseFormSerializer):
 
         try:
             validate_phone_number(values["phone"])
+
         except Exception as e:
             field_errors.append(e.error_message)  # type: ignore
             logger.exception(
@@ -56,10 +57,13 @@ class OTPSerializer(BaseFormSerializer):
     otp: str = Form(max_length=settings.TOTP_LENGTH, min_length=settings.TOTP_LENGTH)
 
 
-class CreateOTPSerializer(BaseModel):
+class LitePhoneSerializer(BaseModel):
     phone: str
 
 
-class ValidateOTPSerializer(BaseModel):
-    phone: str
+class CreateOTPSerializer(LitePhoneSerializer):
+    ...
+
+
+class ValidateOTPSerializer(LitePhoneSerializer):
     otp: str
