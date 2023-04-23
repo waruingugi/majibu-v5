@@ -1,7 +1,8 @@
-from fastapi import Request, APIRouter, Depends
+from fastapi import Request, APIRouter, Depends, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.core.deps import get_db
+from app.core.security import get_access_token
 
 from app.core.config import templates
 from app.auth.serializers.auth import (  # noqa
@@ -71,14 +72,21 @@ async def get_otp_verification(
 @router.post("/validate-otp/{phone}", response_class=HTMLResponse)
 async def post_otp_verification(
     request: Request,
+    response: Response,
     phone: str,
     otp_in: OTPSerializer = Depends(),
+    db: Session = Depends(get_db),
 ):
     """Receive POST and validates OTP is valid"""
     data = ValidateOTPSerializer(otp=otp_in.otp, phone=phone)
 
     if validate_otp(data):
-        pass
+        user = user_dao.get_not_none(db, phone=phone)
+        token_obj = get_access_token(db, user_id=user.id)
+
+        response.set_cookie(
+            key="access_token", value=f"Bearer {token_obj.access_token}", httponly=True
+        )
 
     return templates.TemplateResponse(
         f"{template_prefix}verification.html", {"request": request}
