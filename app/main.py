@@ -4,6 +4,7 @@ from fastapi import Depends, FastAPI
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 from app.auth import api as auth_api
+from app.sessions import api as session_api
 from fastapi.staticfiles import StaticFiles
 
 
@@ -11,6 +12,7 @@ app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(auth_api.router)
+app.include_router(session_api.router)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

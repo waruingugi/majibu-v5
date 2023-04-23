@@ -5,7 +5,7 @@ from app.core.config import templates
 
 
 router = APIRouter()
-template_prefix = "session/templates"
+template_prefix = "sessions/templates/"
 
 
 @router.get("/home/", response_class=HTMLResponse)
