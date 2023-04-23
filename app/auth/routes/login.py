@@ -38,7 +38,6 @@ async def post_phone_verification(
     """Receive POST to validate phone number"""
     if phone_in.is_valid():
         user = user_dao.get_or_create(db, UserCreateSerializer(phone=phone_in.phone))
-        # user = user_dao.update(db, db_obj=user, obj_in={"is_active": False})
         user_is_active = user_dao.is_active(user)
 
         if user_is_active:
