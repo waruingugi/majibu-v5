@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
+from app.errors.custom import ErrorCodes
 
 
 def test_get_phone_verification(client: TestClient):
@@ -56,7 +57,7 @@ def test_post_phone_verification_fails_on_inactive_user(
     )
 
     assert response.template.name == "auth/templates/login.html"
-    assert response.context["field_errors"] is not None
+    assert response.context["field_errors"] == [ErrorCodes.INACTIVE_ACCOUNT.value]
 
 
 def test_get_otp_verification(client: TestClient):

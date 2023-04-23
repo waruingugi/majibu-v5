@@ -20,5 +20,6 @@ def db() -> Generator:
 @pytest.fixture(scope="session")
 def client():
     Base.metadata.create_all(bind=get_engine())
+
     with TestClient(app) as client:
         yield client
