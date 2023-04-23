@@ -59,5 +59,8 @@ class UserDao(CRUDDao[User, UserCreateSerializer, UserUpdateSerializer]):
     def is_superuser(self, user: User) -> bool:
         return user.user_type == UserTypes.SUPERADMIN.value
 
+    def is_active(self, user: User) -> bool:
+        return bool(user.is_active)
+
 
 user_dao = UserDao(User)
