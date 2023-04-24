@@ -1,11 +1,12 @@
-from typing import Annotated
+from typing import List
 
-from fastapi import Depends, FastAPI
-from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel
+from fastapi import FastAPI
 from app.auth import api as auth_api
 from app.sessions import api as session_api
+from app.core.config import templates
 from fastapi.staticfiles import StaticFiles
+
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 app = FastAPI()
@@ -14,23 +15,17 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(auth_api.router)
 app.include_router(session_api.router)
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request, exc):
+    field_errors: List = []
 
-class User(BaseModel):
-    username: str
-    disabled: bool | None = None
+    if hasattr(exc, "detail"):
+        field_errors.append(exc.detail)
+    if hasattr(exc, "error_message"):
+        field_errors.append(exc.error_message)
 
-
-def fake_decode_token(token):
-    return User(username=token + "fakedecoded")
-
-
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-    user = fake_decode_token(token)
-    return user
-
-
-@app.get("/users/me")
-async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
-    return current_user
+    return templates.TemplateResponse(
+        "auth/templates/login.html",
+        {"request": request, "field_errors": field_errors, "title": "New Message"},
+    )

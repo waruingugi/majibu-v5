@@ -17,5 +17,5 @@ async def get_home(
 ):
     """Get home page"""
     return templates.TemplateResponse(
-        f"{template_prefix}home.html", {"request": request}
+        f"{template_prefix}home.html", {"request": request, "title": "Home"}
     )
