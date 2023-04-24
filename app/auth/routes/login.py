@@ -90,14 +90,17 @@ async def post_otp_verification(
         token_obj = get_access_token(db, user_id=user.id)
 
         cookie = insert_token_in_cookie(token_obj)
-        return templates.TemplateResponse(
-            "sessions/templates/home.html",
-            {"request": request},
-            headers={"Set-Cookie": cookie},
+
+        redirect_url = request.url_for("get_home")
+        return RedirectResponse(
+            redirect_url, status_code=302, headers={"Set-Cookie": cookie}
         )
+    else:
+        otp_in.field_errors.append(ErrorCodes.INVALID_OTP.value)
 
     return templates.TemplateResponse(
-        f"{template_prefix}verification.html", {"request": request}
+        f"{template_prefix}verification.html",
+        {"request": request, "field_errors": otp_in.field_errors},
     )
 
 
@@ -107,6 +110,8 @@ async def post_otp_verification(
 # Ecommerce security get_access_token
 # Send message on background task
 # Validate otp on expire
+# Validate cookie on expire
+# Token expire at midnight
 # Set cookie http only,
 # raise InvalidToken fix this <--
 # raise ExpiredAccessToken  <--

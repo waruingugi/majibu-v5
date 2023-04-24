@@ -66,9 +66,23 @@ def test_get_otp_verification(client: TestClient):
     assert response.template.name == "auth/templates/verification.html"
 
 
-def test_post_otp_verification(client: TestClient):
+def test_post_otp_verification_fails_on_wrong_otp(client: TestClient):
     response = client.post(
         "/auth/validate-otp/" + settings.SUPERUSER_PHONE, data={"otp": "0987"}
     )
-    assert response.status_code == 200
+    assert response.context["field_errors"] == [ErrorCodes.INVALID_OTP.value]
     assert response.template.name == "auth/templates/verification.html"
+
+
+def test_post_otp_verification_redirects_on_valid_otp(
+    client: TestClient, mocker: MockerFixture
+):
+    dummy_otp = "0897"
+    mocker.patch(
+        "app.auth.routes.login.validate_otp",
+        return_value=True,
+    )
+    response = client.post(
+        "/auth/validate-otp/" + settings.SUPERUSER_PHONE, data={"otp": dummy_otp}
+    )
+    assert response is not None

@@ -117,7 +117,7 @@ def get_access_token(db: Session, *, user_id: str) -> AuthToken:
 def insert_token_in_cookie(token_obj: AuthToken) -> str:
     """Set token in cookie header"""
     logger.info("Embedding token in cookie")
-    cookie: str = f"access_token=Bearer {token_obj.access_token}; expires={token_obj.access_token_eat}; path=/;"  # noqa
+    cookie: str = f"access_token=Bearer {token_obj.access_token}; max-age={settings.ACCESS_TOKEN_EXPIRY_IN_SECONDS}; path=/;"  # noqa
     db_connection_url = settings.SQLALCHEMY_DATABASE_URI
 
     if "@localhost" not in db_connection_url:  # Hack to check if running in prod.
