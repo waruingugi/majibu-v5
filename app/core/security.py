@@ -17,6 +17,7 @@ from app.auth.serializers.token import TokenCreateSerializer
 from app.auth.constants import TokenGrantType
 from app.auth.daos.token import token_dao
 from app.core.helpers import md5_hash
+from app.core.raw_logger import logger
 
 
 class OAuth2PasswordBearerWithCookie(OAuth2):
@@ -111,3 +112,15 @@ def get_access_token(db: Session, *, user_id: str) -> AuthToken:
     redis_pipeline.execute()
 
     return token_dao.create(db, obj_in=obj_in)
+
+
+def insert_token_in_cookie(token_obj: AuthToken) -> str:
+    """Set token in cookie header"""
+    logger.info("Embedding token in cookie")
+    cookie: str = f"access_token=Bearer {token_obj.access_token}; expires={token_obj.access_token_eat}; path=/;"  # noqa
+    db_connection_url = settings.SQLALCHEMY_DATABASE_URI
+
+    if "@localhost" not in db_connection_url:  # Hack to check if running in prod.
+        cookie += " Secure; HttpOnly"
+
+    return cookie

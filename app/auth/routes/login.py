@@ -16,6 +16,7 @@ from app.notifications.daos.notifications import notifications_dao  # noqa
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
 from app.errors.custom import ErrorCodes
+from app.core.security import insert_token_in_cookie
 
 
 router = APIRouter()
@@ -88,7 +89,7 @@ async def post_otp_verification(
         user = user_dao.get_not_none(db, phone=phone)
         token_obj = get_access_token(db, user_id=user.id)
 
-        cookie: str = f"access_token=Bearer {token_obj.access_token}; path=/;"
+        cookie = insert_token_in_cookie(token_obj)
         return templates.TemplateResponse(
             "sessions/templates/home.html",
             {"request": request},
