@@ -1,4 +1,4 @@
-from fastapi import Request, APIRouter, Depends
+from fastapi import Request, APIRouter, Depends, BackgroundTasks
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.core.deps import get_db
@@ -34,6 +34,7 @@ async def get_phone_verification(request: Request):
 @router.post("/validate-phone/", response_class=HTMLResponse)
 async def post_phone_verification(
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     phone_in: FormatPhoneSerializer = Depends(),
 ):
@@ -46,7 +47,10 @@ async def post_phone_verification(
             create_otp_data = CreateOTPSerializer(phone=phone_in.phone)  # noqa
 
             notifiaction_in = create_otp(create_otp_data)
-            notifications_dao.send_notification(db, obj_in=notifiaction_in)
+
+            background_tasks.add_task(
+                notifications_dao.send_notification, db, obj_in=notifiaction_in
+            )
 
             redirect_url = request.url_for("get_otp_verification", phone=phone_in.phone)
             return RedirectResponse(redirect_url, status_code=302)

@@ -34,9 +34,6 @@ async def get_decoded_token(
     token: str = Depends(Auth2PasswordBearerWithCookie()),
 ) -> dict:
     """Decode the token"""
-    import pdb
-
-    pdb.set_trace()
 
     if check_access_token_is_valid(db, access_token=token):
         try:
