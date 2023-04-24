@@ -49,10 +49,24 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
         return param
 
 
+class Auth2PasswordBearerWithCookie:
+    async def __call__(self, request: Request) -> Optional[str]:
+        # changed to accept access token from httpOnly Cookie
+        authorization: str = request.cookies.get("access_token")  # type: ignore
+
+        scheme, param = get_authorization_scheme_param(authorization)
+        if not authorization or scheme.lower() != "bearer":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return param
+
+
 def create_access_token(db: Session, subject: str, grant_type: str) -> dict:
-    "Create access token and refresh token"
+    "Create access token token"
     access_token_ein = settings.ACCESS_TOKEN_EXPIRY_IN_SECONDS
-    refresh_ein = settings.REFRESH_TOKEN_EXPIRY_IN_SECONDS
 
     to_encode = {
         "iat": int(datetime.utcnow().timestamp()),
@@ -63,15 +77,11 @@ def create_access_token(db: Session, subject: str, grant_type: str) -> dict:
 
     # Create access token
     token = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    # Create refresh token
-    to_encode["exp"] = datetime.utcnow() + timedelta(seconds=refresh_ein)
-    to_encode["iat"] = int(datetime.utcnow().timestamp())
 
     token_data = {
         "access_token": token,
         "token_type": grant_type,
         "access_token_ein": access_token_ein,
-        "refresh_ein": refresh_ein,
         "user_id": subject,
     }
     return token_data
@@ -97,9 +107,6 @@ def get_access_token(db: Session, *, user_id: str) -> AuthToken:
     redis_pipeline = redis.pipeline()
     redis_pipeline.set(
         md5_hash(token_data["access_token"]), 1, ex=token_data["access_token_ein"]
-    )
-    redis_pipeline.set(
-        md5_hash(token_data["refresh_token"]), 1, ex=token_data["refresh_ein"]
     )
     redis_pipeline.execute()
 

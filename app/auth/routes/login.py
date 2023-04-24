@@ -1,4 +1,4 @@
-from fastapi import Request, APIRouter, Depends, Response
+from fastapi import Request, APIRouter, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.core.deps import get_db
@@ -25,6 +25,7 @@ template_prefix = "auth/templates/"
 @router.get("/validate-phone/", response_class=HTMLResponse)
 async def get_phone_verification(request: Request):
     """Get login html"""
+
     return templates.TemplateResponse(
         f"{template_prefix}login.html", {"request": request}
     )
@@ -72,7 +73,6 @@ async def get_otp_verification(
 @router.post("/validate-otp/{phone}", response_class=HTMLResponse)
 async def post_otp_verification(
     request: Request,
-    response: Response,
     phone: str,
     otp_in: OTPSerializer = Depends(),
     db: Session = Depends(get_db),
@@ -84,8 +84,11 @@ async def post_otp_verification(
         user = user_dao.get_not_none(db, phone=phone)
         token_obj = get_access_token(db, user_id=user.id)
 
-        response.set_cookie(
-            key="access_token", value=f"Bearer {token_obj.access_token}", httponly=True
+        cookie: str = f"access_token=Bearer {token_obj.access_token}; path=/;"
+        return templates.TemplateResponse(
+            "sessions/templates/home.html",
+            {"request": request},
+            headers={"Set-Cookie": cookie},
         )
 
     return templates.TemplateResponse(
@@ -97,6 +100,14 @@ async def post_otp_verification(
 # Get or create user
 # TokenDao, TokenSerializers
 # Ecommerce security get_access_token
+# Send message on background task
+# Validate otp on expire
+# Set cookie http only,
+# raise InvalidToken fix this <--
+# raise ExpiredAccessToken  <--
+# raise IncorrectCredentials <---
+# raise InactiveAccount <----
+# raise InsufficientUserPrivileges <---
 # Response
 # Throttling
 # redirect to home page
