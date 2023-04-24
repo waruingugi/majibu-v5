@@ -75,14 +75,16 @@ def test_post_otp_verification_fails_on_wrong_otp(client: TestClient):
 
 
 def test_post_otp_verification_redirects_on_valid_otp(
-    client: TestClient, mocker: MockerFixture
+    db: Session, client: TestClient, mocker: MockerFixture
 ):
-    dummy_otp = "0897"
+    user_dao.get_or_create(
+        db, obj_in=UserCreateSerializer(phone=settings.SUPERUSER_PHONE)
+    )
     mocker.patch(
         "app.auth.routes.login.validate_otp",
         return_value=True,
     )
     response = client.post(
-        "/auth/validate-otp/" + settings.SUPERUSER_PHONE, data={"otp": dummy_otp}
+        "/auth/validate-otp/" + settings.SUPERUSER_PHONE, data={"otp": "0987"}
     )
-    assert response is not None
+    assert response.template.name == "sessions/templates/home.html"

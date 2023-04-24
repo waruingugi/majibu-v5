@@ -77,7 +77,8 @@ async def get_current_active_user(
     current_user: User = Security(get_current_user),
 ) -> User:
     if not current_user.is_active:
-        raise
+        pass
+        # raise
         # raise InactiveAccount
     return current_user
 
@@ -86,6 +87,6 @@ async def get_current_active_superuser(
     current_user: User = Security(get_current_user),
 ) -> User:
     if not user_dao.is_superuser(current_user):
-        raise
+        pass
         # raise InsufficientUserPrivileges
     return current_user
