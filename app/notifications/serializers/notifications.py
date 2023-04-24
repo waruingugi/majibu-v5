@@ -72,8 +72,8 @@ class NotificationBaseSerializer(BaseModel):
 
 
 class CreateNotificationSerializer(NotificationBaseSerializer):
-    ...
+    pass
 
 
 class UpdateNotificationSerializer(NotificationBaseSerializer):
-    ...
+    pass

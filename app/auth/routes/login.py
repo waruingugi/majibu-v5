@@ -1,4 +1,4 @@
-from fastapi import Request, APIRouter, Depends, Response
+from fastapi import Request, APIRouter, Depends, BackgroundTasks
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from app.core.deps import get_db
@@ -16,6 +16,7 @@ from app.notifications.daos.notifications import notifications_dao  # noqa
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
 from app.errors.custom import ErrorCodes
+from app.core.security import insert_token_in_cookie
 
 
 router = APIRouter()
@@ -25,6 +26,7 @@ template_prefix = "auth/templates/"
 @router.get("/validate-phone/", response_class=HTMLResponse)
 async def get_phone_verification(request: Request):
     """Get login html"""
+
     return templates.TemplateResponse(
         f"{template_prefix}login.html", {"request": request}
     )
@@ -33,6 +35,7 @@ async def get_phone_verification(request: Request):
 @router.post("/validate-phone/", response_class=HTMLResponse)
 async def post_phone_verification(
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     phone_in: FormatPhoneSerializer = Depends(),
 ):
@@ -45,7 +48,10 @@ async def post_phone_verification(
             create_otp_data = CreateOTPSerializer(phone=phone_in.phone)  # noqa
 
             notifiaction_in = create_otp(create_otp_data)
-            notifications_dao.send_notification(db, obj_in=notifiaction_in)
+
+            background_tasks.add_task(
+                notifications_dao.send_notification, db, obj_in=notifiaction_in
+            )
 
             redirect_url = request.url_for("get_otp_verification", phone=phone_in.phone)
             return RedirectResponse(redirect_url, status_code=302)
@@ -72,7 +78,6 @@ async def get_otp_verification(
 @router.post("/validate-otp/{phone}", response_class=HTMLResponse)
 async def post_otp_verification(
     request: Request,
-    response: Response,
     phone: str,
     otp_in: OTPSerializer = Depends(),
     db: Session = Depends(get_db),
@@ -84,12 +89,19 @@ async def post_otp_verification(
         user = user_dao.get_not_none(db, phone=phone)
         token_obj = get_access_token(db, user_id=user.id)
 
-        response.set_cookie(
-            key="access_token", value=f"Bearer {token_obj.access_token}", httponly=True
+        cookie = insert_token_in_cookie(token_obj)
+
+        redirect_url = request.url_for("get_home")
+
+        return RedirectResponse(
+            redirect_url, status_code=302, headers={"Set-Cookie": cookie}
         )
+    else:
+        otp_in.field_errors.append(ErrorCodes.INVALID_OTP.value)
 
     return templates.TemplateResponse(
-        f"{template_prefix}verification.html", {"request": request}
+        f"{template_prefix}verification.html",
+        {"request": request, "field_errors": otp_in.field_errors},
     )
 
 
@@ -97,6 +109,16 @@ async def post_otp_verification(
 # Get or create user
 # TokenDao, TokenSerializers
 # Ecommerce security get_access_token
+# Send message on background task
+# Validate otp on expire
+# Validate cookie on expire
+# Token expire at midnight
+# Set cookie http only,
+# raise InvalidToken fix this <--
+# raise ExpiredAccessToken  <--
+# raise IncorrectCredentials <---
+# raise InactiveAccount <----
+# raise InsufficientUserPrivileges <---
 # Response
 # Throttling
 # redirect to home page
