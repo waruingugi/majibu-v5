@@ -12,10 +12,19 @@
                             <h4 class="text-center text-danger">Verification</h4>
                             <hr class="mt-0">
                             <p class="text-center mb-0">Enter the verification code sent to {{ phone }}</p>
+                            {% if field_errors %}
+                                <ul class="list-unstyled small text-danger">
+                                {% for error in field_errors %}
+                                    <li class="small">* {{ error }}</li>
+                                {% endfor %}
+                                </ul>
+                            {% endif %}
                             <form role="form" method="POST">
                                 <div class="form-group mb-3 mt-1">
                                     <input class="form-control text-center w-100" type="text" placeholder="__    __    __   __" name="otp" required="" minlength="4" maxlength="4" pattern="\d*" inputmode="numeric" autocomplete="one-time-code">
-                                    <small class="text-secondary"><a href="{{ url_for('get_phone_verification') }}">Send another code</a></small>
+                                    <small class="text-secondary">
+                                        <a href="{{ url_for('get_phone_verification') }}">Send another code</a>
+                                    </small>
                                 </div>
                                 <button class="btn btn-primary d-block w-100" id="btn-preferred" type="submit">Confirm</button>
                             </form>
