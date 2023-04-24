@@ -111,11 +111,6 @@ async def post_otp_verification(
 
 # Token expire at midnight
 # Messages to autofill
-# raise InvalidToken fix this <--
-# raise ExpiredAccessToken  <--
-# raise IncorrectCredentials <---
-# raise InactiveAccount <----
-# raise InsufficientUserPrivileges <---
 # Response
 # Throttling
 # redirect to home page
