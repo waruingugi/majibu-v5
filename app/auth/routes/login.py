@@ -109,9 +109,6 @@ async def post_otp_verification(
     )
 
 
-# Token expire at midnight
-# Messages to autofill
-# Response
 # Throttling
 # redirect to home page
 # If not valid, return to validation page
