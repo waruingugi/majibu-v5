@@ -33,6 +33,23 @@ class Auth2PasswordBearerWithCookie:  # Custom Auth2
         return param
 
 
+def clear_redis_tokens(db: Session, user_id: str) -> None:
+    """
+    Delete user access tokens saved in redis.
+    This prevents the user from logging in twice using different devices
+    using the token cached in redis.
+    token_dao.pre_create accomplishes the same but on the database level
+    """
+    logger.info(f"Clearing redis tokens related to user id: {user_id}")
+    user_tokens = token_dao.get_all(db, user_id=user_id)
+    redis_pipeline = redis.pipeline()
+
+    for token in user_tokens:
+        redis_pipeline.delete(md5_hash(token.access_token))
+
+    redis_pipeline.execute()
+
+
 def create_access_token(db: Session, subject: str, grant_type: str) -> dict:
     "Create access token token"
     access_token_ein = settings.ACCESS_TOKEN_EXPIRY_IN_SECONDS
@@ -72,6 +89,9 @@ def get_access_token(db: Session, *, user_id: str) -> AuthToken:
     )
 
     # Schedule commands for redis
+    # First clear previous tokens from redis
+    clear_redis_tokens(db, user_id)
+
     # (we're stroing access token to avoid querying the db)
     redis_pipeline = redis.pipeline()
     redis_pipeline.set(
