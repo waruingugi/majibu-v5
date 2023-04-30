@@ -29,23 +29,41 @@ app.include_router(session_api.router)
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request, exc):
-    field_errors: List = []
+    server_errors: List = []
 
     if hasattr(exc, "detail"):
-        field_errors.append(exc.detail)
+        server_errors.append(exc.detail)
     if hasattr(exc, "error_message"):
-        field_errors.append(exc.error_message)
+        server_errors.append(exc.error_message)
 
     return templates.TemplateResponse(
-        "auth/templates/login.html",
-        {"request": request, "field_errors": field_errors, "title": "New Message"},
+        "templates/info.html",
+        {"request": request, "server_errors": server_errors, "title": "New Message"},
     )
 
 
 @app.exception_handler(429)
 async def custom_429_handler(request, __):
-    field_errors: List = ["Too many requests, please try again later"]
+    server_errors: List = ["Too many requests, please try again later"]
+    return templates.TemplateResponse(
+        "templates/info.html",
+        {"request": request, "server_errors": server_errors, "title": "New Message"},
+    )
+
+
+@app.exception_handler(404)
+async def custom_404_handler(request, __):
+    server_errors: List = ["The requested page could not be found"]
+    return templates.TemplateResponse(
+        "templates/info.html",
+        {"request": request, "server_errors": server_errors, "title": "New Message"},
+    )
+
+
+@app.exception_handler(401)
+async def custom_401_handler(request, __):
+    server_errors: List = []
     return templates.TemplateResponse(
         "auth/templates/login.html",
-        {"request": request, "field_errors": field_errors, "title": "New Message"},
+        {"request": request, "server_errors": server_errors, "title": "Login"},
     )

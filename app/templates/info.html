@@ -1,0 +1,47 @@
+{% extends "templates/layout.html" %}
+
+{% block content %}
+    {% include "templates/navbar.html" %}
+
+    <section id="content-full-height" class="bg-light py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-5">
+                    <div class="card mt-5" id="content-card">
+                        <div class="card-body">
+                            <h4 class="text-center">New Message</h4>
+                            <hr class="mt-0">
+                            {% if server_errors|length %}
+                    
+                                {% for error in server_errors %}
+                                    <div id="info-box" class="bg-light border-danger">
+                                        <span>{{ error }}</span>
+                                    </div>
+                                {% endfor %}
+                            
+                            {% else %}
+                                <div id="info-box" class="bg-light border-danger">
+                                    <span>A server error occurred</span>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="card-footer bg-white border-0 mt-2 px-1">
+                                <div class="row">
+                                    <div class="col px-2">
+                                        <a href="{{ url_for('post_phone_verification') }}" class="btn btn-light d-block w-100" role="button">Get Support</a>
+                                    </div>
+                                    <div class="col px-2">
+                                        <a href="{{ url_for('get_home') }}" class="btn btn-primary d-block w-100" id="btn-preferred" type="button">Home</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% include 'templates/footer.html' %}
+
+{% endblock %}

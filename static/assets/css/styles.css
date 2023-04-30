@@ -219,3 +219,10 @@ body {
   font-size: 16px;
 }
 
+#info-box {
+  border-radius: 5px;
+  border-left-style: solid;
+  padding: 1rem 0.5rem !important;
+  margin-top: 0.5rem!important;
+  margin-bottom: 0.5rem!important;
+}
