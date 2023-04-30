@@ -107,8 +107,3 @@ async def post_otp_verification(
             "title": "Verification",
         },
     )
-
-
-# Throttling
-# redirect to home page
-# If not valid, return to validation page
