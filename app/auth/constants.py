@@ -1,6 +1,6 @@
 from enum import Enum
 
-OTP_MESSAGE = "Your Majibu confirmation code is {}"
+OTP_MESSAGE = "Your Majibu OTP is {}"
 
 
 class TokenGrantType(Enum):

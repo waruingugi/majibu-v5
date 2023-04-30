@@ -26,9 +26,8 @@ template_prefix = "auth/templates/"
 @router.get("/validate-phone/", response_class=HTMLResponse)
 async def get_phone_verification(request: Request):
     """Get login html"""
-
     return templates.TemplateResponse(
-        f"{template_prefix}login.html", {"request": request}
+        f"{template_prefix}login.html", {"request": request, "title": "Login"}
     )
 
 
@@ -60,7 +59,7 @@ async def post_phone_verification(
 
     return templates.TemplateResponse(
         f"{template_prefix}login.html",
-        {"request": request, "field_errors": phone_in.field_errors},
+        {"request": request, "title": "Login", "field_errors": phone_in.field_errors},
     )
 
 
@@ -71,7 +70,8 @@ async def get_otp_verification(
 ):
     """Get verification template"""
     return templates.TemplateResponse(
-        f"{template_prefix}verification.html", {"request": request, "phone": phone}
+        f"{template_prefix}verification.html",
+        {"request": request, "phone": phone, "title": "Verification"},
     )
 
 
@@ -101,25 +101,14 @@ async def post_otp_verification(
 
     return templates.TemplateResponse(
         f"{template_prefix}verification.html",
-        {"request": request, "field_errors": otp_in.field_errors},
+        {
+            "request": request,
+            "field_errors": otp_in.field_errors,
+            "title": "Verification",
+        },
     )
 
 
-# If valid, generate access token
-# Get or create user
-# TokenDao, TokenSerializers
-# Ecommerce security get_access_token
-# Send message on background task
-# Validate otp on expire
-# Validate cookie on expire
-# Token expire at midnight
-# Set cookie http only,
-# raise InvalidToken fix this <--
-# raise ExpiredAccessToken  <--
-# raise IncorrectCredentials <---
-# raise InactiveAccount <----
-# raise InsufficientUserPrivileges <---
-# Response
 # Throttling
 # redirect to home page
 # If not valid, return to validation page

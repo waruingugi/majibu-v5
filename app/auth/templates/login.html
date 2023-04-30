@@ -19,7 +19,7 @@
                                     {% endfor %}
                                     </ul>
                                 {% endif %}
-                                <form role="form" method="POST">
+                                <form role="form" action="{{ url_for('post_phone_verification') }}" method="POST">
                                     <div class="input-group mb-3 mt-1">
                                         <span class="input-group-text bg-light">
                                             <span class="fi fi-ke me-1"></span>+254</span>
