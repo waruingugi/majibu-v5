@@ -11,7 +11,7 @@
                             <h4 class="text-center">Choose Any Category</h4>
                             <hr class="mt-0">
                             <div class="mt-2 mb-4">
-                                <a class="btn btn-primary d-block my-3 w-100" role="button" id="btn-preferred">Football
+                                <a href="{{ url_for('get_summary', category=category) }}" class="btn btn-primary d-block my-3 w-100" role="button" id="btn-preferred">Football
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1em" height="1em" fill="currentColor" class="ms-2 animate__animated animate__flash" font-size="8px">
                                         <!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
                                         <path d="M512 256C512 397.4 397.4 512 256 512C114.6 512 0 397.4 0 256C0 114.6 114.6 0 256 0C397.4 0 512 114.6 512 256z"></path>
@@ -19,7 +19,7 @@
                                 </a>
                                 <a class="btn btn-light d-block w-100 my-3 custom-button-light" role="button">BIBLE</a>
                             </div>
-                            <a class="btn btn-light" role="button">
+                            <a href="{{ url_for('get_summary', category=category) }}" class="btn btn-light" role="button">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 0 512 512" width="1em" height="1em" fill="currentColor" class="me-2">
                                     <!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
                                     <path d="M447.1 256C447.1 273.7 433.7 288 416 288H109.3l105.4 105.4c12.5 12.5 12.5 32.75 0 45.25C208.4 444.9 200.2 448 192 448s-16.38-3.125-22.62-9.375l-160-160c-12.5-12.5-12.5-32.75 0-45.25l160-160c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25L109.3 224H416C433.7 224 447.1 238.3 447.1 256z"></path>

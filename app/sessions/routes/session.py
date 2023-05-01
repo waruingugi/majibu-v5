@@ -23,6 +23,24 @@ async def get_home(
     )
 
 
+@router.post("/summary/{category}", response_class=HTMLResponse)
+async def get_summary(
+    request: Request,
+    category: str,
+):
+    """Display session summary"""
+    return templates.TemplateResponse(
+        f"{template_prefix}summary.html",
+        {"request": request, "title": "Summary", "category": category},
+    )
+
+
+# Create templates
+# Opening soon template run on close
+# Request logger
+# Top banner to join whatsapp group - comming soon
+# No more sessions
+# Host on heroku, buy domain
 # Create models
 # Create tests
 # Create serializers

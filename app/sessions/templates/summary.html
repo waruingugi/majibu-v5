@@ -1,0 +1,55 @@
+{% extends "templates/layout.html" %}
+
+{% block content %}
+    {% include "templates/navbar.html" %}
+
+    <section id="content-full-height" class="py-4 bg-light">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-5">
+                    <div class="card mt-5" id="content-card">
+                        <div>
+                            <h4 class="card-header bg-white border-0"><strong>Summary</strong></h4>
+                        </div>
+                        <div class="card-body bg-light mx-2 py-2" style="border-radius: 8px;">
+                            <div class="row">
+                                <div class="col">
+                                    <p class="d-flex flex-column justify-content-lg-start">
+                                        <span class="small">Category - {{ category }}</span>
+                                        <small class="text-secondary">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="-64 0 512 512" width="1em" height="1em" fill="currentColor" class="me-1">
+                                                <!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                                <path d="M0 24C0 10.75 10.75 0 24 0H360C373.3 0 384 10.75 384 24C384 37.25 373.3 48 360 48H352V66.98C352 107.3 335.1 145.1 307.5 174.5L225.9 256L307.5 337.5C335.1 366 352 404.7 352 445V464H360C373.3 464 384 474.7 384 488C384 501.3 373.3 512 360 512H24C10.75 512 0 501.3 0 488C0 474.7 10.75 464 24 464H32V445C32 404.7 48.01 366 76.52 337.5L158.1 256L76.52 174.5C48.01 145.1 32 107.3 32 66.98V48H24C10.75 48 0 37.25 0 24V24zM99.78 384H284.2C281 379.6 277.4 375.4 273.5 371.5L192 289.9L110.5 371.5C106.6 375.4 102.1 379.6 99.78 384H99.78zM284.2 128C296.1 110.4 304 89.03 304 66.98V48H80V66.98C80 89.03 87 110.4 99.78 128H284.2z"></path>
+                                            </svg>Time: 15 seconds
+                                        </small>
+                                    </p>
+                                    <hr style="border-top-style: dashed;">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <ul class="list-unstyled small">
+                                        <li class="d-flex flex-row justify-content-between"><span class="badge py-1" style="background: #f0134d;">14 Days Free Trial</span></li>
+                                        <li class="d-flex flex-row justify-content-between"><span>Amount</span><span class="font-monospace">Ksh 200</span></li>
+                                        <li class="d-flex flex-row justify-content-between"><span>Fee</span><span class="font-monospace"><span style="text-decoration: line-through;">Ksh 17.50</span></span></li>
+                                        <li class="d-flex flex-row justify-content-between"><span><strong>Possible payout</strong></span><span class="font-monospace"><small><strong>Ksh&nbsp;</strong></small><strong>400</strong></span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 mt-2">
+                            <div class="row">
+                                <div class="col"><a class="btn btn-light d-block w-100" role="button">&nbsp;Back</a></div>
+                                <div class="col"><button class="btn btn-primary d-block w-100" id="btn-preferred" type="button" data-bs-target="#login" data-bs-toggle="modal"><span class="animate__animated animate__flash">Play Now</span></button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+        
+
+    {% include 'templates/footer.html' %}
+
+{% endblock %}
