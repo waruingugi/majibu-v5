@@ -5,6 +5,7 @@ from app.core.config import templates
 from app.users.models import User
 from app.core.deps import get_current_active_user
 from app.core.ratelimiter import limiter
+from app.commons.constants import Categories
 
 
 router = APIRouter()
@@ -19,11 +20,12 @@ async def get_home(
 ):
     """Get home page"""
     return templates.TemplateResponse(
-        f"{template_prefix}home.html", {"request": request, "title": "Home"}
+        f"{template_prefix}home.html",
+        {"request": request, "title": "Home", "categories": Categories.list_()},
     )
 
 
-@router.post("/summary/{category}", response_class=HTMLResponse)
+@router.get("/summary/{category}", response_class=HTMLResponse)
 async def get_summary(
     request: Request,
     category: str,
