@@ -21,3 +21,8 @@ async def get_home(
     return templates.TemplateResponse(
         f"{template_prefix}home.html", {"request": request, "title": "Home"}
     )
+
+
+# Create models
+# Create tests
+# Create serializers
