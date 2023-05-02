@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 
 from app.core.config import templates
 from app.users.models import User
-from app.core.deps import get_current_active_user, get_current_active_user_or_none
+from app.core.deps import get_current_active_user_or_none
 from app.core.ratelimiter import limiter
 from app.core.logger import LoggingRoute
 from app.commons.constants import Categories
@@ -17,7 +17,7 @@ template_prefix = "sessions/templates/"
 @limiter.limit("5/minute")
 async def get_home(
     request: Request,
-    _: User = Depends(get_current_active_user),
+    # _: User = Depends(get_current_active_user),
 ):
     """Get home page"""
     return templates.TemplateResponse(
@@ -49,9 +49,7 @@ async def get_summary(
     )
 
 
-# Request logger
-# Returning to previous page on login
-# Create templates
+# Protect docs
 # Opening soon template run on close
 # Request logger
 # Top banner to join whatsapp group - comming soon
