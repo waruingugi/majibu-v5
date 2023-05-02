@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 
 from app.core.config import templates
 from app.users.models import User
-from app.core.deps import get_current_active_user
+from app.core.deps import get_current_active_user, get_current_active_user_or_none
 from app.core.ratelimiter import limiter
 from app.commons.constants import Categories
 
@@ -29,11 +29,17 @@ async def get_home(
 async def get_summary(
     request: Request,
     category: str,
+    user: User = Depends(get_current_active_user_or_none),
 ):
     """Display session summary"""
     return templates.TemplateResponse(
         f"{template_prefix}summary.html",
-        {"request": request, "title": "Summary", "category": category},
+        {
+            "request": request,
+            "title": "Summary",
+            "category": category,
+            "is_logged_in": False if user is None else True,
+        },
     )
 
 

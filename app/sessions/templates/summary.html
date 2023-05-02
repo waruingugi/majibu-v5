@@ -1,6 +1,7 @@
 {% extends "templates/layout.html" %}
 
 {% block content %}
+    {% include "auth/templates/login_modal.html" %}
     {% include "templates/navbar.html" %}
 
     <section id="content-full-height" class="py-4 bg-light">
@@ -39,8 +40,19 @@
                         </div>
                         <div class="card-footer bg-white border-0 mt-2">
                             <div class="row">
-                                <div class="col"><a class="btn btn-light d-block w-100" role="button">&nbsp;Back</a></div>
-                                <div class="col"><button class="btn btn-primary d-block w-100" id="btn-preferred" type="button" data-bs-target="#login" data-bs-toggle="modal"><span class="animate__animated animate__flash">Play Now</span></button></div>
+                                <div class="col">
+                                    <a href="{{ url_for('get_home') }}" class="btn btn-light d-block w-100" role="button">&nbsp;Back</a>
+                                </div>
+                                <div class="col">
+                                    <a id="btn-preferred" href="{{ url_for('get_summary', category=category) }}" class="confirm btn btn-primary d-block w-100" id="btn-preferred" role="button" >
+                                        <span class="animate__animated animate__flash">Play Now</span>
+                                    </a>
+                                    <!--
+                                    <a href="{{ url_for('get_summary', category=category) }}" class="btn btn-primary d-block w-100" id="btn-preferred" role="button" >
+                                        <span class="animate__animated animate__flash">Play Now</span>
+                                    </a>
+                                    -->
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -51,5 +63,28 @@
         
 
     {% include 'templates/footer.html' %}
+
+
+    <script>
+
+        document.querySelector(".confirm").addEventListener("click", function(event) {
+            // Check if the user is logged in
+            var is_logged_in = JSON.parse('{{ is_logged_in | tojson }}');
+            if (is_logged_in) {
+                // User is logged in, allow the button to proceed with the HTTP GET request
+                return true;
+            } else {
+                // User is not logged in, prevent the default action of the href button
+                event.preventDefault();
+
+                // Show the login modal
+                var modal = document.getElementById('login')
+                const login_modal = new bootstrap.Modal(document.getElementById('login'))
+                login_modal.show()
+            }
+        });
+          
+
+    </script>
 
 {% endblock %}
