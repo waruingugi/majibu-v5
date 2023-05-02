@@ -33,6 +33,8 @@ async def get_summary(
     user: User = Depends(get_current_active_user_or_none),
 ):
     """Display session summary"""
+    preferred_redirect_url = request.url_for("get_summary", category=category)
+
     return templates.TemplateResponse(
         f"{template_prefix}summary.html",
         {
@@ -40,6 +42,9 @@ async def get_summary(
             "title": "Summary",
             "category": category,
             "is_logged_in": False if user is None else True,
+        },
+        headers={
+            "Set-Cookie": f"preferred_redirect_to={preferred_redirect_url}; path=/;"
         },
     )
 

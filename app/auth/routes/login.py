@@ -92,7 +92,9 @@ async def post_otp_verification(
 
         cookie = insert_token_in_cookie(token_obj)
 
-        redirect_url = request.url_for("get_home")
+        redirect_url = request.cookies.get("preferred_redirect_to", None)
+        if redirect_url is None:
+            redirect_url = request.url_for("get_home")
 
         return RedirectResponse(
             redirect_url, status_code=302, headers={"Set-Cookie": cookie}
