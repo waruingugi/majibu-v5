@@ -5,6 +5,7 @@ from app.core.deps import get_db
 from app.core.security import get_access_token
 
 from app.core.config import templates
+from app.core.logger import LoggingRoute
 from app.auth.serializers.auth import (  # noqa
     FormatPhoneSerializer,
     CreateOTPSerializer,
@@ -19,7 +20,7 @@ from app.errors.custom import ErrorCodes
 from app.core.security import insert_token_in_cookie
 
 
-router = APIRouter()
+router = APIRouter(route_class=LoggingRoute)
 template_prefix = "auth/templates/"
 
 

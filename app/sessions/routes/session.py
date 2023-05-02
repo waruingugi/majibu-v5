@@ -5,10 +5,11 @@ from app.core.config import templates
 from app.users.models import User
 from app.core.deps import get_current_active_user, get_current_active_user_or_none
 from app.core.ratelimiter import limiter
+from app.core.logger import LoggingRoute
 from app.commons.constants import Categories
 
 
-router = APIRouter()
+router = APIRouter(route_class=LoggingRoute)
 template_prefix = "sessions/templates/"
 
 
@@ -43,6 +44,8 @@ async def get_summary(
     )
 
 
+# Request logger
+# Returning to previous page on login
 # Create templates
 # Opening soon template run on close
 # Request logger

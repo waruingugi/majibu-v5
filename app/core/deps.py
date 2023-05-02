@@ -36,7 +36,6 @@ async def get_decoded_token(
     token: str = Depends(Auth2PasswordBearerWithCookie()),
 ) -> Dict | None:
     """Decode the token"""
-
     if check_access_token_is_valid(db, access_token=token):
         try:
             payload = jwt.decode(
