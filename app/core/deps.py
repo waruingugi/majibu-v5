@@ -21,8 +21,9 @@ from app.exceptions.custom import (
 )
 
 from jose import JWTError, jwt
-from fastapi import Depends, Response, Security
+from fastapi import Depends, Security, Request
 from pydantic import ValidationError
+from starlette.datastructures import MutableHeaders
 
 
 def get_db() -> Generator:
@@ -31,7 +32,7 @@ def get_db() -> Generator:
 
 
 async def get_decoded_token(
-    response: Response,
+    request: Request,
     db: Session = Depends(get_db),
     token: str = Depends(Auth2PasswordBearerWithCookie()),
 ) -> Dict | None:
@@ -46,7 +47,12 @@ async def get_decoded_token(
             )
 
             # ´x-user-id´ response header is used in logging
-            response.headers["x-user-id"] = payload["user_id"]
+            """In APIs, we set this in the response header. However, because we're
+            """
+            request_header = MutableHeaders(request._headers)
+            request_header["x-user-id"] = payload["user_id"]
+            request._headers = request_header
+
             return payload
         except (JWTError, ValidationError):
             raise InvalidToken

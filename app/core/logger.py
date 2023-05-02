@@ -28,7 +28,7 @@ class LoggingRoute(APIRoute):
             response_log_data = dict(
                 status_code=response.status_code,
                 response_id=request.headers.get("x-request-id", None),
-                user_id=response.headers.get("x-user-id", None),
+                user_id=request._headers.get("x-user-id", None),
             )
 
             request_identifier = f"by {response_log_data['user_id']}"

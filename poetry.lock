@@ -42,6 +42,24 @@ test = ["contextlib2", "coverage[toml] (>=4.5)", "hypothesis (>=4.0)", "mock (>=
 trio = ["trio (>=0.16,<0.22)"]
 
 [[package]]
+name = "asgi-correlation-id"
+version = "4.2.0"
+description = "Middleware correlating project logs to individual requests"
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "asgi_correlation_id-4.2.0-py3-none-any.whl", hash = "sha256:bd3321a4022f38179db775d27c40cb45130ac9429d569cd59b5474cb2f65fb1b"},
+    {file = "asgi_correlation_id-4.2.0.tar.gz", hash = "sha256:9d7dcfc2ed016f6e594fffd553788ac70129db7f92bb4dc268ab0b1a3284de5a"},
+]
+
+[package.dependencies]
+starlette = ">=0.18"
+
+[package.extras]
+celery = ["celery"]
+
+[[package]]
 name = "async-timeout"
 version = "4.0.2"
 description = "Timeout context manager for asyncio programs"
@@ -1783,4 +1801,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "e24818d5b3ccea2cc0b7b7c85fc227c8d86f2790f1778fde58f45cc285347c1a"
+content-hash = "dff0970d8622a46447605bfc1d07bd2828ddba7b07943d6fcdee1f07fde04ca3"

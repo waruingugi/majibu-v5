@@ -1,12 +1,13 @@
 from typing import List
-
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI
+
 from app.auth import api as auth_api
 from app.sessions import api as session_api
 from app.core.config import templates
-from fastapi.staticfiles import StaticFiles
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from asgi_correlation_id import CorrelationIdMiddleware
 
 
 # Rate limiter
@@ -20,6 +21,7 @@ app = FastAPI()
 # Rate limiter
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(CorrelationIdMiddleware)
 
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
