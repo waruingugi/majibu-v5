@@ -2,7 +2,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI
 
 from app.auth import api as auth_api
-from app.sessions import api as session_api
+from app.sessions import api as sessions_api
+from app.accounts import api as accounts_api
 
 from asgi_correlation_id import CorrelationIdMiddleware
 
@@ -24,6 +25,7 @@ app.add_middleware(CorrelationIdMiddleware)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(auth_api.router)
-app.include_router(session_api.router)
+app.include_router(sessions_api.router)
+app.include_router(accounts_api.router)
 
 register_exception_handlers(app)
