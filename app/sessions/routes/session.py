@@ -49,6 +49,8 @@ async def get_summary(
     )
 
 
+# Navbar Account balance
+# Account - mpesa
 # Protect docs
 # Opening soon template run on close
 # Request logger
