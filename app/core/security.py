@@ -33,6 +33,18 @@ class Auth2PasswordBearerWithCookie:  # Custom Auth2
         return param
 
 
+class OptionalAuth2PasswordBearerWithCookie:  # Custom Auth2
+    async def __call__(self, request: Request) -> Optional[str]:
+        # Changed to accept access token from httpOnly Cookie
+        logger.info("Running optional search for access token from cookie")
+        authorization: str = request.cookies.get("access_token")  # type: ignore
+
+        scheme, param = get_authorization_scheme_param(authorization)
+        if not authorization or scheme.lower() != "bearer":
+            return None
+        return param
+
+
 def clear_redis_tokens(db: Session, user_id: str) -> None:
     """
     Delete user access tokens saved in redis.
