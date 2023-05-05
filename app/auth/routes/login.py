@@ -1,7 +1,7 @@
-from fastapi import Request, APIRouter, Depends, BackgroundTasks
+from fastapi import Request, APIRouter, Depends, BackgroundTasks, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
-from app.core.deps import get_db
+from app.core.deps import get_current_active_user_or_none, get_db
 from app.core.security import get_access_token
 
 from app.core.config import templates
@@ -16,6 +16,7 @@ from app.auth.otp import create_otp, validate_otp  # noqa
 from app.notifications.daos.notifications import notifications_dao  # noqa
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
+from app.users.models import User
 from app.errors.custom import ErrorCodes
 from app.core.security import insert_token_in_cookie
 
@@ -92,9 +93,9 @@ async def post_otp_verification(
 
         cookie = insert_token_in_cookie(token_obj)
 
-        redirect_url = request.cookies.get("preferred_redirect_to", None)
-        if redirect_url is None:
-            redirect_url = request.url_for("get_home")
+        redirect_url = request.cookies.get(
+            "preferred_redirect_to", request.url_for("get_home")
+        )
 
         return RedirectResponse(
             redirect_url, status_code=302, headers={"Set-Cookie": cookie}
@@ -110,3 +111,24 @@ async def post_otp_verification(
             "title": "Verification",
         },
     )
+
+
+@router.get("/logout", response_class=HTMLResponse)
+async def logout(
+    request: Request,
+    response: Response,
+    user: User = Depends(get_current_active_user_or_none),
+):
+    """Log out the current user"""
+    # response.set_cookie(key="access_token", value="", max_age=1)
+    # response.delete_cookie("access_token", domain="localhost")
+    response = templates.TemplateResponse(
+        f"{template_prefix}login.html",
+        {
+            "request": request,
+            "title": "Login",
+            "is_logged_in": False if user is None else True,
+        },
+    )
+    response.delete_cookie("access_token")
+    return response

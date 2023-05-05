@@ -7,8 +7,12 @@ from fastapi import BackgroundTasks
 from app.core.raw_logger import logger
 
 
-RESTRICTED_PAYLOAD_URLS = [
-    "auth//validate-otp/",
+RESTRICTED_PAYLOAD_URLS = []
+
+UNPREFERRED_REDIRECT_URLS = [
+    "auth/validate-phone/",
+    "auth/validate-otp/",
+    "auth/logout",
 ]
 
 
@@ -24,6 +28,13 @@ class LoggingRoute(APIRoute):
 
             if not response.background:
                 response.background = BackgroundTasks()
+
+            if should_set_preferred_redirect_url_cookie(request):
+                # Set the url to redirect to after login
+                # It is set for each page request except for those in UNPREFERRED_REDIRECT_URLS
+                response.set_cookie(
+                    key="preferred_redirect_to", value=request.headers["referer"]
+                )
 
             response_log_data = dict(
                 status_code=response.status_code,
@@ -55,6 +66,19 @@ class LoggingRoute(APIRoute):
             return response
 
         return custom_route_handler
+
+
+def should_set_preferred_redirect_url_cookie(request: Request) -> bool:
+    """Do not redirect to UNPREFERRED_REDIRECT_URLS urls after login"""
+    referer_url = request.headers.get("referer", None)
+
+    if referer_url is None:
+        return False
+    for url in UNPREFERRED_REDIRECT_URLS:
+        if url in referer_url:
+            return False
+
+    return True
 
 
 def should_log_payload(request: Request) -> bool:
