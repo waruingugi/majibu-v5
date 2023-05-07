@@ -23,6 +23,18 @@ async def get_wallet(
     )
 
 
+@router.get("/deposit/", response_class=HTMLResponse)
+async def get_deposit(
+    request: Request,
+    _: User = Depends(get_current_active_user),
+):
+    """Get deposit page"""
+    return templates.TemplateResponse(
+        f"{template_prefix}deposit.html",
+        {"request": request, "title": "Deposit"},
+    )
+
+
 # Navbar Account balance
 # Deposit
 # Models
