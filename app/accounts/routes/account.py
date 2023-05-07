@@ -21,3 +21,18 @@ async def get_wallet(
         f"{template_prefix}wallet.html",
         {"request": request, "title": "Wallet"},
     )
+
+
+# Navbar Account balance
+# Deposit
+# Models
+# Test models
+# Account - mpesa
+# Protect docs
+# Opening soon template run on close
+# Top banner to join whatsapp group - comming soon
+# No more sessions
+# Host on heroku, buy domain
+# Create models
+# Create tests
+# Create serializers
