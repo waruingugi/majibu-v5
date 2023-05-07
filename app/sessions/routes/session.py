@@ -42,18 +42,3 @@ async def get_summary(
             "is_logged_in": False if user is None else True,
         },
     )
-
-
-# Navbar Account balance
-# logout
-# Clean tests
-# Account - mpesa
-# Protect docs
-# Opening soon template run on close
-# Request logger
-# Top banner to join whatsapp group - comming soon
-# No more sessions
-# Host on heroku, buy domain
-# Create models
-# Create tests
-# Create serializers
