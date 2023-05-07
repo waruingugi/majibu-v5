@@ -35,6 +35,18 @@ async def get_deposit(
     )
 
 
+@router.get("/withdraw/", response_class=HTMLResponse)
+async def get_withdraw(
+    request: Request,
+    _: User = Depends(get_current_active_user),
+):
+    """Get withdraw page"""
+    return templates.TemplateResponse(
+        f"{template_prefix}withdraw.html",
+        {"request": request, "title": "Withdraw"},
+    )
+
+
 # Navbar Account balance
 # Deposit
 # Models
