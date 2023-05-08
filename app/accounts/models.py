@@ -1,11 +1,15 @@
 from app.db.base_class import Base
+from app.accounts.constants import TransactionStatuses
+from app.accounts.utils import generate_transaction_code
+
 from sqlalchemy import String, Numeric, text, Text, JSON
 from sqlalchemy.orm import mapped_column
-from app.accounts.constants import TransactionStatuses
 
 
 class Transactions(Base):
-    transaction_id = mapped_column(String, nullable=False)
+    transaction_id = mapped_column(
+        String, nullable=False, unique=True, default=generate_transaction_code
+    )
     account = mapped_column(String, nullable=False)
     external_transaction_id = mapped_column(String, nullable=False)
     initial_balance = mapped_column(Numeric, server_default=text("0.0"), default=0)
