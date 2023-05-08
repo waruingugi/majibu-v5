@@ -40,6 +40,7 @@ def get_mpesa_access_token() -> str:
     seconds less than the one provided by Mpesa just to be safe.
     """
     access_token = redis.get("mpesa_access_token")
+
     if access_token:
         access_token = (
             str(access_token, "utf-8")
@@ -54,7 +55,7 @@ def get_mpesa_access_token() -> str:
         )
 
         req = requests.get(url, auth=auth, verify=True)
-        res = json.loads(req.text)
+        res = req.json()
 
         access_token = res["access_token"]
         # The timeout set by mpesa is `3599` so we subtract 200 to be safe
