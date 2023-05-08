@@ -1,20 +1,12 @@
 from pydantic import validator, root_validator, BaseModel
 from pydantic.dataclasses import dataclass
 from fastapi import Form
-from typing import List
 import phonenumbers
 
 from app.core.helpers import validate_phone_number
 from app.core.raw_logger import logger
 from app.core.config import settings
-
-
-@dataclass
-class BaseFormSerializer:
-    field_errors: List[str]
-
-    def is_valid(self):
-        return True if not self.field_errors else False
+from app.commons.serializers.commons import BaseFormSerializer
 
 
 @dataclass

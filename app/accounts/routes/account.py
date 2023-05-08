@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse
 
 from app.core.config import templates
 from app.users.models import User
+from app.accounts.serializers.account import DepositSerializer
 from app.core.deps import get_current_active_user
 from app.core.logger import LoggingRoute
 
@@ -29,6 +30,19 @@ async def get_deposit(
     _: User = Depends(get_current_active_user),
 ):
     """Get deposit page"""
+    return templates.TemplateResponse(
+        f"{template_prefix}deposit.html",
+        {"request": request, "title": "Deposit"},
+    )
+
+
+@router.post("/deposit/", response_class=HTMLResponse)
+async def post_deposit(
+    request: Request,
+    amount: DepositSerializer = Depends(),
+    _: User = Depends(get_current_active_user),
+):
+    """Post deposit amount page"""
     return templates.TemplateResponse(
         f"{template_prefix}deposit.html",
         {"request": request, "title": "Deposit"},

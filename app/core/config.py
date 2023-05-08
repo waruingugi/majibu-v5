@@ -56,6 +56,23 @@ class Settings(BaseSettings):
 
     SUPERUSER_PHONE: str
 
+    MPESA_BUSINESS_SHORT_CODE: str
+    MPESA_PASS_KEY: str
+    MPESA_CONSUMER_KEY: str
+    MPESA_SECRET: str
+    MPESA_DATETIME_FORMAT: str = "%Y%m%d%H%M%S"
+    MPESA_CALLBACK_URL: str
+    MPESA_TOKEN_URL: str = (
+        "https://sandbox.safaricom.co.ke/oauth/v1/"
+        "generate?grant_type=client_credentials"
+    )
+    MPESA_STKPUSH_URL: str = (
+        "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest"
+    )
+    MPESA_STKPUSH_QUERY_URL: str = (
+        "https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query"
+    )
+
     class Config:
         env_file = ".env"
         case_sensitive = True
