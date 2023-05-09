@@ -54,13 +54,9 @@ async def post_deposit(
 ):
     """Post deposit amount page"""
     trigger_mpesa_stkpush_payment(amount=deposit.amount, phone_number=user.phone)
+
     redirect_url = request.url_for("get_stkpush")
     return RedirectResponse(redirect_url, status_code=302)
-
-    # return templates.TemplateResponse(
-    #     f"{template_prefix}deposit.html",
-    #     {"request": request, "title": "Deposit"},
-    # )
 
 
 @router.get("/stk/", response_class=HTMLResponse)
