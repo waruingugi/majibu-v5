@@ -1,9 +1,11 @@
 from fastapi import Request, APIRouter, Depends
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
+import phonenumbers
 
-from app.core.config import templates
+from app.core.config import templates, settings
 from app.users.models import User
 from app.accounts.serializers.account import DepositSerializer
+from app.accounts.utils import trigger_mpesa_stkpush_payment
 from app.core.deps import get_current_active_user
 from app.core.logger import LoggingRoute
 
@@ -27,25 +29,49 @@ async def get_wallet(
 @router.get("/deposit/", response_class=HTMLResponse)
 async def get_deposit(
     request: Request,
-    _: User = Depends(get_current_active_user),
+    user: User = Depends(get_current_active_user),
 ):
     """Get deposit page"""
+    account = phonenumbers.format_number(
+        phonenumbers.parse(user.phone), phonenumbers.PhoneNumberFormat.NATIONAL
+    )
     return templates.TemplateResponse(
         f"{template_prefix}deposit.html",
-        {"request": request, "title": "Deposit"},
+        {
+            "request": request,
+            "title": "Deposit",
+            "account": account,
+            "paybill": settings.MPESA_BUSINESS_SHORT_CODE,
+        },
     )
 
 
 @router.post("/deposit/", response_class=HTMLResponse)
 async def post_deposit(
     request: Request,
-    amount: DepositSerializer = Depends(),
-    _: User = Depends(get_current_active_user),
+    deposit: DepositSerializer = Depends(),
+    user: User = Depends(get_current_active_user),
 ):
     """Post deposit amount page"""
+    trigger_mpesa_stkpush_payment(amount=deposit.amount, phone_number=user.phone)
+    redirect_url = request.url_for("get_stkpush")
+    return RedirectResponse(redirect_url, status_code=302)
+
+    # return templates.TemplateResponse(
+    #     f"{template_prefix}deposit.html",
+    #     {"request": request, "title": "Deposit"},
+    # )
+
+
+@router.get("/stk/", response_class=HTMLResponse)
+async def get_stkpush(
+    request: Request,
+    _: User = Depends(get_current_active_user),
+):
+    """Get STKPush page"""
     return templates.TemplateResponse(
-        f"{template_prefix}deposit.html",
-        {"request": request, "title": "Deposit"},
+        f"{template_prefix}stkpush_sent.html",
+        {"request": request, "title": "New message"},
     )
 
 

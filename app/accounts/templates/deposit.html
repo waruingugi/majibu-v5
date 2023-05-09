@@ -13,10 +13,11 @@
                             <h4 class="text-center">Deposit</h4>
                             <hr class="mt-0">
                             <div class="bg-light p-3 mb-4 rounded">
-                                <form><label class="form-label small">Enter amount you wish to deposit</label>
+                                <form role="form" action="{{ url_for('post_deposit') }}" method="POST">
+                                    <label class="form-label small">Enter amount you wish to deposit</label>
                                     <div class="input-group mb-1">
                                         <span class="input-group-text bg-white">Ksh</span>
-                                        <input class="form-control border-start-0" type="tel" min="1" max="5000" maxlength="4" name="amount" required="" minlength="1" pattern="[0-9]+" autocomplete="off" inputmode="tel">
+                                        <input class="form-control border-start-0" type="number" min="1" max="5000" maxlength="4" name="amount" required="" minlength="1" pattern="[0-9]+" autocomplete="off" inputmode="tel">
                                         <button class="btn btn-primary" id="btn-preferred" type="submit">Deposit</button>
                                     </div>
                                 </form>
@@ -28,14 +29,14 @@
                                             <img class="card-img-top w-100 d-block" src="{{ url_for('static', path='assets/img/mpesa-logo.svg') }}" height="40px">
                                         </div>
                                     </div>
-                                    <div class="col"><small>Or use M-Pesa Paybill 686105</small></div>
+                                    <div class="col"><small>Or use M-Pesa Paybill {{ paybill }}</small></div>
                                 </div>
                                 <hr style="border-top-style: dashed;">
                                 <ul class="small ps-4 mb-0">
                                     <li>Go to Lipa Na M-Pesa</li>
                                     <li>Click on Paybill</li>
-                                    <li>Enter Business number as <strong>686105</strong></li>
-                                    <li>Enter account no as <strong>0704845678</strong></li>
+                                    <li>Enter Business number as <strong>{{ paybill }}</strong></li>
+                                    <li>Enter account no as <strong>{{ account }}</strong></li>
                                     <li>Enter amount you wish to deposit</li>
                                     <li>Enter your M-Pesa pin and confirm your request</li>
                                     <li>You balance will reflect in your account within 3 minutes.</li>

@@ -12,6 +12,6 @@ class ErrorCodes(str, Enum):
     INCORRECT_USERNAME_OR_PASSWORD = "Incorrect username or password"
     USERS_PRIVILEGES_NOT_ENOUGH = "This user doesn't have enough privileges"
     STKPushFailed = (
-        "An error ocurred while initiating the STKPush request"
+        "An error ocurred while initiating the STKPush request. "
         "Please try the payment again using our Business PayBill"
     )

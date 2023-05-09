@@ -14,8 +14,10 @@ def register_exception_handlers(app: FastAPI) -> None:
 
         if hasattr(exc, "detail"):
             server_errors.append(exc.detail)
-        if hasattr(exc, "error_message"):
+        elif hasattr(exc, "error_message"):
             server_errors.append(exc.error_message)
+        else:
+            pass  # No specific error message was found
 
         return templates.TemplateResponse(
             template,
