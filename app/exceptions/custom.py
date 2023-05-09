@@ -67,9 +67,9 @@ class InsufficientUserPrivileges(HttpErrorException):
         )
 
 
-class StkPushFailed(HttpErrorException):
+class STKPushFailed(HttpErrorException):
     def __init__(self) -> None:
-        super(StkPushFailed, self).__init__(
+        super(STKPushFailed, self).__init__(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             error_code=ErrorCodes.STKPushFailed.name,
             error_message=ErrorCodes.STKPushFailed.value,

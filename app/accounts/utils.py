@@ -2,7 +2,6 @@ import hashlib
 import hmac
 import base64
 import requests
-import json
 from base64 import b64encode
 from typing import Optional, Dict
 from datetime import datetime
@@ -10,7 +9,7 @@ from datetime import datetime
 from app.core.raw_logger import logger
 from app.core.config import settings, redis
 from app.accounts.constants import MpesaAccountTypes
-from app.exceptions.custom import StkPushFailed
+from app.exceptions.custom import STKPushFailed
 
 
 def generate_transaction_code():
@@ -75,8 +74,8 @@ def initiate_mpesa_stkpush_payment(
     passkey: str,
     transaction_type: str,
     callback_url: str,
-    reference: Optional[str],
-    description: Optional[str],
+    reference: str,
+    description: str,
 ) -> Dict:
     """Trigger STKPush"""
     access_token = get_mpesa_access_token()
@@ -106,11 +105,12 @@ def initiate_mpesa_stkpush_payment(
         "TransactionDesc": description,
     }
     response = requests.post(api_url, json=data, headers=headers, verify=True)
+
     if response.ok:
-        return json.loads(response.text)
+        return response.json()
     else:
         logger.warning(f"STKPush failed with response: {response.text}")
-        raise StkPushFailed
+        raise STKPushFailed
 
 
 def trigger_mpesa_stkpush_payment(amount: int, phone_number: str) -> Optional[Dict]:
@@ -137,6 +137,6 @@ def trigger_mpesa_stkpush_payment(amount: int, phone_number: str) -> Optional[Di
         )
         return data
 
-    except StkPushFailed as e:
+    except STKPushFailed as e:
         logger.warning(f"STKPush failed with exception: {e}")
-        raise StkPushFailed
+        raise STKPushFailed
