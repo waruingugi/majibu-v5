@@ -1,7 +1,11 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from app.accounts.utils import get_mpesa_access_token, initiate_mpesa_stkpush_payment
+from app.accounts.utils import (
+    get_mpesa_access_token,
+    initiate_mpesa_stkpush_payment,
+    trigger_mpesa_stkpush_payment,
+)
 from app.core.config import redis, settings
 from app.accounts.constants import MpesaAccountTypes
 from app.exceptions.custom import STKPushFailed
@@ -93,3 +97,17 @@ class TestMpesaSTKPush(unittest.TestCase):
                 reference=settings.SUPERUSER_PHONE,
                 description="",
             )
+
+    @patch("app.accounts.utils.initiate_mpesa_stkpush_payment")
+    def test_trigger_mpesa_stkpush_payment(self, mock_initiate_mpesa_stkpush_payment):
+        mock_initiate_mpesa_stkpush_payment.return_value = {
+            "MerchantRequestID": "29115-34620561-1",
+            "CheckoutRequestID": "ws_CO_191220191020363925",
+            "ResponseCode": "0",
+            "ResponseDescription": "Success. Request accepted for processing",
+            "CustomerMessage": "Success. Request accepted for processing",
+        }
+        response = trigger_mpesa_stkpush_payment(
+            amount=1, phone_number=settings.SUPERUSER_PHONE
+        )
+        assert response == mock_initiate_mpesa_stkpush_payment.return_value
