@@ -24,7 +24,7 @@ class TestMpesaSTKPush(unittest.TestCase):
 
     @patch("app.accounts.utils.requests")
     def test_get_mpesa_access_token(self, mock_requests):
-        expected_access_token = "c9SQxWWhmdVRlyh0zh8gZDTkubVF"
+        expected_access_token = "fake_access_token"
         self.mock_response.json.return_value = {
             "access_token": expected_access_token,
             "expires_in": "3599",
@@ -36,7 +36,7 @@ class TestMpesaSTKPush(unittest.TestCase):
 
     @patch("app.accounts.utils.requests")
     def test_get_mpesa_access_token_is_set_in_redis(self, mock_requests):
-        expected_access_token = "c9SQxWWhmdVRlyh0zh8gZDTkubVF"
+        expected_access_token = "fake_access_token"
         self.mock_response.json.return_value = {
             "access_token": expected_access_token,
             "expires_in": "3599",
@@ -50,7 +50,7 @@ class TestMpesaSTKPush(unittest.TestCase):
 
     @patch("app.accounts.utils.get_mpesa_access_token")
     def test_initiate_mpesa_stkpush_payment(self, mock_get_mpesa_access_token):
-        mock_get_mpesa_access_token.return_value = "c9SQxWWhmdVRlyh0zh8gZDTkubVF"
+        mock_get_mpesa_access_token.return_value = "fake_access_token"
 
         with patch("app.accounts.utils.requests") as mock_requests:
             self.mock_response.json.return_value = {
@@ -81,7 +81,7 @@ class TestMpesaSTKPush(unittest.TestCase):
     def test_initiate_mpesa_stkpush_payment_raises_exception(
         self, mock_get_mpesa_access_token, mock_requests
     ):
-        mock_get_mpesa_access_token.return_value = "c9SQxWWhmdVRlyh0zh8gZDTkubVF"
+        mock_get_mpesa_access_token.return_value = "fake_access_token"
 
         with self.assertRaises(Exception):
             mock_requests.side_effect = STKPushFailed
