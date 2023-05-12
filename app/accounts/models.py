@@ -2,7 +2,7 @@ from app.db.base_class import Base
 from app.accounts.constants import TransactionStatuses
 from app.accounts.utils import generate_transaction_code
 
-from sqlalchemy import String, Numeric, text, Text, JSON
+from sqlalchemy import String, Numeric, text, Text, JSON, Integer
 from sqlalchemy.orm import mapped_column
 
 
@@ -28,3 +28,37 @@ class Transactions(Base):
     service = mapped_column(String, nullable=False)
     description = mapped_column(Text, nullable=False)
     external_response = mapped_column(JSON, nullable=True)
+
+
+class MpesaPayments(Base):
+    """
+    Records for Payment done through Mpesa.
+
+    Response Section.
+    Contains attributes populated by the synchronous response after posting the
+    request to mpesa stk push url
+    """
+
+    account = mapped_column(String, nullable=False)
+    merchant_request_id = mapped_column(
+        String, comment="Global unique Identifier for any submitted payment request."
+    )
+    checkout_request_id = mapped_column(
+        String,
+        comment="Global unique identifier for the processed transaction request.",
+    )
+    response_code = mapped_column(
+        Integer,
+        comment=(
+            "Indicates the status of the transaction submission. 0 means "
+            "successful submission and any other code means an error occurred."
+        ),
+    )
+    response_description = mapped_column(
+        Text, nullable=True, comment="Description message of the Response Code."
+    )
+    customer_message = mapped_column(
+        Text,
+        nullable=True,
+        comment="Message as an acknowledgement of the payment request submission.",
+    )

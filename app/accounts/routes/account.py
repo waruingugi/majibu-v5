@@ -83,6 +83,15 @@ async def get_withdraw(
     )
 
 
+@router.post("/payments/callback/")
+async def post_confirmation(
+    request: Request,
+):
+    return {"Received": 1}
+
+
+# If 0 response in stkpush - successfull
+# Receives sms on paybill payment
 # Navbar Account balance
 # Deposit
 # Models

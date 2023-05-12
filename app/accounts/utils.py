@@ -105,9 +105,10 @@ def initiate_mpesa_stkpush_payment(
         "TransactionDesc": description,
     }
     response = requests.post(api_url, json=data, headers=headers, verify=True)
+    response_data = response.json()
 
-    if response.ok:
-        return response.json()
+    if response_data["ResponseCode"] == "0":  # 0 means response is ok
+        return response_data
     else:
         logger.warning(f"STKPush failed with response: {response.text}")
         raise STKPushFailed
