@@ -1,13 +1,17 @@
 from fastapi import Request, APIRouter, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
+from sqlalchemy.orm import Session
 import phonenumbers
 
 from app.core.config import templates, settings
 from app.users.models import User
 from app.accounts.serializers.account import DepositSerializer
 from app.accounts.utils import trigger_mpesa_stkpush_payment
-from app.core.deps import get_current_active_user
+from app.core.deps import get_current_active_user, get_db
+from app.accounts.serializers.mpesa import MpesaPaymentCreateSerializer
+from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.core.logger import LoggingRoute
+from app.core.ratelimiter import limiter
 
 
 router = APIRouter(route_class=LoggingRoute)
@@ -47,13 +51,29 @@ async def get_deposit(
 
 
 @router.post("/deposit/", response_class=HTMLResponse)
+@limiter.limit("5/minute")
 async def post_deposit(
     request: Request,
-    deposit: DepositSerializer = Depends(),
     user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+    deposit: DepositSerializer = Depends(),
 ):
     """Post deposit amount page"""
-    trigger_mpesa_stkpush_payment(amount=deposit.amount, phone_number=user.phone)
+    data = trigger_mpesa_stkpush_payment(amount=deposit.amount, phone_number=user.phone)
+
+    if data is not None:
+        # Save the checkout response to db for future reference
+        mpesa_payment_dao.create(
+            db,
+            MpesaPaymentCreateSerializer(
+                phone=data["phone_number"],
+                merchant_request_id=data["MerchantRequestID"],
+                checkout_request_id=data["CheckoutRequestID"],
+                response_code=data["ResponseCode"],
+                response_description=data["ResponseDescription"],
+                customer_message=data["CustomerMessage"],
+            ),
+        )
 
     redirect_url = request.url_for("get_stkpush")
     return RedirectResponse(redirect_url, status_code=302)
@@ -83,6 +103,15 @@ async def get_withdraw(
     )
 
 
+@router.post("/payments/callback/")
+async def post_confirmation(
+    request: Request,
+):
+    return {"Received": 1}
+
+
+# Throttle stkpush
+# Receives sms on paybill payment
 # Navbar Account balance
 # Deposit
 # Models

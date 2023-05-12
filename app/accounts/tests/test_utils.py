@@ -49,7 +49,9 @@ class TestMpesaSTKPush(unittest.TestCase):
         assert mock_requests.get.call_count == 1
 
     @patch("app.accounts.utils.get_mpesa_access_token")
-    def test_initiate_mpesa_stkpush_payment(self, mock_get_mpesa_access_token):
+    def test_initiate_mpesa_stkpush_payment_returns_successful_response(
+        self, mock_get_mpesa_access_token
+    ):
         mock_get_mpesa_access_token.return_value = "fake_access_token"
 
         with patch("app.accounts.utils.requests") as mock_requests:

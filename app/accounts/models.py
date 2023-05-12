@@ -1,9 +1,33 @@
 from app.db.base_class import Base
 from app.accounts.constants import TransactionStatuses
-from app.accounts.utils import generate_transaction_code
+from app.core.raw_logger import logger
+from app.core.config import settings
 
-from sqlalchemy import String, Numeric, text, Text, JSON
+from sqlalchemy import String, Numeric, text, Text, JSON, Integer
 from sqlalchemy.orm import mapped_column
+from datetime import datetime
+import hashlib
+import hmac
+import base64
+
+
+def generate_transaction_code():
+    """Generate unique transaction codes"""
+    logger.info("Generating unique transaction code")
+
+    # Create uniqueness based on date
+    now = datetime.now()
+    msg = f"{now.month}{now.day}{now.hour}{now.minute}{now.second}{now.microsecond}".encode(
+        "utf-8"
+    )
+    secret_key = bytes(settings.SECRET_KEY, "utf-8")
+    signature = hmac.new(secret_key, msg=msg, digestmod=hashlib.sha256).digest()
+
+    transaction_id = base64.urlsafe_b64encode(signature).decode("utf-8").rstrip("=")
+    transaction_id = transaction_id.upper()  # Convert transaction_id to uppercase
+    transaction_code = "".join([c for c in transaction_id if c.isalnum()])
+
+    return f"M{transaction_code[:8]}"
 
 
 class Transactions(Base):
@@ -28,3 +52,37 @@ class Transactions(Base):
     service = mapped_column(String, nullable=False)
     description = mapped_column(Text, nullable=False)
     external_response = mapped_column(JSON, nullable=True)
+
+
+class MpesaPayments(Base):
+    """
+    Records for Payment done through Mpesa.
+
+    Response Section.
+    Contains attributes populated by the synchronous response after posting the
+    request to mpesa stk push url
+    """
+
+    phone = mapped_column(String, nullable=False)
+    merchant_request_id = mapped_column(
+        String, comment="Global unique Identifier for any submitted payment request."
+    )
+    checkout_request_id = mapped_column(
+        String,
+        comment="Global unique identifier for the processed transaction request.",
+    )
+    response_code = mapped_column(
+        Integer,
+        comment=(
+            "Indicates the status of the transaction submission. 0 means "
+            "successful submission and any other code means an error occurred."
+        ),
+    )
+    response_description = mapped_column(
+        Text, nullable=True, comment="Description message of the Response Code."
+    )
+    customer_message = mapped_column(
+        Text,
+        nullable=True,
+        comment="Message as an acknowledgement of the payment request submission.",
+    )
