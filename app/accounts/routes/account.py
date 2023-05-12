@@ -11,6 +11,7 @@ from app.core.deps import get_current_active_user, get_db
 from app.accounts.serializers.mpesa import MpesaPaymentCreateSerializer
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.core.logger import LoggingRoute
+from app.core.ratelimiter import limiter
 
 
 router = APIRouter(route_class=LoggingRoute)
@@ -50,6 +51,7 @@ async def get_deposit(
 
 
 @router.post("/deposit/", response_class=HTMLResponse)
+@limiter.limit("5/minute")
 async def post_deposit(
     request: Request,
     user: User = Depends(get_current_active_user),

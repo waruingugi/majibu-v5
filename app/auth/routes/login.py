@@ -19,6 +19,7 @@ from app.users.serializers.user import UserCreateSerializer
 from app.users.models import User
 from app.errors.custom import ErrorCodes
 from app.core.security import insert_token_in_cookie
+from app.core.ratelimiter import limiter
 
 
 router = APIRouter(route_class=LoggingRoute)
@@ -34,6 +35,7 @@ async def get_phone_verification(request: Request):
 
 
 @router.post("/validate-phone/", response_class=HTMLResponse)
+@limiter.limit("5/minute")
 async def post_phone_verification(
     request: Request,
     background_tasks: BackgroundTasks,
