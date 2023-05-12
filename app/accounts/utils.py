@@ -115,7 +115,7 @@ def trigger_mpesa_stkpush_payment(amount: int, phone_number: str) -> Optional[Di
             reference=account_reference,
         )
         # Include phone number in response
-        data["phone_number"] = phone_number
+        data["phone"] = phone_number
 
         return data
 

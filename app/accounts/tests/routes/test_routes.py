@@ -3,20 +3,14 @@ from pytest_mock import MockerFixture
 from sqlalchemy.orm import Session
 
 from app.accounts.daos.mpesa import mpesa_payment_dao
-from app.core.config import settings
+from app.accounts.constants import MPESA_WHITE_LISTED_IPS
+from app.accounts.serializers.mpesa import MpesaPaymentCreateSerializer
+from app.accounts.tests.test_data import mock_stk_push_response, mock_stk_push_result
 
 
 def test_post_deposit_creates_model_instance(
     db: Session, client: TestClient, mocker: MockerFixture
 ):
-    mock_stk_push_response = {
-        "phone_number": settings.SUPERUSER_PHONE,
-        "MerchantRequestID": "29115-34620561-1",
-        "CheckoutRequestID": "ws_CO_191220191020363925",
-        "ResponseCode": "0",
-        "ResponseDescription": "Success. Request accepted for processing",
-        "CustomerMessage": "Success. Request accepted for processing",
-    }
     mocker.patch(
         "app.accounts.routes.account.trigger_mpesa_stkpush_payment",
         return_value=mock_stk_push_response,
@@ -28,3 +22,23 @@ def test_post_deposit_creates_model_instance(
 
     assert db_obj is not None
     assert db_obj.merchant_request_id == "29115-34620561-1"
+
+
+def test_post_callback(db: Session, client: TestClient, mocker: MockerFixture):
+    mock_client = mocker.patch("fastapi.Request.client")
+    mock_client.host = MPESA_WHITE_LISTED_IPS[0]
+
+    data = mock_stk_push_response
+
+    mpesa_payment_dao.create(
+        db,
+        MpesaPaymentCreateSerializer(
+            phone=data["phone"],
+            merchant_request_id=data["MerchantRequestID"],
+            checkout_request_id=data["CheckoutRequestID"],
+            response_code=data["ResponseCode"],
+            response_description=data["ResponseDescription"],
+            customer_message=data["CustomerMessage"],
+        ),
+    )
+    client.post("/accounts/payments/callback/", json=mock_stk_push_result)

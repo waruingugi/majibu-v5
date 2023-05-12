@@ -7,12 +7,12 @@ from app.core.config import templates, settings
 from app.users.models import User
 from app.accounts.serializers.account import DepositSerializer
 from app.accounts.utils import trigger_mpesa_stkpush_payment
+from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.core.deps import get_current_active_user, get_db
 from app.accounts.serializers.mpesa import (
     MpesaPaymentCreateSerializer,
     MpesaPaymentResultSerializer,
 )
-from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.core.logger import LoggingRoute
 from app.core.ratelimiter import limiter
 from app.accounts.constants import MPESA_WHITE_LISTED_IPS
@@ -69,7 +69,7 @@ async def post_deposit(
         mpesa_payment_dao.create(
             db,
             MpesaPaymentCreateSerializer(
-                phone=data["phone_number"],
+                phone=data["phone"],
                 merchant_request_id=data["MerchantRequestID"],
                 checkout_request_id=data["CheckoutRequestID"],
                 response_code=data["ResponseCode"],
@@ -107,15 +107,21 @@ async def get_withdraw(
 
 
 @router.post("/payments/callback/")
-async def post_confirmation(
+async def post_callback(
     request: Request,
     *,
     mpesa_response_in: MpesaPaymentResultSerializer,
+    db: Session = Depends(get_db),
 ):
     if request.client.host not in MPESA_WHITE_LISTED_IPS:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
-    return {"Received": 1}
+    merchant_request_id = mpesa_response_in.Body.stkCallback.MerchantRequestID
+
+    mpesa_stk_payment = mpesa_payment_dao.get_not_none(
+        db, merchant_request_id=merchant_request_id
+    )
+    return {"checkout_request_id": mpesa_stk_payment.checkout_request_id}
 
 
 # Receive callback
