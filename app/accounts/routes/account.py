@@ -1,4 +1,4 @@
-from fastapi import Request, APIRouter, Depends
+from fastapi import Request, APIRouter, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 import phonenumbers
@@ -8,11 +8,14 @@ from app.users.models import User
 from app.accounts.serializers.account import DepositSerializer
 from app.accounts.utils import trigger_mpesa_stkpush_payment
 from app.core.deps import get_current_active_user, get_db
-from app.accounts.serializers.mpesa import MpesaPaymentCreateSerializer
+from app.accounts.serializers.mpesa import (
+    MpesaPaymentCreateSerializer,
+    MpesaPaymentResultSerializer,
+)
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.core.logger import LoggingRoute
 from app.core.ratelimiter import limiter
-
+from app.accounts.constants import MPESA_WHITE_LISTED_IPS
 
 router = APIRouter(route_class=LoggingRoute)
 template_prefix = "accounts/templates/"
@@ -106,11 +109,18 @@ async def get_withdraw(
 @router.post("/payments/callback/")
 async def post_confirmation(
     request: Request,
+    *,
+    mpesa_response_in: MpesaPaymentResultSerializer,
 ):
+    if request.client.host not in MPESA_WHITE_LISTED_IPS:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
     return {"Received": 1}
 
 
-# Throttle stkpush
+# Receive callback
+# Check if ip, on update, save to transactions model
+# Test STK Push live
 # Receives sms on paybill payment
 # Navbar Account balance
 # Deposit
