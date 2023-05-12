@@ -1,9 +1,11 @@
-from pydantic import validator, root_validator, BaseModel
+from pydantic import root_validator, BaseModel
 from pydantic.dataclasses import dataclass
 from fastapi import Form
-import phonenumbers
 
-from app.core.helpers import validate_phone_number
+from app.core.helpers import (
+    validate_phone_number,
+    _standardize_phone_to_required_format,
+)
 from app.core.raw_logger import logger
 from app.core.config import settings
 from app.commons.serializers.commons import BaseFormSerializer
@@ -13,18 +15,7 @@ from app.commons.serializers.commons import BaseFormSerializer
 class FormatPhoneSerializer(BaseFormSerializer):
     phone: str = Form(...)
 
-    @validator("phone", pre=True)
-    def standardize_phone_to_required_format(cls, value):
-        """Change phone number input to international format: +254702005008"""
-        try:
-            parsed_phone = phonenumbers.parse(value, settings.DEFAULT_COUNTRY_ISO2_CODE)
-
-            return phonenumbers.format_number(
-                parsed_phone, phonenumbers.PhoneNumberFormat.E164
-            )
-        except Exception as e:
-            logger.exception(f"Exception {e} occured while standardizing phone {value}")
-            return value
+    _standardize_phone_to_required_format = _standardize_phone_to_required_format
 
     @root_validator(skip_on_failure=False)
     def validate_form_data(cls, values):

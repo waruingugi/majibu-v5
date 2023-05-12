@@ -1,6 +1,7 @@
 from app.exceptions.custom import HttpErrorException
 from app.errors.custom import ErrorCodes
 from app.core.raw_logger import logger
+from app.core.config import settings
 
 from http import HTTPStatus
 from phonenumbers import parse as parse_phone_number
@@ -9,6 +10,9 @@ from phonenumbers import (
     PhoneNumberType,
     is_valid_number,
     number_type,
+    parse,
+    format_number,
+    PhoneNumberFormat,
 )
 from pydantic import validator
 from hashlib import md5
@@ -42,6 +46,22 @@ def validate_phone_number(phone: str) -> str:
 
 _validate_phone_number = validator("phone", pre=True, allow_reuse=True)(
     validate_phone_number
+)
+
+
+def standardize_phone_to_required_format(phone: str):
+    """Change phone number input to international format: +254702005008"""
+    try:
+        parsed_phone = parse(phone, settings.DEFAULT_COUNTRY_ISO2_CODE)
+
+        return format_number(parsed_phone, PhoneNumberFormat.E164)
+    except Exception as e:
+        logger.exception(f"Exception {e} occured while standardizing phone {phone}")
+        return phone
+
+
+_standardize_phone_to_required_format = validator("phone", pre=True, allow_reuse=True)(
+    standardize_phone_to_required_format
 )
 
 
