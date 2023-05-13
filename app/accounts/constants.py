@@ -17,13 +17,13 @@ class TransactionCashFlow(str, Enum):
     OUTWARD = "OUTWARD"
 
 
-class TransactionType(str, Enum):
+class TransactionTypes(str, Enum):
     REWARD = "REWARD"
     PAYMENT = "PAYMENT"
     BONUS = "BONUS"
 
 
-class TransactionService(str, Enum):
+class TransactionServices(str, Enum):
     MAJIBU = "MAJIBU"
     MPESA = "MPESA"
 

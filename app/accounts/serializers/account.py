@@ -5,7 +5,7 @@ from app.core.helpers import (
     _is_valid_transaction_status,
     _is_valid_transaction_service,
 )
-from app.accounts.constants import TransactionCashFlow
+from app.accounts.constants import TransactionStatuses
 
 from fastapi import Form
 from pydantic.dataclasses import dataclass
@@ -19,12 +19,9 @@ class DepositSerializer(BaseFormSerializer):
 
 
 class TransactionBaseSerializer(BaseModel):
-    class Config:
-        cash_flow = TransactionCashFlow
-
     account: str
     external_transaction_id: str
-    cash_flow: str
+    cash_flow: str = TransactionStatuses.PENDING.value
     type: str
     status: str
     service: str

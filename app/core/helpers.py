@@ -1,9 +1,9 @@
 from app.exceptions.custom import HttpErrorException, InvalidEnumValue
 from app.accounts.constants import (
     TransactionCashFlow,
-    TransactionType,
+    TransactionTypes,
     TransactionStatuses,
-    TransactionService,
+    TransactionServices,
 )
 from app.errors.custom import ErrorCodes
 from app.core.raw_logger import logger
@@ -116,7 +116,7 @@ _is_valid_cash_flow_state = validator("cash_flow", pre=True, allow_reuse=True)(
 
 
 def is_valid_transaction_type(value: str):
-    return value_exists_in_enum(value, TransactionType)
+    return value_exists_in_enum(value, TransactionTypes)
 
 
 _is_valid_transaction_type = validator("type", pre=True, allow_reuse=True)(
@@ -134,7 +134,7 @@ _is_valid_transaction_status = validator("status", pre=True, allow_reuse=True)(
 
 
 def is_valid_transaction_service(value: str):
-    return value_exists_in_enum(value, TransactionService)
+    return value_exists_in_enum(value, TransactionServices)
 
 
 _is_valid_transaction_service = validator("service", pre=True, allow_reuse=True)(
