@@ -10,7 +10,6 @@ from app.accounts.constants import TransactionStatuses
 from fastapi import Form
 from pydantic.dataclasses import dataclass
 from pydantic import BaseModel, Json
-from pydantic.types import PositiveFloat
 
 
 @dataclass
@@ -35,8 +34,9 @@ class TransactionBaseSerializer(BaseModel):
 
 
 class TransactionCreateSerializer(TransactionBaseSerializer):
-    fee: PositiveFloat
-    tax: PositiveFloat
+    amount: float
+    fee: float
+    tax: float
     external_response: Json | None
 
 

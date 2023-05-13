@@ -42,6 +42,7 @@ class MpesaPaymentDao(
                     status=TransactionStatuses.SUCCESSFUL.value,
                     service=TransactionServices.MPESA.value,
                     description=description,
+                    amount=db_obj.amount,
                     fee=0.0,  # No charge for deposits
                     tax=0.0,  # No tax for deposits
                     external_response=db_obj.external_response,

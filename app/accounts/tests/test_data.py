@@ -1,4 +1,5 @@
 from app.core.config import settings
+import json
 
 
 mock_stk_push_response = {
@@ -28,4 +29,18 @@ mock_stk_push_result = {
             },
         }
     }
+}
+
+sample_transaction_instance_info = {
+    "account": settings.SUPERUSER_PHONE,
+    "external_transaction_id": "NLJ7RT61SV",
+    "cash_flow": "INWARD",
+    "type": "PAYMENT",
+    "status": "SUCCESSFUL",
+    "service": "MPESA",
+    "description": "",
+    "amount": 1.0,
+    "fee": 0.0,
+    "tax": 0.0,
+    "external_response": json.dumps({}),
 }

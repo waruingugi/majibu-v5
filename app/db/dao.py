@@ -340,7 +340,7 @@ class ReadDao(Generic[ModelType]):
         query = db.query(self.model)
         query = _create_filtered_query(query, search_filter)
 
-        return db.scalars(query).all()
+        return query.all()  # type: ignore
 
     def get_multi_paginated(
         self: Union[Any, DaoInterface],
