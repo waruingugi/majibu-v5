@@ -24,9 +24,8 @@ class MpesaPaymentDao(
     ) -> None:
 
         if (
-            db_obj.result_code == 0
-            and db_obj.receipt_number  # If Mpesa transacation is successful
-            is not None  # Must have a valid M-Pesa Reference
+            db_obj.result_code == 0  # If Mpesa transacation is successful
+            and db_obj.receipt_number is not None  # Must have a valid M-Pesa Reference
         ):
             description = (
                 f"Deposit of KES {db_obj.amount} "

@@ -18,9 +18,28 @@ class Transactions(Base):
     final_balance = mapped_column(Numeric, server_default=text("0.0"), default=0)
     cash_flow = mapped_column(String, nullable=False)
     type = mapped_column(String, nullable=False)
-    fee = mapped_column(Numeric, server_default=text("0.0"), default=0)
-    tax = mapped_column(Numeric, server_default=text("0.0"), default=0)
-    charge = mapped_column(Numeric, server_default=text("0.0"), default=0)
+    amount = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+    )
+    fee = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+        server_default=text("0.0"),
+        default=0,
+    )
+    tax = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+        server_default=text("0.0"),
+        default=0,
+    )
+    charge = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+        server_default=text("0.0"),
+        default=0,
+    )
     status = mapped_column(
         String,
         nullable=False,
