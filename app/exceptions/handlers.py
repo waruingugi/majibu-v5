@@ -9,7 +9,12 @@ def register_exception_handlers(app: FastAPI) -> None:
     template = "templates/info.html"
 
     def format_exception(exc) -> List:
-        server_errors = format_exception(exc)
+        server_errors: List = []
+
+        if hasattr(exc, "detail"):
+            server_errors.append(exc.detail)
+        if hasattr(exc, "error_message"):
+            server_errors.append(exc.error_message)
 
         return server_errors
 

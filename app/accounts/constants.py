@@ -23,7 +23,7 @@ class TransactionType(str, Enum):
     BONUS = "BONUS"
 
 
-class TransactionStatus(str, Enum):
+class TransactionService(str, Enum):
     MAJIBU = "MAJIBU"
     MPESA = "MPESA"
 

@@ -1,4 +1,10 @@
-from app.exceptions.custom import HttpErrorException
+from app.exceptions.custom import HttpErrorException, InvalidEnumValue
+from app.accounts.constants import (
+    TransactionCashFlow,
+    TransactionType,
+    TransactionStatuses,
+    TransactionService,
+)
 from app.errors.custom import ErrorCodes
 from app.core.raw_logger import logger
 from app.core.config import settings
@@ -62,6 +68,50 @@ def standardize_phone_to_required_format(phone: str):
 
 _standardize_phone_to_required_format = validator("phone", pre=True, allow_reuse=True)(
     standardize_phone_to_required_format
+)
+
+
+def value_exists_in_enum(value, enum_state):
+    """Validate value is in Enum state"""
+    states = [type.value for type in enum_state.__members__.values()]
+    if value not in states:
+        raise InvalidEnumValue(f"The {value} value does not exist in {enum_state}")
+    return value
+
+
+def is_valid_cash_flow_state(value: str):
+    return value_exists_in_enum(value, TransactionCashFlow)
+
+
+_is_valid_cash_flow_state = validator("cash_flow", pre=True, allow_reuse=True)(
+    is_valid_cash_flow_state
+)
+
+
+def is_valid_transaction_type(value: str):
+    return value_exists_in_enum(value, TransactionType)
+
+
+_is_is_valid_transaction_type = validator("type", pre=True, allow_reuse=True)(
+    is_valid_transaction_type
+)
+
+
+def is_valid_transaction_status(value: str):
+    return value_exists_in_enum(value, TransactionStatuses)
+
+
+_is_valid_transaction_status = validator("status", pre=True, allow_reuse=True)(
+    is_valid_transaction_status
+)
+
+
+def is_valid_transaction_service(value: str):
+    return value_exists_in_enum(value, TransactionService)
+
+
+_is_valid_transaction_service = validator("service", pre=True, allow_reuse=True)(
+    is_valid_transaction_service
 )
 
 

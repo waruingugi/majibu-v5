@@ -74,3 +74,10 @@ class STKPushFailed(HttpErrorException):
             error_code=ErrorCodes.STKPushFailed.name,
             error_message=ErrorCodes.STKPushFailed.value,
         )
+
+
+class InvalidEnumValue(Exception):
+    """An invalid enum value was provided"""
+
+    def __init__(self, message: str = "An invalid enum value was provided") -> None:
+        self.message = message
