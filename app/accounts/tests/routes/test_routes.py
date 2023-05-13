@@ -6,6 +6,7 @@ from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.accounts.constants import MPESA_WHITE_LISTED_IPS
 from app.accounts.serializers.mpesa import MpesaPaymentCreateSerializer
 from app.accounts.tests.test_data import mock_stk_push_response, mock_stk_push_result
+from app.core.config import settings
 
 
 def test_post_deposit_creates_model_instance(
@@ -33,7 +34,7 @@ def test_post_callback(db: Session, client: TestClient, mocker: MockerFixture):
     mpesa_payment_dao.create(
         db,
         MpesaPaymentCreateSerializer(
-            phone=data["phone"],
+            phone_number=settings.SUPERUSER_PHONE,
             merchant_request_id=data["MerchantRequestID"],
             checkout_request_id=data["CheckoutRequestID"],
             response_code=data["ResponseCode"],

@@ -3,8 +3,9 @@ from app.accounts.constants import TransactionStatuses
 from app.core.raw_logger import logger
 from app.core.config import settings
 
-from sqlalchemy import String, Numeric, text, Text, JSON, Integer
+from sqlalchemy import String, Numeric, text, Text, JSON, Integer, Float
 from sqlalchemy.orm import mapped_column
+from sqlalchemy import DateTime
 from datetime import datetime
 import hashlib
 import hmac
@@ -63,7 +64,6 @@ class MpesaPayments(Base):
     request to mpesa stk push url
     """
 
-    phone = mapped_column(String, nullable=False)
     merchant_request_id = mapped_column(
         String, comment="Global unique Identifier for any submitted payment request."
     )
@@ -85,4 +85,49 @@ class MpesaPayments(Base):
         Text,
         nullable=True,
         comment="Message as an acknowledgement of the payment request submission.",
+    )
+
+    """
+    Results Section.
+    Contains attributes populated by the callback
+    """
+
+    result_code = mapped_column(
+        Integer,
+        nullable=True,
+        comment=(
+            "Indicates the status of the transaction processing. 0 means "
+            "successful processing and any other code means an error occurred."
+        ),
+    )
+    result_description = mapped_column(
+        Text, nullable=True, comment="Description message of the Results Code."
+    )
+
+    """
+    Results Section - Success
+    Contains attributes populated by the callback if payment is successful
+    """
+    amount = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+        comment="This is the Amount that was transacted.",
+    )
+    receipt_number = mapped_column(
+        String,
+        nullable=True,
+        comment="This is the unique M-PESA transaction ID for the payment request.",
+    )
+    phone_number = mapped_column(
+        String,
+        nullable=False,
+        comment="number of the customer who made the payment.",
+    )
+    transaction_date = mapped_column(
+        DateTime,
+        nullable=True,
+        comment=(
+            "This is a timestamp that represents the date and time that the "
+            "transaction completed."
+        ),
     )

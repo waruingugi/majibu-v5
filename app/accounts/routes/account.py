@@ -1,4 +1,4 @@
-from fastapi import Request, APIRouter, Depends, HTTPException, status
+from fastapi import Request, APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 import phonenumbers
@@ -6,7 +6,7 @@ import phonenumbers
 from app.core.config import templates, settings
 from app.users.models import User
 from app.accounts.serializers.account import DepositSerializer
-from app.accounts.utils import trigger_mpesa_stkpush_payment
+from app.accounts.utils import trigger_mpesa_stkpush_payment, process_mpesa_stk
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.core.deps import get_current_active_user, get_db
 from app.accounts.serializers.mpesa import (
@@ -68,8 +68,8 @@ async def post_deposit(
         # Save the checkout response to db for future reference
         mpesa_payment_dao.create(
             db,
-            MpesaPaymentCreateSerializer(
-                phone=data["phone"],
+            obj_in=MpesaPaymentCreateSerializer(
+                phone_number=user.phone,
                 merchant_request_id=data["MerchantRequestID"],
                 checkout_request_id=data["CheckoutRequestID"],
                 response_code=data["ResponseCode"],
@@ -111,21 +111,18 @@ async def post_callback(
     request: Request,
     *,
     mpesa_response_in: MpesaPaymentResultSerializer,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
     if request.client.host not in MPESA_WHITE_LISTED_IPS:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
-    merchant_request_id = mpesa_response_in.Body.stkCallback.MerchantRequestID
-
-    mpesa_stk_payment = mpesa_payment_dao.get_not_none(
-        db, merchant_request_id=merchant_request_id
-    )
-    return {"checkout_request_id": mpesa_stk_payment.checkout_request_id}
+    background_tasks.add_task(process_mpesa_stk, db, mpesa_response_in.Body.stkCallback)
 
 
 # Receive callback
 # Check if ip, on update, save to transactions model
+# Send message on save to model
 # Test STK Push live
 # Receives sms on paybill payment
 # Navbar Account balance

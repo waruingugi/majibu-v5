@@ -1,18 +1,20 @@
 from typing import Optional, Union, List
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
-from app.core.helpers import _standardize_phone_to_required_format
+from app.core.helpers import standardize_phone_to_required_format
 
 
 class MpesaPaymentBaseSerializer(BaseModel):
-    phone: str
+    phone_number: Optional[str]
     merchant_request_id: Optional[str]
     checkout_request_id: Optional[str]
     response_code: Optional[str]
     response_description: Optional[str]
     customer_message: Optional[str]
 
-    _standardize_phone_to_required_format = _standardize_phone_to_required_format
+    _standardize_phone_to_required_format = validator(
+        "phone_number", pre=True, allow_reuse=True
+    )(standardize_phone_to_required_format)
 
 
 class MpesaPaymentCreateSerializer(MpesaPaymentBaseSerializer):

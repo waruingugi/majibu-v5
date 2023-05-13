@@ -12,6 +12,22 @@ class MpesaAccountTypes(str, Enum):
     BUYGOODS = "CustomerBuyGoodsOnline"
 
 
+class TransactionCashFlow(str, Enum):
+    INWARD = "INWARD"
+    OUTWARD = "OUTWARD"
+
+
+class TransactionType(str, Enum):
+    REWARD = "REWARD"
+    PAYMENT = "PAYMENT"
+    BONUS = "BONUS"
+
+
+class TransactionStatus(str, Enum):
+    MAJIBU = "MAJIBU"
+    MPESA = "MPESA"
+
+
 MPESA_WHITE_LISTED_IPS = [
     "196.201.214.200",
     "196.201.214.206",

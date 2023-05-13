@@ -2,10 +2,13 @@ import requests
 from base64 import b64encode
 from typing import Optional, Dict
 from datetime import datetime
+from sqlalchemy.orm import Session
 
 from app.core.raw_logger import logger
 from app.core.config import settings, redis
 from app.accounts.constants import MpesaAccountTypes
+from app.accounts.serializers.mpesa import MpesaPaymentResultStkCallbackSerializer
+from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.exceptions.custom import STKPushFailed
 
 
@@ -114,11 +117,50 @@ def trigger_mpesa_stkpush_payment(amount: int, phone_number: str) -> Optional[Di
             description=transaction_description,
             reference=account_reference,
         )
-        # Include phone number in response
-        data["phone"] = phone_number
 
         return data
 
     except STKPushFailed as e:
         logger.warning(f"STKPush failed with exception: {e}")
         raise STKPushFailed
+
+
+def process_mpesa_stk(
+    db: Session, mpesa_response_in: MpesaPaymentResultStkCallbackSerializer
+) -> None:
+    """
+    Process Mpesa STK payment from Callback or From Queue
+    """
+    checkout_request_id = mpesa_response_in.CheckoutRequestID
+
+    mpesa_payment = mpesa_payment_dao.get_not_none(
+        db, checkout_request_id=checkout_request_id
+    )
+
+    updated_mpesa_payment = {
+        "result_code": mpesa_response_in.ResultCode,
+        "result_description": mpesa_response_in.ResultDesc,
+    }
+
+    if mpesa_response_in.CallbackMetadata:
+        for item in mpesa_response_in.CallbackMetadata.Item:
+            if item.Name == "Amount":
+                updated_mpesa_payment["amount"] = item.Value
+            if item.Name == "MpesaReceiptNumber":
+                updated_mpesa_payment["receipt_number"] = item.Value
+            if item.Name == "Balance":
+                updated_mpesa_payment["balance"] = item.Value
+            if item.Name == "TransactionDate":
+                updated_mpesa_payment["transaction_date"] = datetime.strptime(
+                    str(item.Value), settings.MPESA_DATETIME_FORMAT
+                )
+            if item.Name == "PhoneNumber":
+                updated_mpesa_payment["phone_number"] = "+" + str(item.Value)
+
+    mpesa_payment_dao.update(db, db_obj=mpesa_payment, obj_in=updated_mpesa_payment)
+
+    logger.info(f"Received mpesa payment: {updated_mpesa_payment}")
+
+    # send_mpesa_order_payment_results_notification(
+    #     db, mpesa_order_payment=mpesa_order_payment
+    # )
