@@ -22,24 +22,22 @@ class MpesaPaymentDao(
     def on_post_update(
         self, db: Session, db_obj: MpesaPayments, changed: ChangedObjState
     ) -> None:
-        result_code = changed["result_code"]["after"]
-        account = changed["phone_number"]["after"]
-        external_transaction_id = changed["receipt_number"]["after"]
-        amount = changed["amount"]["after"]
-        description = (
-            f"Deposit of KES {amount} for account {account} using M-Pesa STKPush."
-        )
 
         if (
-            result_code == 0
-            and external_transaction_id  # If Mpesa transacation is successful
-            is not None
+            db_obj.result_code == 0
+            and db_obj.receipt_number  # If Mpesa transacation is successful
+            is not None  # Must have a valid M-Pesa Reference
         ):
+            description = (
+                f"Deposit of KES {db_obj.amount} "
+                + f"for account {db_obj.phone_number} using M-Pesa STKPush."
+            )
+
             transaction_dao.create(
                 db,
                 obj_in=TransactionCreateSerializer(
-                    account=account,
-                    external_transaction_id=external_transaction_id,
+                    account=db_obj.phone_number,
+                    external_transaction_id=db_obj.receipt_number,
                     cash_flow=TransactionCashFlow.INWARD.value,
                     type=TransactionTypes.PAYMENT.value,
                     status=TransactionStatuses.SUCCESSFUL.value,
@@ -47,6 +45,7 @@ class MpesaPaymentDao(
                     description=description,
                     fee=0.0,  # No charge for deposits
                     tax=0.0,  # No tax for deposits
+                    external_response=db_obj.external_response,
                 ),
             )
 
