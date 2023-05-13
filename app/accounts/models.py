@@ -98,7 +98,7 @@ class MpesaPayments(Base):
     phone_number = mapped_column(
         String,
         nullable=False,
-        comment="number of the customer who made the payment.",
+        comment="Phone number of the customer who made the payment.",
     )
     transaction_date = mapped_column(
         DateTime,
@@ -108,3 +108,4 @@ class MpesaPayments(Base):
             "transaction completed."
         ),
     )
+    external_response = mapped_column(JSON, nullable=True)

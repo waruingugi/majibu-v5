@@ -297,7 +297,9 @@ class ReadDao(Generic[ModelType]):
     ) -> ModelType:
         obj = self.get(db, load_options, **filters)
         if not obj:
-            raise ObjectDoesNotExist
+            raise ObjectDoesNotExist(
+                f"Object with filters {filters} could not be found"
+            )
         return obj
 
     def get_all(

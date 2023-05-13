@@ -11,15 +11,11 @@ class HttpErrorException(HTTPException):
         self.detail = error_message
 
 
-class ObjectDoesNotExist(HttpErrorException):
+class ObjectDoesNotExist(Exception):
     """The specified object was not found"""
 
-    def __init__(self) -> None:
-        super(ObjectDoesNotExist, self).__init__(
-            status_code=HTTPStatus.NOT_FOUND,
-            error_code=ErrorCodes.OBJECT_NOT_FOUND.name,
-            error_message=ErrorCodes.OBJECT_NOT_FOUND.value,
-        )
+    def __init__(self, message: str) -> None:
+        self.message = message
 
 
 class InvalidToken(HttpErrorException):

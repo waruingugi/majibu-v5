@@ -21,9 +21,9 @@ class DepositSerializer(BaseFormSerializer):
 class TransactionBaseSerializer(BaseModel):
     account: str
     external_transaction_id: str
-    cash_flow: str = TransactionStatuses.PENDING.value
+    cash_flow: str
     type: str
-    status: str
+    status: str = TransactionStatuses.PENDING.value
     service: str
     description: str
 
@@ -35,11 +35,8 @@ class TransactionBaseSerializer(BaseModel):
 
 
 class TransactionCreateSerializer(TransactionBaseSerializer):
-    initial_balance: PositiveFloat
-    final_balance: PositiveFloat
     fee: PositiveFloat
     tax: PositiveFloat
-    charge: PositiveFloat
     external_response: Json | None
 
 
