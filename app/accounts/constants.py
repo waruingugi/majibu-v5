@@ -1,5 +1,10 @@
 from enum import Enum
 
+MPESA_PAYMENT_DEPOSIT = (
+    "You've successfully deposited KES {} for your account {}. "
+    "Thank your for choosing Majibu!"
+)
+
 
 class TransactionStatuses(str, Enum):
     PENDING = "PENDING"

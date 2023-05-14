@@ -13,8 +13,10 @@ def register_exception_handlers(app: FastAPI) -> None:
 
         if hasattr(exc, "detail"):
             server_errors.append(exc.detail)
-        if hasattr(exc, "error_message"):
+        elif hasattr(exc, "error_message"):
             server_errors.append(exc.error_message)
+        else:
+            pass
 
         return server_errors
 
@@ -34,6 +36,21 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(429)
     async def custom_429_handler(request, __):
         server_errors: List = ["Too many requests, please try again later"]
+
+        return templates.TemplateResponse(
+            template,
+            {
+                "request": request,
+                "server_errors": server_errors,
+                "title": "New Message",
+            },
+        )
+
+    @app.exception_handler(500)
+    async def custom_500_handler(request, __):
+        server_errors: List = [
+            "Something seems to be broken. Please contace admin for assistance"
+        ]
 
         return templates.TemplateResponse(
             template,

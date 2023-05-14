@@ -8,7 +8,7 @@ from app.users.models import User
 from app.accounts.serializers.account import DepositSerializer
 from app.accounts.utils import trigger_mpesa_stkpush_payment, process_mpesa_stk
 from app.accounts.daos.mpesa import mpesa_payment_dao
-from app.core.deps import get_current_active_user, get_db
+from app.core.deps import get_current_active_user, get_db, get_user_balance
 from app.accounts.serializers.mpesa import (
     MpesaPaymentCreateSerializer,
     MpesaPaymentResultSerializer,
@@ -23,13 +23,16 @@ template_prefix = "accounts/templates/"
 
 @router.get("/wallet/", response_class=HTMLResponse)
 async def get_wallet(
-    request: Request,
-    _: User = Depends(get_current_active_user),
+    request: Request, wallet_balance: float = Depends(get_user_balance)
 ):
     """Get wallet page"""
     return templates.TemplateResponse(
         f"{template_prefix}wallet.html",
-        {"request": request, "title": "Wallet"},
+        {
+            "request": request,
+            "title": "Wallet",
+            "current_balance": f"{wallet_balance:,}",
+        },
     )
 
 
