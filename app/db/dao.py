@@ -297,8 +297,23 @@ class ReadDao(Generic[ModelType]):
     ) -> ModelType:
         obj = self.get(db, load_options, **filters)
         if not obj:
-            raise ObjectDoesNotExist
+            raise ObjectDoesNotExist(
+                f"Object with filters {filters} could not be found"
+            )
         return obj
+
+    def get_or_none(
+        self: Union[Any, DaoInterface],
+        db: Session,
+        search_filter: Filter | Dict,
+    ) -> ModelType | None:
+        query = db.query(self.model)
+        query = _create_filtered_query(query, search_filter)
+
+        if not query:
+            return None
+
+        return query.first()  # type: ignore
 
     def get_all(
         self,
@@ -338,7 +353,7 @@ class ReadDao(Generic[ModelType]):
         query = db.query(self.model)
         query = _create_filtered_query(query, search_filter)
 
-        return db.scalars(query).all()
+        return query.all()  # type: ignore
 
     def get_multi_paginated(
         self: Union[Any, DaoInterface],

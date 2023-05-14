@@ -1,4 +1,4 @@
-from fastapi import Request, APIRouter, Depends
+from fastapi import Request, APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 import phonenumbers
@@ -6,13 +6,16 @@ import phonenumbers
 from app.core.config import templates, settings
 from app.users.models import User
 from app.accounts.serializers.account import DepositSerializer
-from app.accounts.utils import trigger_mpesa_stkpush_payment
-from app.core.deps import get_current_active_user, get_db
-from app.accounts.serializers.mpesa import MpesaPaymentCreateSerializer
+from app.accounts.utils import trigger_mpesa_stkpush_payment, process_mpesa_stk
 from app.accounts.daos.mpesa import mpesa_payment_dao
+from app.core.deps import get_current_active_user, get_db, get_user_balance
+from app.accounts.serializers.mpesa import (
+    MpesaPaymentCreateSerializer,
+    MpesaPaymentResultSerializer,
+)
 from app.core.logger import LoggingRoute
 from app.core.ratelimiter import limiter
-
+from app.accounts.constants import MPESA_WHITE_LISTED_IPS
 
 router = APIRouter(route_class=LoggingRoute)
 template_prefix = "accounts/templates/"
@@ -20,13 +23,16 @@ template_prefix = "accounts/templates/"
 
 @router.get("/wallet/", response_class=HTMLResponse)
 async def get_wallet(
-    request: Request,
-    _: User = Depends(get_current_active_user),
+    request: Request, wallet_balance: float = Depends(get_user_balance)
 ):
     """Get wallet page"""
     return templates.TemplateResponse(
         f"{template_prefix}wallet.html",
-        {"request": request, "title": "Wallet"},
+        {
+            "request": request,
+            "title": "Wallet",
+            "current_balance": f"{wallet_balance:,}",
+        },
     )
 
 
@@ -65,8 +71,8 @@ async def post_deposit(
         # Save the checkout response to db for future reference
         mpesa_payment_dao.create(
             db,
-            MpesaPaymentCreateSerializer(
-                phone=data["phone_number"],
+            obj_in=MpesaPaymentCreateSerializer(
+                phone_number=user.phone,
                 merchant_request_id=data["MerchantRequestID"],
                 checkout_request_id=data["CheckoutRequestID"],
                 response_code=data["ResponseCode"],
@@ -104,13 +110,23 @@ async def get_withdraw(
 
 
 @router.post("/payments/callback/")
-async def post_confirmation(
+async def post_callback(
     request: Request,
+    *,
+    mpesa_response_in: MpesaPaymentResultSerializer,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
 ):
-    return {"Received": 1}
+    if request.client.host not in MPESA_WHITE_LISTED_IPS:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
+    background_tasks.add_task(process_mpesa_stk, db, mpesa_response_in.Body.stkCallback)
 
 
-# Throttle stkpush
+# Receive callback
+# Check if ip, on update, save to transactions model
+# Send message on save to model
+# Test STK Push live
 # Receives sms on paybill payment
 # Navbar Account balance
 # Deposit

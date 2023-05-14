@@ -1,13 +1,29 @@
 import unittest
 from unittest.mock import MagicMock, patch
+from sqlalchemy.orm import Session
 
 from app.accounts.utils import (
     get_mpesa_access_token,
     initiate_mpesa_stkpush_payment,
     trigger_mpesa_stkpush_payment,
 )
+from app.accounts.constants import (
+    TransactionCashFlow,
+    TransactionServices,
+    TransactionStatuses,
+    TransactionTypes,
+)
 from app.core.config import redis, settings
 from app.accounts.constants import MpesaAccountTypes
+from app.accounts.tests.test_data import (
+    serialized_call_back,
+    mock_stk_push_response,
+    mpesa_reference_no,
+)
+from app.accounts.serializers.mpesa import MpesaPaymentCreateSerializer
+from app.accounts.daos.mpesa import mpesa_payment_dao
+from app.accounts.daos.account import transaction_dao
+from app.accounts.utils import process_mpesa_stk
 from app.exceptions.custom import STKPushFailed
 
 
@@ -113,3 +129,28 @@ class TestMpesaSTKPush(unittest.TestCase):
             amount=1, phone_number=settings.SUPERUSER_PHONE
         )
         assert response == mock_initiate_mpesa_stkpush_payment.return_value
+
+
+def test_process_mpesa_stk_successfully_creates_transaction_instance(db: Session):
+    data = mock_stk_push_response
+
+    mpesa_payment_dao.create(
+        db,
+        MpesaPaymentCreateSerializer(
+            phone_number=settings.SUPERUSER_PHONE,
+            merchant_request_id=data["MerchantRequestID"],
+            checkout_request_id=data["CheckoutRequestID"],
+            response_code=data["ResponseCode"],
+            response_description=data["ResponseDescription"],
+            customer_message=data["CustomerMessage"],
+        ),
+    )
+    process_mpesa_stk(db, serialized_call_back)
+
+    transaction = transaction_dao.get(db, external_transaction_id=mpesa_reference_no)
+
+    assert transaction is not None
+    assert transaction.cash_flow == TransactionCashFlow.INWARD.value
+    assert transaction.service == TransactionServices.MPESA.value
+    assert transaction.status == TransactionStatuses.SUCCESSFUL.value
+    assert transaction.type == TransactionTypes.PAYMENT.value

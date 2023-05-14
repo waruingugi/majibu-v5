@@ -73,6 +73,8 @@ class Settings(BaseSettings):
         "https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query"
     )
 
+    MONETARY_DECIMAL_PLACES: int = 2  # Decimal places to use for all monetary values
+
     class Config:
         env_file = ".env"
         case_sensitive = True

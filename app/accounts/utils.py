@@ -1,12 +1,19 @@
 import requests
+import json
 from base64 import b64encode
 from typing import Optional, Dict
 from datetime import datetime
+from sqlalchemy.orm import Session
 
 from app.core.raw_logger import logger
 from app.core.config import settings, redis
-from app.accounts.constants import MpesaAccountTypes
+from app.accounts.constants import MpesaAccountTypes, MPESA_PAYMENT_DEPOSIT
+from app.accounts.serializers.mpesa import MpesaPaymentResultStkCallbackSerializer
+from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.exceptions.custom import STKPushFailed
+from app.notifications.daos.notifications import notifications_dao
+from app.notifications.constants import NotificationChannels, NotificationTypes
+from app.notifications.serializers.notifications import CreateNotificationSerializer
 
 
 def get_mpesa_access_token() -> str:
@@ -16,6 +23,8 @@ def get_mpesa_access_token() -> str:
     We store the key in the server cache(Redis) for a period of 200
     seconds less than the one provided by Mpesa just to be safe.
     """
+    logger.info("Retrieving M-Pesa token...")
+
     access_token = redis.get("mpesa_access_token")
 
     if access_token:
@@ -56,6 +65,8 @@ def initiate_mpesa_stkpush_payment(
     description: str,
 ) -> Dict:
     """Trigger STKPush"""
+    logger.info(f"Initiate M-Pesa STKPush for KES {amount} to {phone_number}")
+
     access_token = get_mpesa_access_token()
     phone_number = str(phone_number).replace("+", "")
     timestamp = datetime.now().strftime(settings.MPESA_DATETIME_FORMAT)
@@ -69,31 +80,36 @@ def initiate_mpesa_stkpush_payment(
         "Content-Type": "application/json",
         "Authorization": f"Bearer {access_token}",
     }
-    data = {
-        "BusinessShortCode": business_short_code,
-        "Password": password,
-        "Timestamp": timestamp,
-        "TransactionType": transaction_type,
-        "Amount": int(amount),
-        "PartyA": phone_number,
-        "PartyB": party_b,
-        "PhoneNumber": phone_number,
-        "CallBackURL": callback_url,
-        "AccountReference": reference,
-        "TransactionDesc": description,
-    }
-    response = requests.post(api_url, json=data, headers=headers, verify=True)
-    response_data = response.json()
 
-    if response_data["ResponseCode"] == "0":  # 0 means response is ok
-        return response_data
-    else:
-        logger.warning(f"STKPush failed with response: {response.text}")
+    try:
+        data = {
+            "BusinessShortCode": business_short_code,
+            "Password": password,
+            "Timestamp": timestamp,
+            "TransactionType": transaction_type,
+            "Amount": int(amount),
+            "PartyA": phone_number,
+            "PartyB": party_b,
+            "PhoneNumber": phone_number,
+            "CallBackURL": callback_url,
+            "AccountReference": reference,
+            "TransactionDesc": description,
+        }
+        response = requests.post(api_url, json=data, headers=headers, verify=True)
+        response_data = response.json()
+
+        if response_data["ResponseCode"] == "0":  # 0 means response is ok
+            return response_data
+
+    except Exception as e:
+        logger.warning(f"Initiating STKPush failed with response: {e}")
         raise STKPushFailed
 
 
 def trigger_mpesa_stkpush_payment(amount: int, phone_number: str) -> Optional[Dict]:
     """Send Mpesa STK push."""
+    logger.info(f"Trigerring M-Pesa STKPush for KES {amount} to {phone_number}")
+
     business_short_code = settings.MPESA_BUSINESS_SHORT_CODE
     party_b = settings.MPESA_BUSINESS_SHORT_CODE
     amount = amount
@@ -114,11 +130,61 @@ def trigger_mpesa_stkpush_payment(amount: int, phone_number: str) -> Optional[Di
             description=transaction_description,
             reference=account_reference,
         )
-        # Include phone number in response
-        data["phone_number"] = phone_number
 
         return data
 
     except STKPushFailed as e:
-        logger.warning(f"STKPush failed with exception: {e}")
+        logger.warning(f"Trigering STKPush failed with exception: {e}")
         raise STKPushFailed
+
+
+def process_mpesa_stk(
+    db: Session, mpesa_response_in: MpesaPaymentResultStkCallbackSerializer
+) -> None:
+    """
+    Process Mpesa STK payment from Callback or From Queue
+    """
+    checkout_request_id = mpesa_response_in.CheckoutRequestID
+
+    mpesa_payment = mpesa_payment_dao.get_not_none(
+        db, checkout_request_id=checkout_request_id
+    )
+
+    updated_mpesa_payment = {
+        "result_code": mpesa_response_in.ResultCode,
+        "result_description": mpesa_response_in.ResultDesc,
+        "external_response": json.dumps(mpesa_response_in.dict()),
+    }
+
+    if mpesa_response_in.CallbackMetadata:
+        for item in mpesa_response_in.CallbackMetadata.Item:
+            if item.Name == "Amount":
+                updated_mpesa_payment["amount"] = item.Value
+            if item.Name == "MpesaReceiptNumber":
+                updated_mpesa_payment["receipt_number"] = item.Value
+            if item.Name == "Balance":
+                updated_mpesa_payment["balance"] = item.Value
+            if item.Name == "TransactionDate":
+                updated_mpesa_payment["transaction_date"] = datetime.strptime(
+                    str(item.Value), settings.MPESA_DATETIME_FORMAT
+                )
+            if item.Name == "PhoneNumber":
+                updated_mpesa_payment["phone_number"] = "+" + str(item.Value)
+
+    update_mpesa_payment = mpesa_payment_dao.update(
+        db, db_obj=mpesa_payment, obj_in=updated_mpesa_payment
+    )
+
+    logger.info(f"Received mpesa payment: {updated_mpesa_payment}")
+
+    notifications_dao.send_notification(
+        db,
+        obj_in=CreateNotificationSerializer(
+            channel=NotificationChannels.SMS.value,
+            phone=update_mpesa_payment.phone_number,
+            message=MPESA_PAYMENT_DEPOSIT.format(
+                update_mpesa_payment.amount, update_mpesa_payment.phone_number
+            ),
+            type=NotificationTypes.DEPOSIT.value,
+        ),
+    )

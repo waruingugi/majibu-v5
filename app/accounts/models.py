@@ -1,33 +1,11 @@
 from app.db.base_class import Base
 from app.accounts.constants import TransactionStatuses
-from app.core.raw_logger import logger
+from app.core.helpers import generate_transaction_code
 from app.core.config import settings
 
-from sqlalchemy import String, Numeric, text, Text, JSON, Integer
+from sqlalchemy import String, Numeric, text, Text, JSON, Integer, Float
 from sqlalchemy.orm import mapped_column
-from datetime import datetime
-import hashlib
-import hmac
-import base64
-
-
-def generate_transaction_code():
-    """Generate unique transaction codes"""
-    logger.info("Generating unique transaction code")
-
-    # Create uniqueness based on date
-    now = datetime.now()
-    msg = f"{now.month}{now.day}{now.hour}{now.minute}{now.second}{now.microsecond}".encode(
-        "utf-8"
-    )
-    secret_key = bytes(settings.SECRET_KEY, "utf-8")
-    signature = hmac.new(secret_key, msg=msg, digestmod=hashlib.sha256).digest()
-
-    transaction_id = base64.urlsafe_b64encode(signature).decode("utf-8").rstrip("=")
-    transaction_id = transaction_id.upper()  # Convert transaction_id to uppercase
-    transaction_code = "".join([c for c in transaction_id if c.isalnum()])
-
-    return f"M{transaction_code[:8]}"
+from sqlalchemy import DateTime
 
 
 class Transactions(Base):
@@ -40,9 +18,28 @@ class Transactions(Base):
     final_balance = mapped_column(Numeric, server_default=text("0.0"), default=0)
     cash_flow = mapped_column(String, nullable=False)
     type = mapped_column(String, nullable=False)
-    fee = mapped_column(Numeric, server_default=text("0.0"), default=0)
-    tax = mapped_column(Numeric, server_default=text("0.0"), default=0)
-    charge = mapped_column(Numeric, server_default=text("0.0"), default=0)
+    amount = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+    )
+    fee = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+        server_default=text("0.0"),
+        default=0,
+    )
+    tax = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+        server_default=text("0.0"),
+        default=0,
+    )
+    charge = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+        server_default=text("0.0"),
+        default=0,
+    )
     status = mapped_column(
         String,
         nullable=False,
@@ -63,7 +60,6 @@ class MpesaPayments(Base):
     request to mpesa stk push url
     """
 
-    phone = mapped_column(String, nullable=False)
     merchant_request_id = mapped_column(
         String, comment="Global unique Identifier for any submitted payment request."
     )
@@ -86,3 +82,49 @@ class MpesaPayments(Base):
         nullable=True,
         comment="Message as an acknowledgement of the payment request submission.",
     )
+
+    """
+    Results Section.
+    Contains attributes populated by the callback
+    """
+
+    result_code = mapped_column(
+        Integer,
+        nullable=True,
+        comment=(
+            "Indicates the status of the transaction processing. 0 means "
+            "successful processing and any other code means an error occurred."
+        ),
+    )
+    result_description = mapped_column(
+        Text, nullable=True, comment="Description message of the Results Code."
+    )
+
+    """
+    Results Section - Success
+    Contains attributes populated by the callback if payment is successful
+    """
+    amount = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+        comment="This is the Amount that was transacted.",
+    )
+    receipt_number = mapped_column(
+        String,
+        nullable=True,
+        comment="This is the unique M-PESA transaction ID for the payment request.",
+    )
+    phone_number = mapped_column(
+        String,
+        nullable=False,
+        comment="Phone number of the customer who made the payment.",
+    )
+    transaction_date = mapped_column(
+        DateTime,
+        nullable=True,
+        comment=(
+            "This is a timestamp that represents the date and time that the "
+            "transaction completed."
+        ),
+    )
+    external_response = mapped_column(JSON, nullable=True)
