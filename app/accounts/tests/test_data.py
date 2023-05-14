@@ -1,7 +1,17 @@
 from app.core.config import settings
+from app.accounts.serializers.mpesa import (
+    MpesaPaymentResultCallbackMetadataSerializer,
+    MpesaPaymentResultStkCallbackSerializer,
+    MpesaPaymentResultBodySerializer,
+    MpesaPaymentResultSerializer,
+)
 import json
 
 
+# M-Pesa Reference Number
+mpesa_reference_no = "NLJ7RT61SV"
+
+# M-Pesa STKPush response
 mock_stk_push_response = {
     "phone": settings.SUPERUSER_PHONE,
     "MerchantRequestID": "29115-34620561-1",
@@ -11,7 +21,7 @@ mock_stk_push_response = {
     "CustomerMessage": "Success. Request accepted for processing",
 }
 
-
+# M-Pesa STKPush result
 mock_stk_push_result = {
     "Body": {
         "stkCallback": {
@@ -22,7 +32,7 @@ mock_stk_push_result = {
             "CallbackMetadata": {
                 "Item": [
                     {"Name": "Amount", "Value": 1.00},
-                    {"Name": "MpesaReceiptNumber", "Value": "NLJ7RT61SV"},
+                    {"Name": "MpesaReceiptNumber", "Value": mpesa_reference_no},
                     {"Name": "TransactionDate", "Value": 20191219102115},
                     {"Name": "PhoneNumber", "Value": 254708374149},
                 ]
@@ -31,9 +41,10 @@ mock_stk_push_result = {
     }
 }
 
+# Transaction instance to be saved in Transaction model
 sample_transaction_instance_info = {
     "account": settings.SUPERUSER_PHONE,
-    "external_transaction_id": "NLJ7RT61SV",
+    "external_transaction_id": mpesa_reference_no,
     "cash_flow": "INWARD",
     "type": "PAYMENT",
     "status": "SUCCESSFUL",
@@ -44,3 +55,22 @@ sample_transaction_instance_info = {
     "tax": 0.0,
     "external_response": json.dumps({}),
 }
+
+# Serialized M-Pesa STKPush result
+serialized_call_back_metadata = MpesaPaymentResultCallbackMetadataSerializer(
+    **mock_stk_push_result["Body"]["stkCallback"]["CallbackMetadata"]
+)
+
+serialized_call_back = MpesaPaymentResultStkCallbackSerializer(
+    CallbackMetadata=serialized_call_back_metadata,
+    MerchantRequestID=mock_stk_push_result["Body"]["stkCallback"]["MerchantRequestID"],
+    CheckoutRequestID=mock_stk_push_result["Body"]["stkCallback"]["CheckoutRequestID"],
+    ResultCode=mock_stk_push_result["Body"]["stkCallback"]["ResultCode"],
+    ResultDesc=mock_stk_push_result["Body"]["stkCallback"]["ResultDesc"],
+)
+
+serialized_result_body = MpesaPaymentResultBodySerializer(
+    stkCallback=serialized_call_back
+)
+
+serailized_stk_push_result = MpesaPaymentResultSerializer(Body=serialized_result_body)
