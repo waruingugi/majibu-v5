@@ -25,7 +25,7 @@ class TransactionDao(
 
         if user_account_transactions:
             user_account = user_account_transactions[0]
-            initial_final_balance = user_account[0].final_balance
+            initial_final_balance = float(user_account.final_balance)
 
         if values["cash_flow"] == TransactionCashFlow.INWARD.value:
             charge = values["amount"] - values["fee"] - values["tax"]
