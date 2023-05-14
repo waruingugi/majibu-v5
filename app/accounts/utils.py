@@ -1,4 +1,5 @@
 import requests
+import json
 from base64 import b64encode
 from typing import Optional, Dict
 from datetime import datetime
@@ -140,6 +141,7 @@ def process_mpesa_stk(
     updated_mpesa_payment = {
         "result_code": mpesa_response_in.ResultCode,
         "result_description": mpesa_response_in.ResultDesc,
+        "external_response": json.dumps(mpesa_response_in.dict()),
     }
 
     if mpesa_response_in.CallbackMetadata:
