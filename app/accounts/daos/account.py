@@ -6,7 +6,12 @@ from app.accounts.serializers.account import (
     TransactionCreateSerializer,
     TransactionUpdateSerializer,
 )
-from app.accounts.constants import TransactionCashFlow
+from app.accounts.constants import TransactionCashFlow, TransactionServices
+from app.accounts.constants import MPESA_PAYMENT_DEPOSIT
+
+from app.notifications.daos.notifications import notifications_dao
+from app.notifications.serializers.notifications import CreateNotificationSerializer
+from app.notifications.constants import NotificationChannels, NotificationTypes
 
 
 class TransactionDao(
@@ -34,6 +39,29 @@ class TransactionDao(
         values["final_balance"] = initial_final_balance + charge  # New final balance
         values["initial_balance"] = initial_final_balance  # Original balance
         values["charge"] = charge
+
+    def on_post_create(self, db: Session, db_obj: Transactions) -> None:
+        """Send notifications on new transactions to their wallet"""
+        channel = NotificationChannels.SMS.value
+        phone = db_obj.account
+        message = type = ""
+
+        if (
+            db_obj.cash_flow == TransactionCashFlow.INWARD.value
+            and db_obj.service == TransactionServices.MPESA.value
+        ):  # Means if the transaction is an M-Pesa Deposit
+            message = MPESA_PAYMENT_DEPOSIT.format(db_obj.amount, db_obj.account)
+            type = NotificationTypes.DEPOSIT.value
+
+        notifications_dao.send_notification(
+            db,
+            obj_in=CreateNotificationSerializer(
+                channel=channel,
+                phone=phone,
+                message=message,
+                type=type,
+            ),
+        )
 
     def get_user_balance(self, db: Session, *, account: str) -> float:
         latest_transaction = self.get_or_none(

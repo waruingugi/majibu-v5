@@ -7,13 +7,10 @@ from sqlalchemy.orm import Session
 
 from app.core.raw_logger import logger
 from app.core.config import settings, redis
-from app.accounts.constants import MpesaAccountTypes, MPESA_PAYMENT_DEPOSIT
+from app.accounts.constants import MpesaAccountTypes
 from app.accounts.serializers.mpesa import MpesaPaymentResultStkCallbackSerializer
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.exceptions.custom import STKPushFailed
-from app.notifications.daos.notifications import notifications_dao
-from app.notifications.constants import NotificationChannels, NotificationTypes
-from app.notifications.serializers.notifications import CreateNotificationSerializer
 
 
 def get_mpesa_access_token() -> str:
@@ -63,7 +60,7 @@ def initiate_mpesa_stkpush_payment(
     callback_url: str,
     reference: str,
     description: str,
-) -> Dict:
+) -> Dict | None:
     """Trigger STKPush"""
     logger.info(f"Initiate M-Pesa STKPush for KES {amount} to {phone_number}")
 
@@ -176,22 +173,9 @@ def process_mpesa_stk(
                 if item.Name == "PhoneNumber":
                     updated_mpesa_payment["phone_number"] = "+" + str(item.Value)
 
-        update_mpesa_payment = mpesa_payment_dao.update(
-            db, db_obj=mpesa_payment, obj_in=updated_mpesa_payment
-        )
+        mpesa_payment_dao.update(db, db_obj=mpesa_payment, obj_in=updated_mpesa_payment)
 
         logger.info(f"Received mpesa payment: {updated_mpesa_payment}")
 
-        notifications_dao.send_notification(
-            db,
-            obj_in=CreateNotificationSerializer(
-                channel=NotificationChannels.SMS.value,
-                phone=update_mpesa_payment.phone_number,
-                message=MPESA_PAYMENT_DEPOSIT.format(
-                    update_mpesa_payment.amount, update_mpesa_payment.phone_number
-                ),
-                type=NotificationTypes.DEPOSIT.value,
-            ),
-        )
     else:
         logger.info("Received an unknown STKPush response: {mpesa_response_in}")
