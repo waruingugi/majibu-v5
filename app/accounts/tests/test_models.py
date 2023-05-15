@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 import json
-import pytest
+from typing import Callable
 
 from app.accounts.tests.test_data import (
     sample_transaction_instance_info,
@@ -15,26 +15,8 @@ from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.core.config import settings
 
 
-@pytest.fixture
-def delete_previous_transcations(db: Session):
-    # First delete previously existing rows
-    previous_transactions = transaction_dao.get_all(
-        db, account=sample_transaction_instance_info["account"]
-    )
-    for transaction in previous_transactions:
-        transaction_dao.remove(db, id=transaction.id)
-
-
-@pytest.fixture
-def delete_previous_mpesa_payment_transactions(db: Session):
-    # First delete previously existing rows
-    previous_transactions = mpesa_payment_dao.get_all(db)
-    for transaction in previous_transactions:
-        mpesa_payment_dao.remove(db, id=transaction.id)
-
-
 def test_create_transaction_instance_succesfully(
-    db: Session, delete_previous_transcations
+    db: Session, delete_previous_transcations: Callable
 ) -> None:
     """Test created transaction instance has correct default values"""
     obj_in = TransactionCreateSerializer(**sample_transaction_instance_info)
@@ -47,7 +29,7 @@ def test_create_transaction_instance_succesfully(
 
 
 def test_new_transaction_shows_correct_final_balance(
-    db: Session, delete_previous_transcations
+    db: Session, delete_previous_transcations: Callable
 ) -> None:
     obj_in = TransactionCreateSerializer(**sample_transaction_instance_info)
     transaction_dao.create(db, obj_in=obj_in)
@@ -65,7 +47,7 @@ def test_new_transaction_shows_correct_final_balance(
 
 
 def test_mpesa_payment_is_created_successfully(
-    db: Session, delete_previous_mpesa_payment_transactions
+    db: Session, delete_previous_mpesa_payment_transactions: Callable
 ):
     data = mock_stk_push_response
 
@@ -88,7 +70,7 @@ def test_mpesa_payment_is_created_successfully(
 
 
 def test_mpesa_payment_is_updated_successfully(
-    db: Session, delete_previous_mpesa_payment_transactions
+    db: Session, delete_previous_mpesa_payment_transactions: Callable
 ):
     data = mock_stk_push_response
 

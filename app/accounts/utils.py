@@ -146,45 +146,52 @@ def process_mpesa_stk(
     """
     checkout_request_id = mpesa_response_in.CheckoutRequestID
 
-    mpesa_payment = mpesa_payment_dao.get_not_none(
-        db, checkout_request_id=checkout_request_id
+    mpesa_payment = mpesa_payment_dao.get_or_none(
+        db, {"checkout_request_id": checkout_request_id}
     )
 
-    updated_mpesa_payment = {
-        "result_code": mpesa_response_in.ResultCode,
-        "result_description": mpesa_response_in.ResultDesc,
-        "external_response": json.dumps(mpesa_response_in.dict()),
-    }
+    if mpesa_payment:
+        logger.info(
+            f"Received response for previous STKPush {mpesa_payment.checkout_request_id}"
+        )
 
-    if mpesa_response_in.CallbackMetadata:
-        for item in mpesa_response_in.CallbackMetadata.Item:
-            if item.Name == "Amount":
-                updated_mpesa_payment["amount"] = item.Value
-            if item.Name == "MpesaReceiptNumber":
-                updated_mpesa_payment["receipt_number"] = item.Value
-            if item.Name == "Balance":
-                updated_mpesa_payment["balance"] = item.Value
-            if item.Name == "TransactionDate":
-                updated_mpesa_payment["transaction_date"] = datetime.strptime(
-                    str(item.Value), settings.MPESA_DATETIME_FORMAT
-                )
-            if item.Name == "PhoneNumber":
-                updated_mpesa_payment["phone_number"] = "+" + str(item.Value)
+        updated_mpesa_payment = {
+            "result_code": mpesa_response_in.ResultCode,
+            "result_description": mpesa_response_in.ResultDesc,
+            "external_response": json.dumps(mpesa_response_in.dict()),
+        }
 
-    update_mpesa_payment = mpesa_payment_dao.update(
-        db, db_obj=mpesa_payment, obj_in=updated_mpesa_payment
-    )
+        if mpesa_response_in.CallbackMetadata:
+            for item in mpesa_response_in.CallbackMetadata.Item:
+                if item.Name == "Amount":
+                    updated_mpesa_payment["amount"] = item.Value
+                if item.Name == "MpesaReceiptNumber":
+                    updated_mpesa_payment["receipt_number"] = item.Value
+                if item.Name == "Balance":
+                    updated_mpesa_payment["balance"] = item.Value
+                if item.Name == "TransactionDate":
+                    updated_mpesa_payment["transaction_date"] = datetime.strptime(
+                        str(item.Value), settings.MPESA_DATETIME_FORMAT
+                    )
+                if item.Name == "PhoneNumber":
+                    updated_mpesa_payment["phone_number"] = "+" + str(item.Value)
 
-    logger.info(f"Received mpesa payment: {updated_mpesa_payment}")
+        update_mpesa_payment = mpesa_payment_dao.update(
+            db, db_obj=mpesa_payment, obj_in=updated_mpesa_payment
+        )
 
-    notifications_dao.send_notification(
-        db,
-        obj_in=CreateNotificationSerializer(
-            channel=NotificationChannels.SMS.value,
-            phone=update_mpesa_payment.phone_number,
-            message=MPESA_PAYMENT_DEPOSIT.format(
-                update_mpesa_payment.amount, update_mpesa_payment.phone_number
+        logger.info(f"Received mpesa payment: {updated_mpesa_payment}")
+
+        notifications_dao.send_notification(
+            db,
+            obj_in=CreateNotificationSerializer(
+                channel=NotificationChannels.SMS.value,
+                phone=update_mpesa_payment.phone_number,
+                message=MPESA_PAYMENT_DEPOSIT.format(
+                    update_mpesa_payment.amount, update_mpesa_payment.phone_number
+                ),
+                type=NotificationTypes.DEPOSIT.value,
             ),
-            type=NotificationTypes.DEPOSIT.value,
-        ),
-    )
+        )
+    else:
+        logger.info("Received an unknown STKPush response: {mpesa_response_in}")

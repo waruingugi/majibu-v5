@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from sqlalchemy.orm import Session
+from typing import Callable
 
 from app.accounts.utils import (
     get_mpesa_access_token,
@@ -39,7 +40,7 @@ class TestMpesaSTKPush(unittest.TestCase):
         redis.flushall()  # Flush all values from redis
 
     @patch("app.accounts.utils.requests")
-    def test_get_mpesa_access_token(self, mock_requests):
+    def test_get_mpesa_access_token(self, mock_requests) -> None:
         expected_access_token = "fake_access_token"
         self.mock_response.json.return_value = {
             "access_token": expected_access_token,
@@ -51,7 +52,7 @@ class TestMpesaSTKPush(unittest.TestCase):
         assert access_token == expected_access_token
 
     @patch("app.accounts.utils.requests")
-    def test_get_mpesa_access_token_is_set_in_redis(self, mock_requests):
+    def test_get_mpesa_access_token_is_set_in_redis(self, mock_requests) -> None:
         expected_access_token = "fake_access_token"
         self.mock_response.json.return_value = {
             "access_token": expected_access_token,
@@ -67,7 +68,7 @@ class TestMpesaSTKPush(unittest.TestCase):
     @patch("app.accounts.utils.get_mpesa_access_token")
     def test_initiate_mpesa_stkpush_payment_returns_successful_response(
         self, mock_get_mpesa_access_token
-    ):
+    ) -> None:
         mock_get_mpesa_access_token.return_value = "fake_access_token"
 
         with patch("app.accounts.utils.requests") as mock_requests:
@@ -98,7 +99,7 @@ class TestMpesaSTKPush(unittest.TestCase):
     @patch("app.accounts.utils.requests")
     def test_initiate_mpesa_stkpush_payment_raises_exception(
         self, mock_get_mpesa_access_token, mock_requests
-    ):
+    ) -> None:
         mock_get_mpesa_access_token.return_value = "fake_access_token"
 
         with self.assertRaises(Exception):
@@ -117,7 +118,9 @@ class TestMpesaSTKPush(unittest.TestCase):
             )
 
     @patch("app.accounts.utils.initiate_mpesa_stkpush_payment")
-    def test_trigger_mpesa_stkpush_payment(self, mock_initiate_mpesa_stkpush_payment):
+    def test_trigger_mpesa_stkpush_payment(
+        self, mock_initiate_mpesa_stkpush_payment
+    ) -> None:
         mock_initiate_mpesa_stkpush_payment.return_value = {
             "MerchantRequestID": "29115-34620561-1",
             "CheckoutRequestID": "ws_CO_191220191020363925",
@@ -131,7 +134,9 @@ class TestMpesaSTKPush(unittest.TestCase):
         assert response == mock_initiate_mpesa_stkpush_payment.return_value
 
 
-def test_process_mpesa_stk_successfully_creates_transaction_instance(db: Session):
+def test_process_mpesa_stk_successfully_creates_transaction_instance(
+    db: Session,
+) -> None:
     data = mock_stk_push_response
 
     mpesa_payment_dao.create(
@@ -154,3 +159,12 @@ def test_process_mpesa_stk_successfully_creates_transaction_instance(db: Session
     assert transaction.service == TransactionServices.MPESA.value
     assert transaction.status == TransactionStatuses.SUCCESSFUL.value
     assert transaction.type == TransactionTypes.PAYMENT.value
+
+
+def test_process_mpesa_stk_fails_to_create_unknown_transaction_instance(
+    db: Session, delete_previous_mpesa_payment_transactions: Callable
+) -> None:
+    process_mpesa_stk(db, serialized_call_back)
+    mpesa_payments = mpesa_payment_dao.get_all(db)
+
+    assert len(mpesa_payments) == 0
