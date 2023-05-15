@@ -46,6 +46,21 @@ def test_new_transaction_shows_correct_final_balance(
     assert db_obj.initial_balance == 1.00
 
 
+def test_transaction_dao_shows_correct_user_balance(
+    db: Session, delete_previous_transcations: Callable
+) -> None:
+    sample_transaction_instance_info["amount"] = 9.55
+
+    transaction_dao.create(
+        db, obj_in=TransactionCreateSerializer(**sample_transaction_instance_info)
+    )
+    user_balance = transaction_dao.get_user_balance(
+        db, account=sample_transaction_instance_info["account"]
+    )
+
+    assert float(user_balance) == 9.55
+
+
 def test_mpesa_payment_is_created_successfully(
     db: Session, delete_previous_mpesa_payment_transactions: Callable
 ):

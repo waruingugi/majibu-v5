@@ -35,5 +35,15 @@ class TransactionDao(
         values["initial_balance"] = initial_final_balance  # Original balance
         values["charge"] = charge
 
+    def get_user_balance(self, db: Session, *, account: str) -> float:
+        latest_transaction = self.get_or_none(
+            db, {"order_by": ["-created_at"], "account": account}
+        )
+        current_balance = 0.00
+        if latest_transaction:
+            current_balance = latest_transaction.final_balance
+
+        return current_balance
+
 
 transaction_dao = TransactionDao(Transactions)

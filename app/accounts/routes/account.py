@@ -8,7 +8,8 @@ from app.users.models import User
 from app.accounts.serializers.account import DepositSerializer
 from app.accounts.utils import trigger_mpesa_stkpush_payment, process_mpesa_stk
 from app.accounts.daos.mpesa import mpesa_payment_dao
-from app.core.deps import get_current_active_user, get_db, get_user_balance
+from app.accounts.daos.account import transaction_dao
+from app.core.deps import get_current_active_user, get_db
 from app.accounts.serializers.mpesa import (
     MpesaPaymentCreateSerializer,
     MpesaPaymentResultSerializer,
@@ -23,9 +24,12 @@ template_prefix = "accounts/templates/"
 
 @router.get("/wallet/", response_class=HTMLResponse)
 async def get_wallet(
-    request: Request, wallet_balance: float = Depends(get_user_balance)
+    request: Request,
+    user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
 ):
     """Get wallet page"""
+    wallet_balance = transaction_dao.get_user_balance(db, account=user.phone)
     return templates.TemplateResponse(
         f"{template_prefix}wallet.html",
         {
@@ -123,13 +127,10 @@ async def post_callback(
     background_tasks.add_task(process_mpesa_stk, db, mpesa_response_in.Body.stkCallback)
 
 
-# Receive callback
-# Check if ip, on update, save to transactions model
-# Send message on save to model
-# Test STK Push live
-# Receives sms on paybill payment
 # Navbar Account balance
-# Deposit
+# Python 2 decimal places - Test models
+# Callback for paybill
+# Deposit history
 # Models
 # Test models
 # Account - mpesa
