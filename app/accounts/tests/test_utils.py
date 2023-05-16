@@ -20,11 +20,12 @@ from app.accounts.tests.test_data import (
     serialized_call_back,
     mock_stk_push_response,
     mpesa_reference_no,
+    serialized_paybill_deposit_response,
 )
 from app.accounts.serializers.mpesa import MpesaPaymentCreateSerializer
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.accounts.daos.account import transaction_dao
-from app.accounts.utils import process_mpesa_stk
+from app.accounts.utils import process_mpesa_stk, process_mpesa_paybill_payment
 from app.exceptions.custom import STKPushFailed
 
 
@@ -159,6 +160,7 @@ def test_process_mpesa_stk_successfully_creates_transaction_instance(
     assert transaction.service == TransactionServices.MPESA.value
     assert transaction.status == TransactionStatuses.SUCCESSFUL.value
     assert transaction.type == TransactionTypes.PAYMENT.value
+    assert float(transaction.final_balance) == float(1.0)
 
 
 def test_process_mpesa_stk_fails_to_create_unknown_transaction_instance(
@@ -168,3 +170,24 @@ def test_process_mpesa_stk_fails_to_create_unknown_transaction_instance(
     mpesa_payments = mpesa_payment_dao.get_all(db)
 
     assert len(mpesa_payments) == 0
+
+
+def test_process_mpesa_paybill_payment_creates_model_instance(
+    db: Session, delete_transcation_model_instances: Callable
+) -> None:
+    process_mpesa_paybill_payment(db, serialized_paybill_deposit_response)
+    transaction = transaction_dao.get(
+        db, external_transaction_id=serialized_paybill_deposit_response.TransID
+    )
+
+    assert transaction is not None
+    assert transaction.cash_flow == TransactionCashFlow.INWARD.value
+    assert transaction.service == TransactionServices.MPESA.value
+    assert transaction.status == TransactionStatuses.SUCCESSFUL.value
+    assert transaction.type == TransactionTypes.PAYMENT.value
+    assert float(transaction.amount) == float(
+        serialized_paybill_deposit_response.TransAmount
+    )
+    assert float(transaction.final_balance) == float(
+        serialized_paybill_deposit_response.TransAmount
+    )

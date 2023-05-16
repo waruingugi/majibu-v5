@@ -50,7 +50,9 @@ class TransactionDao(
             db_obj.cash_flow == TransactionCashFlow.INWARD.value
             and db_obj.service == TransactionServices.MPESA.value
         ):  # Means if the transaction is an M-Pesa Deposit
-            message = MPESA_PAYMENT_DEPOSIT.format(db_obj.amount, db_obj.account)
+            message = MPESA_PAYMENT_DEPOSIT.format(
+                db_obj.amount, db_obj.account, db_obj.final_balance
+            )
             type = NotificationTypes.DEPOSIT.value
 
         notifications_dao.send_notification(

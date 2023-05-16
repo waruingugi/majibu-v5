@@ -16,7 +16,7 @@ from app.core.config import settings
 
 
 def test_create_transaction_instance_succesfully(
-    db: Session, delete_previous_transcations: Callable
+    db: Session, delete_transcation_model_instances: Callable
 ) -> None:
     """Test created transaction instance has correct default values"""
     obj_in = TransactionCreateSerializer(**sample_transaction_instance_info)
@@ -29,7 +29,7 @@ def test_create_transaction_instance_succesfully(
 
 
 def test_new_transaction_shows_correct_final_balance(
-    db: Session, delete_previous_transcations: Callable
+    db: Session, delete_transcation_model_instances: Callable
 ) -> None:
     obj_in = TransactionCreateSerializer(**sample_transaction_instance_info)
     transaction_dao.create(db, obj_in=obj_in)
@@ -47,7 +47,7 @@ def test_new_transaction_shows_correct_final_balance(
 
 
 def test_transaction_dao_shows_correct_user_balance(
-    db: Session, delete_previous_transcations: Callable
+    db: Session, delete_transcation_model_instances: Callable
 ) -> None:
     sample_transaction_instance_info["amount"] = 9.55
 

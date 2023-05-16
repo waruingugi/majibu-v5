@@ -48,3 +48,23 @@ class MpesaPaymentResultBodySerializer(BaseModel):
 
 class MpesaPaymentResultSerializer(BaseModel):
     Body: MpesaPaymentResultBodySerializer
+
+
+class MpesaDirectPaymentSerializer(BaseModel):
+    TransactionType: str
+    TransID: str
+    TransTime: str
+    TransAmount: str
+    BusinessShortCode: str
+    BillRefNumber: Optional[str]
+    InvoiceNumber: Optional[str]
+    OrgAccountBalance: Optional[str]
+    ThirdPartyTransID: Optional[str]
+    MSISDN: str
+    FirstName: Optional[str]
+    MiddleName: Optional[str]
+    LastName: Optional[str]
+
+    _standardize_phone_to_required_format = validator(
+        "MSISDN", pre=True, allow_reuse=True
+    )(standardize_phone_to_required_format)

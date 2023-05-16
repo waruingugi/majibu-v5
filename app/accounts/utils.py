@@ -7,9 +7,21 @@ from sqlalchemy.orm import Session
 
 from app.core.raw_logger import logger
 from app.core.config import settings, redis
-from app.accounts.constants import MpesaAccountTypes
-from app.accounts.serializers.mpesa import MpesaPaymentResultStkCallbackSerializer
+from app.accounts.constants import (
+    MpesaAccountTypes,
+    TransactionCashFlow,
+    TransactionTypes,
+    TransactionStatuses,
+    TransactionServices,
+    PAYBILL_DEPOSIT_DESCRIPTION,
+)
+from app.accounts.serializers.mpesa import (
+    MpesaPaymentResultStkCallbackSerializer,
+    MpesaDirectPaymentSerializer,
+)
 from app.accounts.daos.mpesa import mpesa_payment_dao
+from app.accounts.daos.account import transaction_dao
+from app.accounts.serializers.account import TransactionCreateSerializer
 from app.exceptions.custom import STKPushFailed
 
 
@@ -62,7 +74,7 @@ def initiate_mpesa_stkpush_payment(
     description: str,
 ) -> Dict | None:
     """Trigger STKPush"""
-    logger.info(f"Initiate M-Pesa STKPush for KES {amount} to {phone_number}")
+    logger.info(f"Initiate M-Pesa STKPush for Ksh {amount} to {phone_number}")
 
     access_token = get_mpesa_access_token()
     phone_number = str(phone_number).replace("+", "")
@@ -112,7 +124,7 @@ def trigger_mpesa_stkpush_payment(amount: int, phone_number: str) -> Optional[Di
     amount = amount
     account_reference = phone_number
     transaction_description = (
-        f"Request for deposit of KES {amount} for account {phone_number} in Majibu."
+        f"Request for deposit of Ksh {amount} for account {phone_number} in Majibu."
     )
     try:
         passkey = settings.MPESA_PASS_KEY
@@ -179,3 +191,28 @@ def process_mpesa_stk(
 
     else:
         logger.info("Received an unknown STKPush response: {mpesa_response_in}")
+
+
+def process_mpesa_paybill_payment(
+    db: Session, mpesa_response_in: MpesaDirectPaymentSerializer
+):
+    """Process direct payments to paybill"""
+    description = PAYBILL_DEPOSIT_DESCRIPTION.format(
+        mpesa_response_in.TransAmount, mpesa_response_in.MSISDN
+    )
+
+    transaction_in = TransactionCreateSerializer(
+        account=mpesa_response_in.MSISDN,
+        external_transaction_id=mpesa_response_in.TransID,
+        cash_flow=TransactionCashFlow.INWARD.value,
+        type=TransactionTypes.PAYMENT.value,
+        status=TransactionStatuses.SUCCESSFUL.value,
+        service=TransactionServices.MPESA.value,
+        description=description,
+        amount=float(mpesa_response_in.TransAmount),
+        fee=0.0,
+        tax=0.0,
+        external_response=json.dumps(mpesa_response_in.dict()),
+    )
+
+    transaction_dao.create(db, obj_in=transaction_in)

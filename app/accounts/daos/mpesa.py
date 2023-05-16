@@ -14,6 +14,7 @@ from app.accounts.constants import (
     TransactionServices,
     TransactionStatuses,
 )
+from app.accounts.constants import STKPUSH_DEPOSIT_DESCRPTION
 
 
 class MpesaPaymentDao(
@@ -27,9 +28,8 @@ class MpesaPaymentDao(
             db_obj.result_code == 0  # If Mpesa transacation is successful
             and db_obj.receipt_number is not None  # Must have a valid M-Pesa Reference
         ):
-            description = (
-                f"Deposit of KES {db_obj.amount} "
-                + f"for account {db_obj.phone_number} using M-Pesa STKPush."
+            description = STKPUSH_DEPOSIT_DESCRPTION.format(
+                db_obj.amount, db_obj.phone_number
             )
 
             transaction_dao.create(

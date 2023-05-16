@@ -18,7 +18,7 @@ import pytest
 
 
 @pytest.fixture
-def delete_previous_transcations(db: Session) -> None:
+def delete_transcation_model_instances(db: Session) -> None:
     # Delete previously existing rows in Transactions model
     previous_transactions = transaction_dao.get_all(db)
     for transaction in previous_transactions:

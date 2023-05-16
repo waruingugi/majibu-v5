@@ -1,8 +1,19 @@
 from enum import Enum
 
+
+# SMS message sent to user on M-Pesa deposit
 MPESA_PAYMENT_DEPOSIT = (
-    "You've successfully deposited KES {} for your account {}. "
+    "You've successfully deposited Ksh{} for your account {}. "
+    "New balance is Ksh{}. "
     "Thank your for choosing Majibu!"
+)
+
+# M-Pesa STKPush deposit description
+STKPUSH_DEPOSIT_DESCRPTION = "Deposit of Ksh {} " "for account {} using M-Pesa STKPush."
+
+# M-Pesa direct paybill payment description
+PAYBILL_DEPOSIT_DESCRIPTION = (
+    "Deposit of Ksh {} " "for account {} using M-Pesa paybill."
 )
 
 

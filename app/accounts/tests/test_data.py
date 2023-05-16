@@ -4,6 +4,7 @@ from app.accounts.serializers.mpesa import (
     MpesaPaymentResultStkCallbackSerializer,
     MpesaPaymentResultBodySerializer,
     MpesaPaymentResultSerializer,
+    MpesaDirectPaymentSerializer,
 )
 import json
 
@@ -74,3 +75,25 @@ serialized_result_body = MpesaPaymentResultBodySerializer(
 )
 
 serailized_stk_push_result = MpesaPaymentResultSerializer(Body=serialized_result_body)
+
+
+# M-Pesa Paybill Response
+
+sample_paybill_deposit_response = {
+    "TransactionType": "Pay Bill",
+    "TransID": "RKTQDM7W6S",
+    "TransTime": "20191122063845",
+    "TransAmount": "10",
+    "BusinessShortCode": settings.MPESA_BUSINESS_SHORT_CODE,
+    "BillRefNumber": settings.SUPERUSER_PHONE,
+    "InvoiceNumber": "",
+    "OrgAccountBalance": "35.00",
+    "ThirdPartyTransID": "",
+    "MSISDN": settings.SUPERUSER_PHONE,
+    "FirstName": "WARUI",
+    "MiddleName": "NGUGI",
+    "LastName": "NGUGI",
+}
+serialized_paybill_deposit_response = MpesaDirectPaymentSerializer(
+    **sample_paybill_deposit_response
+)

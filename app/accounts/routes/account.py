@@ -6,13 +6,18 @@ import phonenumbers
 from app.core.config import templates, settings
 from app.users.models import User
 from app.accounts.serializers.account import DepositSerializer
-from app.accounts.utils import trigger_mpesa_stkpush_payment, process_mpesa_stk
+from app.accounts.utils import (
+    trigger_mpesa_stkpush_payment,
+    process_mpesa_stk,
+    process_mpesa_paybill_payment,
+)
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.accounts.daos.account import transaction_dao
 from app.core.deps import get_current_active_user, get_db
 from app.accounts.serializers.mpesa import (
     MpesaPaymentCreateSerializer,
     MpesaPaymentResultSerializer,
+    MpesaDirectPaymentSerializer,
 )
 from app.core.logger import LoggingRoute
 from app.core.ratelimiter import limiter
@@ -30,12 +35,13 @@ async def get_wallet(
 ):
     """Get wallet page"""
     wallet_balance = transaction_dao.get_user_balance(db, account=user.phone)
+
     return templates.TemplateResponse(
         f"{template_prefix}wallet.html",
         {
             "request": request,
             "title": "Wallet",
-            "current_balance": f"{wallet_balance:,}",
+            "current_balance": wallet_balance,
         },
     )
 
@@ -121,15 +127,31 @@ async def post_callback(
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
 ):
+    """CallBack URL is used to receive responses for STKPush from M-Pesa"""
     if request.client.host not in MPESA_WHITE_LISTED_IPS:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
     background_tasks.add_task(process_mpesa_stk, db, mpesa_response_in.Body.stkCallback)
 
 
-# Navbar Account balance
-# Python 2 decimal places - Test models
+@router.post("/payments/confirmation")
+async def post_confirmation(
+    request: Request,
+    paybill_response_in: MpesaDirectPaymentSerializer,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    """Confirmation URL is used to receive responses for direct paybill payments from M-Pesa"""
+    if request.client.host not in MPESA_WHITE_LISTED_IPS:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
+    background_tasks.add_task(process_mpesa_paybill_payment, db, paybill_response_in)
+
+
 # Callback for paybill
+# Serializer for paybill - corrections
+# Transactions model create - if valid
+# Tests and more tests
 # Deposit history
 # Models
 # Test models
