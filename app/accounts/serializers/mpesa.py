@@ -68,3 +68,33 @@ class MpesaDirectPaymentSerializer(BaseModel):
     _standardize_phone_to_required_format = validator(
         "MSISDN", pre=True, allow_reuse=True
     )(standardize_phone_to_required_format)
+
+
+class WithdrawalBaseSerializer(BaseModel):
+    ConversationID: str
+    OriginatorConversationID: str
+    ResponseCode: str
+    ResponseDescription: str
+
+
+class WithdawalCreateSerializer(WithdrawalBaseSerializer):
+    pass
+
+
+class WithdrawalResultReferenceItemSerializer(BaseModel):
+    Name: str
+    Value: Optional[Union[int, str]] = ""
+
+
+class WithdrawalReferenceDataSerializer(BaseModel):
+    Item: List[MpesaPaymentResultItemSerializer]
+
+
+class WithdrawalResultSerializer(BaseModel):
+    ResultType: int
+    ResultCode: int
+    ResultDesc: str
+    OriginatorConversationID: str
+    ConversationID: str
+    TransactionID: str
+    ReferenceData: WithdrawalReferenceDataSerializer

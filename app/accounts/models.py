@@ -162,7 +162,7 @@ class Withdrawals(Base):
         Text, comment="This is the description of the request submission status."
     )
 
-    """Results Section - Success
+    """Response Section - Success
     Contains attributes populated by the callback if payment is successful"""
     result_code = mapped_column(
         Integer,
@@ -183,8 +183,6 @@ class Withdrawals(Base):
         ),
     )
 
-    """Response Section - Success
-    Contains attributes populated by the callback if payment is successful"""
     transaction_id = mapped_column(String, nullable=True)
     transaction_amount = mapped_column(
         Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
