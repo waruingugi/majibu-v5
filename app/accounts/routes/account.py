@@ -18,6 +18,7 @@ from app.accounts.serializers.mpesa import (
     MpesaPaymentCreateSerializer,
     MpesaPaymentResultSerializer,
     MpesaDirectPaymentSerializer,
+    WithdrawalResultSerializer,
 )
 from app.core.logger import LoggingRoute
 from app.core.ratelimiter import limiter
@@ -148,11 +149,31 @@ async def post_confirmation(
     background_tasks.add_task(process_mpesa_paybill_payment, db, paybill_response_in)
 
 
-# Callback for paybill
-# Serializer for paybill - corrections
-# Transactions model create - if valid
-# Tests and more tests
+@router.post("/payments/result/")
+async def post_withdrawal_result(
+    request: Request,
+    withdrawal_response_in: WithdrawalResultSerializer,
+):
+    """Callback URL to receive response after posting withdrawal request to M-Pesa"""
+    return withdrawal_response_in
+
+
+@router.post("/payments/timeout/")
+async def post_withdrawal_time_out(
+    request: Request,
+):
+    """
+    Callback URL to receive response after posting
+    withdrawal request to M-Pesa in case of time out"""
+    pass
+
+
 # B2C
+# Create withdrawaø request save to db
+# If valid callback update db model instance else fail
+# Celery
+# Query B2C pending transactions or use retry feature
+# Fix payment func names
 # Deposit history
 # Models
 # Test models

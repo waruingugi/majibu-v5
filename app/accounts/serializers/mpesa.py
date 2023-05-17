@@ -81,20 +81,29 @@ class WithdawalCreateSerializer(WithdrawalBaseSerializer):
     pass
 
 
-class WithdrawalResultReferenceItemSerializer(BaseModel):
-    Name: str
-    Value: Optional[Union[int, str]] = ""
+class KeyValueDict(BaseModel):
+    Key: str
+    Value: str
 
 
-class WithdrawalReferenceDataSerializer(BaseModel):
-    Item: List[MpesaPaymentResultItemSerializer]
+class WithdrawalReferenceItemSerializer(BaseModel):
+    ReferenceItem: KeyValueDict
 
 
-class WithdrawalResultSerializer(BaseModel):
+class WithdrawalResultBodyParaments(BaseModel):
+    ResultParameter: List[KeyValueDict]
+
+
+class WithdrawalResultBodySerializer(BaseModel):
     ResultType: int
     ResultCode: int
     ResultDesc: str
     OriginatorConversationID: str
     ConversationID: str
     TransactionID: str
-    ReferenceData: WithdrawalReferenceDataSerializer
+    ResultParameters: Optional[WithdrawalResultBodyParaments] = None
+    ReferenceData: WithdrawalReferenceItemSerializer
+
+
+class WithdrawalResultSerializer(BaseModel):
+    Result: WithdrawalResultBodySerializer

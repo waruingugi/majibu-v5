@@ -117,3 +117,55 @@ sample_paybill_deposit_response = {
 serialized_paybill_deposit_response = MpesaDirectPaymentSerializer(
     **sample_paybill_deposit_response
 )
+
+
+# M-Pesa B2C sample data
+sample_failed_b2c_response = {
+    "Result": {
+        "ResultType": 0,
+        "ResultCode": 2,
+        "ResultDesc": "Declined due to limit rule",
+        "OriginatorConversationID": "22250-3928810-1",
+        "ConversationID": "AG_20230517_20102330edbb3fee8a88",
+        "TransactionID": "REH91PXYJ7",
+        "ResultParameters": None,
+        "ReferenceData": {
+            "ReferenceItem": {
+                "Key": "QueueTimeoutURL",
+                "Value": "https://internalsandbox.safaricom.co.ke/mpesa/b2cresults/v1/submit",
+            }
+        },
+    }
+}
+
+sample_successful_b2c_response = {
+    "Result": {
+        "ResultType": 0,
+        "ResultCode": 0,
+        "ResultDesc": "The service request is processed successfully.",
+        "OriginatorConversationID": "88599-22310068-1",
+        "ConversationID": "AG_20230517_20400a1efc7357012ce8",
+        "TransactionID": "REH3SOIU9T",
+        "ResultParameters": {
+            "ResultParameter": [
+                {
+                    "Key": "ReceiverPartyPublicName",
+                    "Value": "254704845040 - WARUI NGUGI",
+                },
+                {"Key": "TransactionCompletedDateTime", "Value": "17.05.2023 22:41:32"},
+                {"Key": "B2CUtilityAccountAvailableFunds", "Value": 5970.0},
+                {"Key": "B2CWorkingAccountAvailableFunds", "Value": 312.74},
+                {"Key": "B2CRecipientIsRegisteredCustomer", "Value": "Y"},
+                {"Key": "B2CChargesPaidAccountAvailableFunds", "Value": 0.0},
+                {"Key": "TransactionAmount", "Value": 10},
+                {"Key": "TransactionReceipt", "Value": "REH3SOIU9T"},
+            ]
+        },
+        "ReferenceData": {
+            "ReferenceItem": {
+                "Key": "QueueTimeoutURL",
+                "Value": "http://internalapi.safaricom.co.ke/mpesa/b2cresults/v1/submit",
+            }
+        },
+    }
+}
