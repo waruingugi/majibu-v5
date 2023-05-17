@@ -18,6 +18,7 @@ from app.core.config import redis, settings
 from app.accounts.constants import MpesaAccountTypes
 from app.accounts.tests.test_data import (
     serialized_call_back,
+    serialized_failed_call_back,
     mock_stk_push_response,
     mpesa_reference_no,
     serialized_paybill_deposit_response,
@@ -161,6 +162,29 @@ def test_process_mpesa_stk_successfully_creates_transaction_instance(
     assert transaction.status == TransactionStatuses.SUCCESSFUL.value
     assert transaction.type == TransactionTypes.PAYMENT.value
     assert float(transaction.final_balance) == float(1.0)
+
+
+def test_process_mpesa_stk_fails_to_create_failed_stk_push_response(
+    db: Session, delete_transcation_model_instances: Callable
+) -> None:
+    data = mock_stk_push_response
+
+    mpesa_payment_dao.create(
+        db,
+        MpesaPaymentCreateSerializer(
+            phone_number=settings.SUPERUSER_PHONE,
+            merchant_request_id=data["MerchantRequestID"],
+            checkout_request_id=data["CheckoutRequestID"],
+            response_code=data["ResponseCode"],
+            response_description=data["ResponseDescription"],
+            customer_message=data["CustomerMessage"],
+        ),
+    )
+    process_mpesa_stk(db, serialized_failed_call_back)
+
+    transaction = transaction_dao.get_all(db)
+
+    assert len(transaction) == 0
 
 
 def test_process_mpesa_stk_fails_to_create_unknown_transaction_instance(

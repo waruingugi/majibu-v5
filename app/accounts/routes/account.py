@@ -134,7 +134,7 @@ async def post_callback(
     background_tasks.add_task(process_mpesa_stk, db, mpesa_response_in.Body.stkCallback)
 
 
-@router.post("/payments/confirmation")
+@router.post("/payments/confirmation/")
 async def post_confirmation(
     request: Request,
     paybill_response_in: MpesaDirectPaymentSerializer,
@@ -152,6 +152,7 @@ async def post_confirmation(
 # Serializer for paybill - corrections
 # Transactions model create - if valid
 # Tests and more tests
+# B2C
 # Deposit history
 # Models
 # Test models

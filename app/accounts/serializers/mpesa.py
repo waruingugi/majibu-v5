@@ -27,7 +27,7 @@ class MpesaPaymentUpdateSerializer(MpesaPaymentBaseSerializer):
 
 class MpesaPaymentResultItemSerializer(BaseModel):
     Name: str
-    Value: Optional[Union[int, str]]
+    Value: Optional[Union[int, str]] = ""
 
 
 class MpesaPaymentResultCallbackMetadataSerializer(BaseModel):
@@ -39,7 +39,7 @@ class MpesaPaymentResultStkCallbackSerializer(BaseModel):
     CheckoutRequestID: str
     ResultCode: int
     ResultDesc: str
-    CallbackMetadata: Optional[MpesaPaymentResultCallbackMetadataSerializer]
+    CallbackMetadata: Optional[MpesaPaymentResultCallbackMetadataSerializer] = None
 
 
 class MpesaPaymentResultBodySerializer(BaseModel):
@@ -56,14 +56,14 @@ class MpesaDirectPaymentSerializer(BaseModel):
     TransTime: str
     TransAmount: str
     BusinessShortCode: str
-    BillRefNumber: Optional[str]
-    InvoiceNumber: Optional[str]
-    OrgAccountBalance: Optional[str]
-    ThirdPartyTransID: Optional[str]
+    BillRefNumber: Optional[str] = ""
+    InvoiceNumber: Optional[str] = ""
+    OrgAccountBalance: Optional[str] = ""
+    ThirdPartyTransID: Optional[str] = ""
     MSISDN: str
-    FirstName: Optional[str]
-    MiddleName: Optional[str]
-    LastName: Optional[str]
+    FirstName: Optional[str] = ""
+    MiddleName: Optional[str] = ""
+    LastName: Optional[str] = ""
 
     _standardize_phone_to_required_format = validator(
         "MSISDN", pre=True, allow_reuse=True

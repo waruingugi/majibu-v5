@@ -3,7 +3,6 @@ from app.accounts.serializers.mpesa import (
     MpesaPaymentResultCallbackMetadataSerializer,
     MpesaPaymentResultStkCallbackSerializer,
     MpesaPaymentResultBodySerializer,
-    MpesaPaymentResultSerializer,
     MpesaDirectPaymentSerializer,
 )
 import json
@@ -57,6 +56,18 @@ sample_transaction_instance_info = {
     "external_response": json.dumps({}),
 }
 
+# Sample pf failed STKPush response
+sample_failed_stk_push_response = {
+    "Body": {
+        "stkCallback": {
+            "MerchantRequestID": "29115-34620561-1",
+            "CheckoutRequestID": "ws_CO_191220191020363925",
+            "ResultCode": 1032,
+            "ResultDesc": "Request canceled by user.",
+        }
+    }
+}
+
 # Serialized M-Pesa STKPush result
 serialized_call_back_metadata = MpesaPaymentResultCallbackMetadataSerializer(
     **mock_stk_push_result["Body"]["stkCallback"]["CallbackMetadata"]
@@ -74,7 +85,16 @@ serialized_result_body = MpesaPaymentResultBodySerializer(
     stkCallback=serialized_call_back
 )
 
-serailized_stk_push_result = MpesaPaymentResultSerializer(Body=serialized_result_body)
+serialized_failed_call_back = MpesaPaymentResultStkCallbackSerializer(
+    MerchantRequestID=sample_failed_stk_push_response["Body"]["stkCallback"][
+        "MerchantRequestID"
+    ],
+    CheckoutRequestID=sample_failed_stk_push_response["Body"]["stkCallback"][
+        "CheckoutRequestID"
+    ],
+    ResultCode=sample_failed_stk_push_response["Body"]["stkCallback"]["ResultCode"],
+    ResultDesc=sample_failed_stk_push_response["Body"]["stkCallback"]["ResultDesc"],
+)
 
 
 # M-Pesa Paybill Response

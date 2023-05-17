@@ -3,7 +3,7 @@ from app.accounts.constants import TransactionStatuses
 from app.core.helpers import generate_transaction_code
 from app.core.config import settings
 
-from sqlalchemy import String, Numeric, text, Text, JSON, Integer, Float
+from sqlalchemy import String, Numeric, text, Text, JSON, Integer, Float, Boolean
 from sqlalchemy.orm import mapped_column
 from sqlalchemy import DateTime
 
@@ -87,7 +87,6 @@ class MpesaPayments(Base):
     Results Section.
     Contains attributes populated by the callback
     """
-
     result_code = mapped_column(
         Integer,
         nullable=True,
@@ -101,7 +100,7 @@ class MpesaPayments(Base):
     )
 
     """
-    Results Section - Success
+    Response Section - Success
     Contains attributes populated by the callback if payment is successful
     """
     amount = mapped_column(
@@ -127,4 +126,103 @@ class MpesaPayments(Base):
             "transaction completed."
         ),
     )
+    external_response = mapped_column(JSON, nullable=True)
+
+
+class Withdrawals(Base):
+    """
+    Records any withdrawals initiated by the user
+
+    Response section.
+    Contains attributes populated after posting the request to
+    mpesa B2C api url"""
+
+    conversation_id = mapped_column(
+        String,
+        comment=(
+            "This is a global unique identifier for the transaction request returned by the API "
+            "proxy upon successful request submission."
+        ),
+    )
+    originator_conversation_id = mapped_column(
+        String,
+        comment=(
+            "This is a global unique identifier for the transaction request returned by the M-PESA "
+            "upon successful request submission."
+        ),
+    )
+    response_code = mapped_column(
+        Integer,
+        comment=(
+            "Indicates the status of the transaction submission. 0 means "
+            "successful submission and any other code means an error occurred."
+        ),
+    )
+    response_description = mapped_column(
+        Text, comment="This is the description of the request submission status."
+    )
+
+    """Results Section - Success
+    Contains attributes populated by the callback if payment is successful"""
+    result_code = mapped_column(
+        Integer,
+        nullable=True,
+        comment=(
+            "Indicates the status of the transaction processing. 0 means "
+            "successful processing and any other code means an error occurred."
+        ),
+    )
+    result_description = mapped_column(
+        Text, nullable=True, comment="Description message of the Results Code."
+    )
+    result_type = mapped_column(
+        Integer,
+        nullable=True,
+        comment=(
+            "Indicates whether the transaction was already sent to your listener. Usual value is 0."
+        ),
+    )
+
+    """Response Section - Success
+    Contains attributes populated by the callback if payment is successful"""
+    transaction_id = mapped_column(String, nullable=True)
+    transaction_amount = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+        comment="This is the Amount that was transacted.",
+    )
+    working_account_available_funds = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+        comment="Available balance of the Working account under the B2C shortcode used in the transaction.",
+    )
+    utility_account_available_funds = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+        comment="Available balance of the Utility account under the B2C shortcode used in the transaction.",
+    )
+    transaction_date = mapped_column(
+        DateTime,
+        nullable=True,
+        comment=(
+            "This is a timestamp that represents the date and time that the "
+            "transaction completed."
+        ),
+    )
+    phone_number = mapped_column(
+        String,
+        nullable=True,
+        comment="Phone number of the customer who received the payment.",
+    )
+    full_name = mapped_column(
+        String,
+        nullable=True,
+        comment="Name of the customer who received the payment.",
+    )
+    charges_paid_account_available_funds = mapped_column(
+        Float(asdecimal=True, decimal_return_scale=settings.MONETARY_DECIMAL_PLACES),
+        nullable=True,
+        comment="Available balance of the Charges Paid account under the B2C shortcode.",
+    )
+    is_mpesa_registered_customer = mapped_column(Boolean, nullable=True)
     external_response = mapped_column(JSON, nullable=True)
