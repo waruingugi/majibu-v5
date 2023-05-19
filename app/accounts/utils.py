@@ -300,7 +300,7 @@ def initiate_b2c_payment(
         raise B2CPaymentFailed(str(e))
 
 
-def process_b2c_payment(db: Session, user: User, amount: int):
+def process_b2c_payment(db: Session, *, user: User, amount: int):
     """Process an M-Pesa B2C payment request"""
     try:
         # Save hashed value that expires every 2 minutes.

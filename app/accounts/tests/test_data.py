@@ -126,6 +126,11 @@ sample_b2c_response = {
     "ResponseCode": "0",
     "ResponseDescription": "Accept the service request successfully.",
 }
+sample_failed_b2c_response = {
+    "requestId": "11728-2929992-1",
+    "errorCode": "401.002.01",
+    "errorMessage": "Error Occurred - Invalid Access Token - BJGFGOXv5aZnw90KkA4TDtu4Xdyf",
+}
 
 sample_failed_b2c_result = {
     "Result": {
