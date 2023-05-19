@@ -108,7 +108,7 @@ class WithdrawalResultBodySerializer(BaseModel):
     OriginatorConversationID: str
     ConversationID: str
     TransactionID: str
-    ResultParameters: Optional[WithdrawalResultBodyParaments] = None
+    ResultParameters: WithdrawalResultBodyParaments
     ReferenceData: WithdrawalReferenceItemSerializer
 
 

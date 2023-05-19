@@ -11,7 +11,11 @@ from cryptography.x509 import Certificate, load_pem_x509_certificate
 
 from app.core.raw_logger import logger
 from app.core.config import settings, redis
-from app.core.helpers import md5_hash
+from app.core.helpers import (
+    md5_hash,
+    format_mpesa_result_params_to_dict,
+    format_mpesa_receiver_details,
+)
 from app.accounts.constants import (
     MpesaAccountTypes,
     TransactionCashFlow,
@@ -24,6 +28,7 @@ from app.accounts.serializers.mpesa import (
     MpesaPaymentResultStkCallbackSerializer,
     MpesaDirectPaymentSerializer,
     WithdrawalCreateSerializer,
+    WithdrawalResultBodySerializer,
 )
 from app.accounts.daos.mpesa import mpesa_payment_dao, withdrawal_dao
 from app.accounts.daos.account import transaction_dao
@@ -206,6 +211,7 @@ def process_mpesa_paybill_payment(
     db: Session, mpesa_response_in: MpesaDirectPaymentSerializer
 ) -> None:
     """Process direct payments to paybill"""
+    logger.info("Processing M-Pesa paybill payment")
     description = PAYBILL_DEPOSIT_DESCRIPTION.format(
         mpesa_response_in.TransAmount, mpesa_response_in.MSISDN
     )
@@ -302,6 +308,7 @@ def initiate_b2c_payment(
 
 def process_b2c_payment(db: Session, *, user: User, amount: int):
     """Process an M-Pesa B2C payment request"""
+    logger.info("Processiong B2C payment")
     try:
         # Save hashed value that expires every 2 minutes.
         # That effectively only limits a user to 1 successful withdrawal
@@ -325,3 +332,48 @@ def process_b2c_payment(db: Session, *, user: User, amount: int):
     except Exception as e:
         logger.error(f"An execption ocurred while processing B2C payment: {e}")
         raise B2CPaymentFailed(str(e))
+
+
+def process_b2c_payment_result(
+    db: Session, mpesa_b2c_result: WithdrawalResultBodySerializer
+):
+    """Process B2C payment"""
+    logger.info("Processing B2C payment result.")
+    withrawal_request = withdrawal_dao.get_not_none(
+        db, conversation_id=mpesa_b2c_result.ConversationID
+    )
+
+    result_parameters = mpesa_b2c_result.ResultParameters
+    result_parameter = result_parameters.ResultParameter
+
+    if result_parameter is not None:
+        result_params = format_mpesa_result_params_to_dict(result_parameter)
+        phone, full_name = format_mpesa_receiver_details(
+            result_params["ReceiverPartyPublicName"]
+        )
+
+        updated_withdrawal_request = {
+            "result_code": mpesa_b2c_result.ResultCode,
+            "result_description": mpesa_b2c_result.ResultDesc,
+            "transaction_id": mpesa_b2c_result.TransactionID,
+            "transaction_amount": result_params["TransactionAmount"],
+            "working_account_available_funds": result_params[
+                "B2CWorkingAccountAvailableFunds"
+            ],
+            "utility_account_available_funds": result_params[
+                "B2CUtilityAccountAvailableFunds"
+            ],
+            "transaction_date": result_params["ReceiverPartyPublicName"],
+            "phone_number": phone,
+            "full_name": full_name,
+            "charges_paid_account_available_funds": result_params[
+                "B2CChargesPaidAccountAvailableFunds"
+            ],
+            "external_response": json.dumps(mpesa_b2c_result.dict()),
+        }
+
+        withdrawal_dao.update(
+            db, db_obj=withrawal_request, obj_in=updated_withdrawal_request
+        )
+    else:
+        logger.warning(f"Received invalid B2C response: {mpesa_b2c_result.dict()}")

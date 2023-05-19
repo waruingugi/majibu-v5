@@ -12,6 +12,7 @@ from app.accounts.utils import (
     process_b2c_payment,
 )
 from app.core.config import redis, settings
+from app.core.helpers import md5_hash
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
 
@@ -279,8 +280,10 @@ def test_process_b2c_payment_creates_withdrawal_instance(
         db_obj = withdrawal_dao.get(
             db, conversation_id=sample_b2c_response["ConversationID"]
         )
+        cached_data = redis.get(md5_hash(f"{user.phone}:withdraw_request"))
 
         assert db_obj is not None
+        assert cached_data is not None
         assert (
             db_obj.originator_conversation_id
             == sample_b2c_response["OriginatorConversationID"]

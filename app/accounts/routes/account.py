@@ -10,6 +10,7 @@ from app.accounts.utils import (
     trigger_mpesa_stkpush_payment,
     process_mpesa_stk,
     process_mpesa_paybill_payment,
+    process_b2c_payment,
 )
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.accounts.daos.account import transaction_dao
@@ -126,6 +127,7 @@ async def get_withdraw(
 @router.post("/withdraw/", response_class=HTMLResponse)
 async def post_withdraw(
     request: Request,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
     withdraw: WithdrawSerializer = Depends(),
@@ -141,8 +143,14 @@ async def post_withdraw(
 
     elif redis.get(md5_hash(f"{user.phone}:withdraw_request")):
         withdraw.field_errors.append(ErrorCodes.SIMILAR_WITHDRAWAL_REQUEST.value)
+
     else:
-        pass
+        background_tasks.add_task(
+            process_b2c_payment, db, user=user, amount=withdraw.amount
+        )
+        redirect_url = request.url_for("get_withdraw_success")
+
+        return RedirectResponse(redirect_url, status_code=302)
 
     return templates.TemplateResponse(
         f"{template_prefix}withdraw.html",
@@ -151,6 +159,18 @@ async def post_withdraw(
             "title": "Withdraw",
             "field_errors": withdraw.field_errors,
         },
+    )
+
+
+@router.get("/withdraw/success", response_class=HTMLResponse)
+async def get_withdraw_success(
+    request: Request,
+    _: User = Depends(get_current_active_user),
+):
+    """Get withdraw success page"""
+    return templates.TemplateResponse(
+        f"{template_prefix}withdraw_success.html",
+        {"request": request, "title": "Withdraw"},
     )
 
 
@@ -189,6 +209,9 @@ async def post_withdrawal_result(
     withdrawal_response_in: WithdrawalResultSerializer,
 ):
     """Callback URL to receive response after posting withdrawal request to M-Pesa"""
+    if request.client.host not in MPESA_WHITE_LISTED_IPS:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
     return withdrawal_response_in
 
 
@@ -210,6 +233,7 @@ async def post_withdrawal_time_out(
 # Make request, send request
 # Wait for response, if response in previous db
 # Update to success and save to transactions
+# check transaction values if success
 # Save response to db
 # If valid callback update db model instance else fail
 # Celery

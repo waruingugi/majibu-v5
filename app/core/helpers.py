@@ -140,3 +140,19 @@ def is_valid_transaction_service(value: str):
 _is_valid_transaction_service = validator("service", pre=True, allow_reuse=True)(
     is_valid_transaction_service
 )
+
+
+def format_mpesa_receiver_details(receiver_string):
+    parts = receiver_string.split(" - ")
+    phone_number = parts[0].strip()
+    full_name = parts[1].strip()
+    return phone_number, full_name
+
+
+def format_mpesa_result_params_to_dict(result_parameters):
+    result_dict = {}
+    for item in result_parameters:
+        key = item["Key"]
+        value = item["Value"]
+        result_dict[key] = value
+    return result_dict

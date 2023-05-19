@@ -10,7 +10,10 @@ from app.accounts.tests.test_data import (
     mock_stk_push_result,
     sample_paybill_deposit_response,
 )
-from app.core.config import settings
+
+from app.errors.custom import ErrorCodes
+from app.core.config import settings, redis
+from app.core.helpers import md5_hash
 
 
 def test_post_deposit_creates_model_instance(
@@ -87,11 +90,55 @@ def test_post_confirmation_accepts_white_listed_ips(
     assert hasattr(response, "context") is False
 
 
-def test_post_confirmation_fails_with_http_exception(
-    client: TestClient, mocker: MockerFixture
-):
+def test_post_confirmation_fails_with_http_exception(client: TestClient):
     response = client.post(
         "/accounts/payments/confirmation/", json=sample_paybill_deposit_response
     )
 
     assert "Forbidden" in response.context["server_errors"]
+
+
+def test_post_withdraw_fails_on_insufficient_balance(
+    client: TestClient, mocker: MockerFixture
+):
+    mocker.patch("app.accounts.routes.account.process_b2c_payment", return_value=None)
+    response = client.post("/accounts/withdraw/", data={"amount": "70000"})
+
+    field_error = "You do not have sufficient balance to withdraw ksh70000"
+    assert field_error in response.context["field_errors"]
+
+
+def test_post_withdraw_fails_if_previous_request_exists(
+    client: TestClient, mocker: MockerFixture
+):
+    redis.flushall()  # Clear all values from redis
+    mocker.patch("app.accounts.routes.account.process_b2c_payment", return_value=None)
+    mocker.patch(  # Inflate user's balance by ksh50
+        "app.accounts.routes.account.transaction_dao.get_user_balance", return_value=50
+    )
+
+    # Set a previous request in redis
+    hashed_withdrawal_request = md5_hash(f"{settings.SUPERUSER_PHONE}:withdraw_request")
+    timeout = 60 * 2  # 2 minutes
+    redis.set(hashed_withdrawal_request, 15, ex=timeout)
+
+    response = client.post("/accounts/withdraw/", data={"amount": "1"})
+
+    field_error = ErrorCodes.SIMILAR_WITHDRAWAL_REQUEST.value
+    assert field_error in response.context["field_errors"]
+
+
+def test_post_withdraw_succeeds_in_calling_process_b2c_payment(
+    client: TestClient, mocker: MockerFixture
+):
+    redis.flushall()  # Clear all values from redis
+    mock_process_b2c_payment = mocker.patch(
+        "app.accounts.routes.account.process_b2c_payment", return_value=None
+    )
+    mocker.patch(  # Inflate user's balance by ksh50
+        "app.accounts.routes.account.transaction_dao.get_user_balance", return_value=50
+    )
+    response = client.post("/accounts/withdraw/", data={"amount": "1"})
+
+    assert ("field_errors" in response.context) is False
+    assert mock_process_b2c_payment.call_count == 1
