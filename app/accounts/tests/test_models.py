@@ -4,14 +4,18 @@ from typing import Callable
 
 from app.accounts.tests.test_data import (
     sample_transaction_instance_info,
+    sample_b2c_response,
     mock_stk_push_response,
     serialized_call_back,
 )
 from app.accounts.serializers.account import TransactionCreateSerializer
-from app.accounts.serializers.mpesa import MpesaPaymentCreateSerializer
+from app.accounts.serializers.mpesa import (
+    MpesaPaymentCreateSerializer,
+    WithdrawalCreateSerializer,
+)
 from app.accounts.utils import process_mpesa_stk
 from app.accounts.daos.account import transaction_dao
-from app.accounts.daos.mpesa import mpesa_payment_dao
+from app.accounts.daos.mpesa import mpesa_payment_dao, withdrawal_dao
 from app.core.config import settings
 
 
@@ -108,3 +112,15 @@ def test_mpesa_payment_is_updated_successfully(
     assert db_obj.receipt_number is not None
     assert db_obj.external_response == json.dumps(serialized_call_back.dict())
     assert db_obj.amount > 0.00
+
+
+def test_create_withdrawal_instance_succesfully(db: Session) -> None:
+    """Test created withdrawal instance has correct default values"""
+    obj_in = WithdrawalCreateSerializer(**sample_b2c_response)
+    db_obj = withdrawal_dao.create(db, obj_in=obj_in)
+
+    assert db_obj.conversation_id == sample_b2c_response["ConversationID"]
+    assert (
+        db_obj.originator_conversation_id
+        == sample_b2c_response["OriginatorConversationID"]
+    )

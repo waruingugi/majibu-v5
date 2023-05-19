@@ -3,9 +3,9 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 import phonenumbers
 
-from app.core.config import templates, settings
 from app.users.models import User
-from app.accounts.serializers.account import DepositSerializer
+from app.errors.custom import ErrorCodes
+from app.accounts.serializers.account import DepositSerializer, WithdrawSerializer
 from app.accounts.utils import (
     trigger_mpesa_stkpush_payment,
     process_mpesa_stk,
@@ -13,16 +13,19 @@ from app.accounts.utils import (
 )
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.accounts.daos.account import transaction_dao
-from app.core.deps import get_current_active_user, get_db
 from app.accounts.serializers.mpesa import (
     MpesaPaymentCreateSerializer,
     MpesaPaymentResultSerializer,
     MpesaDirectPaymentSerializer,
     WithdrawalResultSerializer,
 )
-from app.core.logger import LoggingRoute
-from app.core.ratelimiter import limiter
 from app.accounts.constants import MPESA_WHITE_LISTED_IPS
+
+from app.core.logger import LoggingRoute
+from app.core.config import templates, settings, redis
+from app.core.ratelimiter import limiter
+from app.core.helpers import md5_hash
+from app.core.deps import get_current_active_user, get_db
 
 router = APIRouter(route_class=LoggingRoute)
 template_prefix = "accounts/templates/"
@@ -120,6 +123,37 @@ async def get_withdraw(
     )
 
 
+@router.post("/withdraw/", response_class=HTMLResponse)
+async def post_withdraw(
+    request: Request,
+    user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+    withdraw: WithdrawSerializer = Depends(),
+):
+    """Request withdrawal amount"""
+    user_balance = transaction_dao.get_user_balance(db, account=user.phone)
+    total_withdraw_charge = settings.MPESA_B2C_CHARGE + withdraw.amount
+
+    if user_balance < total_withdraw_charge:
+        withdraw.field_errors.append(
+            f"You do not have sufficient balance to withdraw ksh{withdraw.amount}"
+        )
+
+    elif redis.get(md5_hash(f"{user.phone}:withdraw_request")):
+        withdraw.field_errors.append(ErrorCodes.SIMILAR_WITHDRAWAL_REQUEST.value)
+    else:
+        pass
+
+    return templates.TemplateResponse(
+        f"{template_prefix}withdraw.html",
+        {
+            "request": request,
+            "title": "Withdraw",
+            "field_errors": withdraw.field_errors,
+        },
+    )
+
+
 @router.post("/payments/callback/")
 async def post_callback(
     request: Request,
@@ -170,6 +204,13 @@ async def post_withdrawal_time_out(
 
 # B2C
 # Create withdrawaø request save to db
+# Save request to redis
+# If request in redis - a similar request already exists
+# If request exists in db in the last 3 mins, raise error
+# Make request, send request
+# Wait for response, if response in previous db
+# Update to success and save to transactions
+# Save response to db
 # If valid callback update db model instance else fail
 # Celery
 # Query B2C pending transactions or use retry feature

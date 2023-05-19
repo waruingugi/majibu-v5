@@ -67,9 +67,22 @@ class STKPushFailed(HttpErrorException):
     def __init__(self) -> None:
         super(STKPushFailed, self).__init__(
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-            error_code=ErrorCodes.STKPushFailed.name,
-            error_message=ErrorCodes.STKPushFailed.value,
+            error_code=ErrorCodes.STK_PUSH_FAILED.name,
+            error_message=ErrorCodes.STK_PUSH_FAILED.value,
         )
+
+
+class B2CPaymentFailed(Exception):
+    def __init__(self, message: str = ErrorCodes.B2C_PAYMENT_FAILED.value) -> None:
+        self.message = message
+
+
+class SimilarWithdrawalRequest(Exception):
+    """The user initiated a withdrawal request while a previous one
+    is still being processed."""
+
+    def __init__(self) -> None:
+        self.message = ErrorCodes.SIMILAR_WITHDRAWAL_REQUEST.value
 
 
 class InvalidEnumValue(Exception):

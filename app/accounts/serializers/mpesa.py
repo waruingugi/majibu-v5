@@ -77,7 +77,11 @@ class WithdrawalBaseSerializer(BaseModel):
     ResponseDescription: str
 
 
-class WithdawalCreateSerializer(WithdrawalBaseSerializer):
+class WithdrawalCreateSerializer(WithdrawalBaseSerializer):
+    pass
+
+
+class WithdrawalUpdateSerializer(WithdrawalBaseSerializer):
     pass
 
 

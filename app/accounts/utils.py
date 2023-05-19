@@ -4,9 +4,14 @@ from base64 import b64encode
 from typing import Optional, Dict
 from datetime import datetime
 from sqlalchemy.orm import Session
+import os
+
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.x509 import Certificate, load_pem_x509_certificate
 
 from app.core.raw_logger import logger
 from app.core.config import settings, redis
+from app.core.helpers import md5_hash
 from app.accounts.constants import (
     MpesaAccountTypes,
     TransactionCashFlow,
@@ -18,14 +23,20 @@ from app.accounts.constants import (
 from app.accounts.serializers.mpesa import (
     MpesaPaymentResultStkCallbackSerializer,
     MpesaDirectPaymentSerializer,
+    WithdawalCreateSerializer,
 )
-from app.accounts.daos.mpesa import mpesa_payment_dao
+from app.accounts.daos.mpesa import mpesa_payment_dao, withdrawal_dao
 from app.accounts.daos.account import transaction_dao
 from app.accounts.serializers.account import TransactionCreateSerializer
-from app.exceptions.custom import STKPushFailed
+from app.users.models import User
+
+from app.accounts.constants import B2CMpesaCommandIDs
+from app.exceptions.custom import STKPushFailed, B2CPaymentFailed
 
 
-def get_mpesa_access_token() -> str:
+def get_mpesa_access_token(
+    MPESA_CONSUMER_KEY=settings.MPESA_CONSUMER_KEY, MPESA_SECRET=settings.MPESA_SECRET
+) -> str:
     """
     Get Mpesa Access Token.
     Requires the application secret and consumer key.
@@ -45,9 +56,7 @@ def get_mpesa_access_token() -> str:
 
     if not access_token:
         url = settings.MPESA_TOKEN_URL
-        auth = requests.auth.HTTPBasicAuth(
-            settings.MPESA_CONSUMER_KEY, settings.MPESA_SECRET
-        )
+        auth = requests.auth.HTTPBasicAuth(MPESA_CONSUMER_KEY, MPESA_SECRET)
 
         req = requests.get(url, auth=auth, verify=True)
         res = req.json()
@@ -111,7 +120,7 @@ def initiate_mpesa_stkpush_payment(
             return response_data
 
     except Exception as e:
-        logger.warning(f"Initiating STKPush failed with response: {e}")
+        logger.error(f"Initiating STKPush failed with response: {e}")
         raise STKPushFailed
 
 
@@ -143,7 +152,7 @@ def trigger_mpesa_stkpush_payment(amount: int, phone_number: str) -> Optional[Di
         return data
 
     except STKPushFailed as e:
-        logger.warning(f"Trigering STKPush failed with exception: {e}")
+        logger.error(f"Trigering STKPush failed with exception: {e}")
         raise STKPushFailed
 
 
@@ -190,12 +199,12 @@ def process_mpesa_stk(
         logger.info(f"Received mpesa payment: {updated_mpesa_payment}")
 
     else:
-        logger.info("Received an unknown STKPush response: {mpesa_response_in}")
+        logger.warning("Received an unknown STKPush response: {mpesa_response_in}")
 
 
 def process_mpesa_paybill_payment(
     db: Session, mpesa_response_in: MpesaDirectPaymentSerializer
-):
+) -> None:
     """Process direct payments to paybill"""
     description = PAYBILL_DEPOSIT_DESCRIPTION.format(
         mpesa_response_in.TransAmount, mpesa_response_in.MSISDN
@@ -216,3 +225,102 @@ def process_mpesa_paybill_payment(
     )
 
     transaction_dao.create(db, obj_in=transaction_in)
+
+
+def get_mpesa_certificate() -> str:
+    """Load the M-Pesa certification file that will be used for encryption"""
+    logger.info("Retrieving M-Pesa certificate...")
+
+    file_name = "ProductionCertificate.cer"
+    current_path = os.path.dirname(__file__)
+    cert_file_path = os.path.join(current_path, file_name)
+
+    cert_file = open(cert_file_path, "r")
+    cert_str = cert_file.read()
+    cert_file.close()
+
+    return cert_str
+
+
+def get_initiator_security_credential() -> str:
+    """Get cert and extract public key"""
+    cert_str = get_mpesa_certificate()
+    cert_obj: Certificate = load_pem_x509_certificate(str.encode(cert_str))
+    public_key = cert_obj.public_key()
+
+    # Encrypt key with public key and PKCS1v15 padding as recommended by safaricom
+    byte_password = bytes(settings.MPESA_B2C_PASSWORD, "utf-8")
+    ciphertext = public_key.encrypt(byte_password, padding=padding.PKCS1v15())  # type: ignore
+
+    return b64encode(ciphertext).decode("utf-8")
+
+
+def initiate_b2c_payment(
+    amount: int,
+    party_b: str,
+    remarks: Optional[str] = "",
+    occassion: Optional[str] = "",
+    command_id: str = B2CMpesaCommandIDs.PROMOTIONPAYMENT.value,
+) -> Dict | None:
+    """Initiate an M-Pesa B2C payment"""
+    access_token = get_mpesa_access_token(
+        settings.MPESA_B2C_CONSUMER_KEY, settings.MPESA_B2C_SECRET
+    )
+
+    api_url = settings.MPESA_B2C_URL
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {access_token}",
+    }
+
+    try:
+        payload = {
+            "InitiatorName": settings.MPESA_B2C_INITIATOR_NAME,
+            "SecurityCredential": get_initiator_security_credential(),
+            "CommandID": command_id,
+            "Amount": amount,
+            "PartyA": settings.MPESA_B2C_SHORTCODE,
+            "PartyB": party_b,
+            "Remarks": remarks,
+            "QueueTimeOutURL": settings.MPESA_B2C_QUEUE_TIMEOUT_URL,
+            "ResultURL": settings.MPESA_B2C_RESULT_URL,
+            "Occassion": occassion,
+        }
+        response = requests.post(api_url, json=payload, headers=headers, verify=True)
+        response_data = response.json()
+
+        logger.info(f"Received B2C payment response: {response_data}")
+
+        if response_data["ResponseCode"] == "0":  # 0 means response is ok
+            return response_data
+
+    except Exception as e:
+        logger.error(f"An execption ocurred while initiating B2C payment: {e}")
+        raise B2CPaymentFailed(str(e))
+
+
+def process_b2c_payment(db: Session, user: User, amount: int):
+    """Process an M-Pesa B2C payment request"""
+    try:
+        # Save hashed value that expires every 2 minutes.
+        # That effectively only limits a user to 1 successful withdrawal
+        # each 2 minutes
+        hashed_withdrawal_request = md5_hash(f"{user.phone}:withdraw_request")
+        timeout = 60 * 2  # 2 minutes
+        redis.set(hashed_withdrawal_request, amount, ex=timeout)
+
+        data = initiate_b2c_payment(amount=amount, party_b=user.phone)
+
+        if data is not None:
+            withdrawal_data = WithdawalCreateSerializer(
+                ConversationID=data["ConversationID"],
+                OriginatorConversationID=data["OriginatorConversationID"],
+                ResponseCode=data["ResponseCode"],
+                ResponseDescription=data["ResponseDescription"],
+            )
+
+            withdrawal_dao.create(db, obj_in=withdrawal_data)
+
+    except Exception as e:
+        logger.error(f"An execption ocurred while processing B2C payment: {e}")
+        raise B2CPaymentFailed(str(e))

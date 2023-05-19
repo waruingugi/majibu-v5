@@ -1,11 +1,13 @@
 from sqlalchemy.orm import Session
 
 from app.db.dao import CRUDDao, ChangedObjState
-from app.accounts.models import MpesaPayments
+from app.accounts.models import MpesaPayments, Withdrawals
 from app.accounts.daos.account import transaction_dao
 from app.accounts.serializers.mpesa import (
     MpesaPaymentCreateSerializer,
     MpesaPaymentUpdateSerializer,
+    WithdrawalCreateSerializer,
+    WithdrawalUpdateSerializer,
 )
 from app.accounts.serializers.account import TransactionCreateSerializer
 from app.accounts.constants import (
@@ -51,3 +53,12 @@ class MpesaPaymentDao(
 
 
 mpesa_payment_dao = MpesaPaymentDao(MpesaPayments)
+
+
+class WithdrawalDao(
+    CRUDDao[Withdrawals, WithdrawalCreateSerializer, WithdrawalUpdateSerializer]
+):
+    pass
+
+
+withdrawal_dao = WithdrawalDao(Withdrawals)

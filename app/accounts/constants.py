@@ -17,6 +17,12 @@ PAYBILL_DEPOSIT_DESCRIPTION = (
 )
 
 
+class B2CMpesaCommandIDs(str, Enum):
+    SALARYPAYMENT = "SalaryPayment"
+    BUSINESSPAYMENT = "BusinessPayment"
+    PROMOTIONPAYMENT = "PromotionPayment"
+
+
 class TransactionStatuses(str, Enum):
     PENDING = "PENDING"
     SUCCESSFUL = "SUCCESSFUL"

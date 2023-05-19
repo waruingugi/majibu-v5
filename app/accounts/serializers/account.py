@@ -17,6 +17,11 @@ class DepositSerializer(BaseFormSerializer):
     amount: int = Form(gt=0)
 
 
+@dataclass
+class WithdrawSerializer(BaseFormSerializer):
+    amount: int = Form(gt=0)
+
+
 class TransactionBaseSerializer(BaseModel):
     account: str
     external_transaction_id: str

@@ -120,7 +120,14 @@ serialized_paybill_deposit_response = MpesaDirectPaymentSerializer(
 
 
 # M-Pesa B2C sample data
-sample_failed_b2c_response = {
+sample_b2c_response = {
+    "ConversationID": "AG_20191219_00005797af5d7d75f652",
+    "OriginatorConversationID": "16740-34861180-1",
+    "ResponseCode": "0",
+    "ResponseDescription": "Accept the service request successfully.",
+}
+
+sample_failed_b2c_result = {
     "Result": {
         "ResultType": 0,
         "ResultCode": 2,
@@ -138,7 +145,7 @@ sample_failed_b2c_response = {
     }
 }
 
-sample_successful_b2c_response = {
+sample_successful_b2c_result = {
     "Result": {
         "ResultType": 0,
         "ResultCode": 0,
