@@ -23,7 +23,7 @@ from app.accounts.constants import (
 from app.accounts.serializers.mpesa import (
     MpesaPaymentResultStkCallbackSerializer,
     MpesaDirectPaymentSerializer,
-    WithdawalCreateSerializer,
+    WithdrawalCreateSerializer,
 )
 from app.accounts.daos.mpesa import mpesa_payment_dao, withdrawal_dao
 from app.accounts.daos.account import transaction_dao
@@ -256,6 +256,7 @@ def get_initiator_security_credential() -> str:
 
 
 def initiate_b2c_payment(
+    *,
     amount: int,
     party_b: str,
     remarks: Optional[str] = "",
@@ -279,7 +280,7 @@ def initiate_b2c_payment(
             "SecurityCredential": get_initiator_security_credential(),
             "CommandID": command_id,
             "Amount": amount,
-            "PartyA": settings.MPESA_B2C_SHORTCODE,
+            "PartyA": settings.MPESA_B2C_SHORT_CODE,
             "PartyB": party_b,
             "Remarks": remarks,
             "QueueTimeOutURL": settings.MPESA_B2C_QUEUE_TIMEOUT_URL,
@@ -312,11 +313,11 @@ def process_b2c_payment(db: Session, user: User, amount: int):
         data = initiate_b2c_payment(amount=amount, party_b=user.phone)
 
         if data is not None:
-            withdrawal_data = WithdawalCreateSerializer(
-                ConversationID=data["ConversationID"],
-                OriginatorConversationID=data["OriginatorConversationID"],
-                ResponseCode=data["ResponseCode"],
-                ResponseDescription=data["ResponseDescription"],
+            withdrawal_data = WithdrawalCreateSerializer(
+                conversation_id=data["ConversationID"],
+                originator_conversation_id=data["OriginatorConversationID"],
+                response_code=data["ResponseCode"],
+                response_description=data["ResponseDescription"],
             )
 
             withdrawal_dao.create(db, obj_in=withdrawal_data)

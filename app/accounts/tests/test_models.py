@@ -116,8 +116,16 @@ def test_mpesa_payment_is_updated_successfully(
 
 def test_create_withdrawal_instance_succesfully(db: Session) -> None:
     """Test created withdrawal instance has correct default values"""
-    obj_in = WithdrawalCreateSerializer(**sample_b2c_response)
-    db_obj = withdrawal_dao.create(db, obj_in=obj_in)
+    data = sample_b2c_response
+    db_obj = withdrawal_dao.create(
+        db,
+        obj_in=WithdrawalCreateSerializer(
+            conversation_id=data["ConversationID"],
+            originator_conversation_id=data["OriginatorConversationID"],
+            response_code=data["ResponseCode"],
+            response_description=data["ResponseDescription"],
+        ),
+    )
 
     assert db_obj.conversation_id == sample_b2c_response["ConversationID"]
     assert (

@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     MPESA_B2C_SECRET: str
     MPESA_B2C_URL: str
     MPESA_B2C_PASSWORD: str
-    MPESA_B2C_SHORTCODE: str
+    MPESA_B2C_SHORT_CODE: str
     MPESA_B2C_INITIATOR_NAME: str
     MPESA_B2C_QUEUE_TIMEOUT_URL: str
     MPESA_B2C_RESULT_URL: str

@@ -7,6 +7,7 @@ from app.accounts.utils import (
     get_mpesa_access_token,
     initiate_mpesa_stkpush_payment,
     trigger_mpesa_stkpush_payment,
+    initiate_b2c_payment,
 )
 from app.accounts.constants import (
     TransactionCashFlow,
@@ -22,6 +23,7 @@ from app.accounts.tests.test_data import (
     mock_stk_push_response,
     mpesa_reference_no,
     serialized_paybill_deposit_response,
+    sample_b2c_response,
 )
 from app.accounts.serializers.mpesa import MpesaPaymentCreateSerializer
 from app.accounts.daos.mpesa import mpesa_payment_dao
@@ -215,3 +217,42 @@ def test_process_mpesa_paybill_payment_creates_model_instance(
     assert float(transaction.final_balance) == float(
         serialized_paybill_deposit_response.TransAmount
     )
+
+
+class TestMpesaB2CPayment(unittest.TestCase):
+    mock_response = MagicMock()
+
+    @patch("app.accounts.utils.get_mpesa_access_token")
+    def test_initiate_b2c_payment_returns_correct_response(
+        self, mock_get_mpesa_access_token
+    ):
+        mock_get_mpesa_access_token.return_value = "random_token"
+
+        with patch("app.accounts.utils.requests") as mock_requests:
+            self.mock_response.json.return_value = sample_b2c_response
+            mock_requests.post.return_value = self.mock_response
+
+            response = initiate_b2c_payment(
+                amount=1,
+                party_b=settings.SUPERUSER_PHONE,
+            )
+
+            assert response == self.mock_response.json()
+
+    @patch("app.accounts.utils.get_mpesa_access_token")
+    def test_initiate_b2c_payment_returns_none_if_error_in_response(
+        self, mock_get_mpesa_access_token
+    ):
+        mock_get_mpesa_access_token.return_value = "random_token"
+
+        with patch("app.accounts.utils.requests") as mock_requests:
+            sample_b2c_response["ResponseCode"] = "1"
+            self.mock_response.json.return_value = sample_b2c_response
+            mock_requests.post.return_value = self.mock_response
+
+            response = initiate_b2c_payment(
+                amount=1,
+                party_b=settings.SUPERUSER_PHONE,
+            )
+
+            assert response is None
