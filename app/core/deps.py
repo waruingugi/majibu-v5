@@ -8,7 +8,6 @@ from app.core.security import (
 )
 from app.auth.utils.token import check_access_token_is_valid
 from app.core.config import settings, redis
-from app.core.raw_logger import logger
 from app.core.helpers import md5_hash
 from app.users.models import User
 from app.users.daos.user import user_dao
@@ -19,7 +18,6 @@ from app.exceptions.custom import (
     InactiveAccount,
     InsufficientUserPrivileges,
 )
-from app.accounts.daos.account import transaction_dao
 
 from jose import JWTError, jwt
 from fastapi import Depends, Security, Request
@@ -140,19 +138,3 @@ async def get_current_active_superuser(
     if not user_dao.is_superuser(current_user):
         raise InsufficientUserPrivileges
     return current_user
-
-
-async def get_user_balance(
-    user: User = Security(get_current_user),
-    db: Session = Depends(get_db),
-) -> float:
-    logger.info(f"Get user: {user.phone} balance")
-
-    latest_transaction = transaction_dao.get_or_none(
-        db, {"order_by": ["-created_at"], "account": user.phone}
-    )
-    current_balance = 0.00
-    if latest_transaction:
-        current_balance = latest_transaction.final_balance
-
-    return current_balance

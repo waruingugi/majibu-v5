@@ -1,11 +1,13 @@
 from sqlalchemy.orm import Session
 
 from app.db.dao import CRUDDao, ChangedObjState
-from app.accounts.models import MpesaPayments
+from app.accounts.models import MpesaPayments, Withdrawals
 from app.accounts.daos.account import transaction_dao
 from app.accounts.serializers.mpesa import (
     MpesaPaymentCreateSerializer,
     MpesaPaymentUpdateSerializer,
+    WithdrawalCreateSerializer,
+    WithdrawalUpdateSerializer,
 )
 from app.accounts.serializers.account import TransactionCreateSerializer
 from app.accounts.constants import (
@@ -14,6 +16,7 @@ from app.accounts.constants import (
     TransactionServices,
     TransactionStatuses,
 )
+from app.accounts.constants import STKPUSH_DEPOSIT_DESCRPTION
 
 
 class MpesaPaymentDao(
@@ -27,9 +30,8 @@ class MpesaPaymentDao(
             db_obj.result_code == 0  # If Mpesa transacation is successful
             and db_obj.receipt_number is not None  # Must have a valid M-Pesa Reference
         ):
-            description = (
-                f"Deposit of KES {db_obj.amount} "
-                + f"for account {db_obj.phone_number} using M-Pesa STKPush."
+            description = STKPUSH_DEPOSIT_DESCRPTION.format(
+                db_obj.amount, db_obj.phone_number
             )
 
             transaction_dao.create(
@@ -51,3 +53,12 @@ class MpesaPaymentDao(
 
 
 mpesa_payment_dao = MpesaPaymentDao(MpesaPayments)
+
+
+class WithdrawalDao(
+    CRUDDao[Withdrawals, WithdrawalCreateSerializer, WithdrawalUpdateSerializer]
+):
+    pass
+
+
+withdrawal_dao = WithdrawalDao(Withdrawals)

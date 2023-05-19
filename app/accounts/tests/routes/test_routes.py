@@ -5,7 +5,11 @@ from sqlalchemy.orm import Session
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.accounts.constants import MPESA_WHITE_LISTED_IPS
 from app.accounts.serializers.mpesa import MpesaPaymentCreateSerializer
-from app.accounts.tests.test_data import mock_stk_push_response, mock_stk_push_result
+from app.accounts.tests.test_data import (
+    mock_stk_push_response,
+    mock_stk_push_result,
+    sample_paybill_deposit_response,
+)
 from app.core.config import settings
 
 
@@ -68,3 +72,26 @@ def test_post_callback_accepts_white_listed_ips(
     response = client.post("/accounts/payments/callback/", json=mock_stk_push_result)
 
     assert hasattr(response, "context") is False
+
+
+def test_post_confirmation_accepts_white_listed_ips(
+    client: TestClient, mocker: MockerFixture
+):
+    mock_client = mocker.patch("fastapi.Request.client")
+    mock_client.host = MPESA_WHITE_LISTED_IPS[0]
+
+    response = client.post(
+        "/accounts/payments/confirmation/", json=sample_paybill_deposit_response
+    )
+
+    assert hasattr(response, "context") is False
+
+
+def test_post_confirmation_fails_with_http_exception(
+    client: TestClient, mocker: MockerFixture
+):
+    response = client.post(
+        "/accounts/payments/confirmation/", json=sample_paybill_deposit_response
+    )
+
+    assert "Forbidden" in response.context["server_errors"]

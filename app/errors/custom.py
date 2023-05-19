@@ -11,7 +11,11 @@ class ErrorCodes(str, Enum):
     EXPIRED_AUTHORIZATION_TOKEN = "The authorization token expired"
     INCORRECT_USERNAME_OR_PASSWORD = "Incorrect username or password"
     USERS_PRIVILEGES_NOT_ENOUGH = "This user doesn't have enough privileges"
-    STKPushFailed = (
+    STK_PUSH_FAILED = (
         "An error ocurred while initiating the STKPush request. "
         "Please try the payment again using our Business PayBill"
     )
+    SIMILAR_WITHDRAWAL_REQUEST = (
+        "A previous withdrawal request is being processed. " "Please try again later."
+    )
+    B2C_PAYMENT_FAILED = "An error ocurred while initiating a B2C payment."

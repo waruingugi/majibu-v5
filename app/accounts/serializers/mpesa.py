@@ -27,7 +27,7 @@ class MpesaPaymentUpdateSerializer(MpesaPaymentBaseSerializer):
 
 class MpesaPaymentResultItemSerializer(BaseModel):
     Name: str
-    Value: Optional[Union[int, str]]
+    Value: Optional[Union[int, str]] = ""
 
 
 class MpesaPaymentResultCallbackMetadataSerializer(BaseModel):
@@ -39,7 +39,7 @@ class MpesaPaymentResultStkCallbackSerializer(BaseModel):
     CheckoutRequestID: str
     ResultCode: int
     ResultDesc: str
-    CallbackMetadata: Optional[MpesaPaymentResultCallbackMetadataSerializer]
+    CallbackMetadata: Optional[MpesaPaymentResultCallbackMetadataSerializer] = None
 
 
 class MpesaPaymentResultBodySerializer(BaseModel):
@@ -48,3 +48,66 @@ class MpesaPaymentResultBodySerializer(BaseModel):
 
 class MpesaPaymentResultSerializer(BaseModel):
     Body: MpesaPaymentResultBodySerializer
+
+
+class MpesaDirectPaymentSerializer(BaseModel):
+    TransactionType: str
+    TransID: str
+    TransTime: str
+    TransAmount: str
+    BusinessShortCode: str
+    BillRefNumber: Optional[str] = ""
+    InvoiceNumber: Optional[str] = ""
+    OrgAccountBalance: Optional[str] = ""
+    ThirdPartyTransID: Optional[str] = ""
+    MSISDN: str
+    FirstName: Optional[str] = ""
+    MiddleName: Optional[str] = ""
+    LastName: Optional[str] = ""
+
+    _standardize_phone_to_required_format = validator(
+        "MSISDN", pre=True, allow_reuse=True
+    )(standardize_phone_to_required_format)
+
+
+class WithdrawalBaseSerializer(BaseModel):
+    ConversationID: str
+    OriginatorConversationID: str
+    ResponseCode: str
+    ResponseDescription: str
+
+
+class WithdrawalCreateSerializer(WithdrawalBaseSerializer):
+    pass
+
+
+class WithdrawalUpdateSerializer(WithdrawalBaseSerializer):
+    pass
+
+
+class KeyValueDict(BaseModel):
+    Key: str
+    Value: str
+
+
+class WithdrawalReferenceItemSerializer(BaseModel):
+    ReferenceItem: KeyValueDict
+
+
+class WithdrawalResultBodyParaments(BaseModel):
+    ResultParameter: List[KeyValueDict]
+
+
+class WithdrawalResultBodySerializer(BaseModel):
+    ResultType: int
+    ResultCode: int
+    ResultDesc: str
+    OriginatorConversationID: str
+    ConversationID: str
+    TransactionID: str
+    ResultParameters: Optional[WithdrawalResultBodyParaments] = None
+    ReferenceData: WithdrawalReferenceItemSerializer
+
+
+class WithdrawalResultSerializer(BaseModel):
+    Result: WithdrawalResultBodySerializer
