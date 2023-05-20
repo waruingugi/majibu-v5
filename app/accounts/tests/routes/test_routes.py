@@ -9,6 +9,7 @@ from app.accounts.tests.test_data import (
     mock_stk_push_response,
     mock_stk_push_result,
     sample_paybill_deposit_response,
+    sample_successful_b2c_result,
 )
 
 from app.errors.custom import ErrorCodes
@@ -18,7 +19,7 @@ from app.core.helpers import md5_hash
 
 def test_post_deposit_creates_model_instance(
     db: Session, client: TestClient, mocker: MockerFixture
-):
+) -> None:
     mocker.patch(
         "app.accounts.routes.account.trigger_mpesa_stkpush_payment",
         return_value=mock_stk_push_response,
@@ -34,7 +35,7 @@ def test_post_deposit_creates_model_instance(
 
 def test_post_callback_fails_with_http_exception(
     db: Session, client: TestClient, mocker: MockerFixture
-):
+) -> None:
     data = mock_stk_push_response
 
     mpesa_payment_dao.create(
@@ -55,7 +56,7 @@ def test_post_callback_fails_with_http_exception(
 
 def test_post_callback_accepts_white_listed_ips(
     db: Session, client: TestClient, mocker: MockerFixture
-):
+) -> None:
     mock_client = mocker.patch("fastapi.Request.client")
     mock_client.host = MPESA_WHITE_LISTED_IPS[0]
 
@@ -79,7 +80,7 @@ def test_post_callback_accepts_white_listed_ips(
 
 def test_post_confirmation_accepts_white_listed_ips(
     client: TestClient, mocker: MockerFixture
-):
+) -> None:
     mock_client = mocker.patch("fastapi.Request.client")
     mock_client.host = MPESA_WHITE_LISTED_IPS[0]
 
@@ -90,7 +91,7 @@ def test_post_confirmation_accepts_white_listed_ips(
     assert hasattr(response, "context") is False
 
 
-def test_post_confirmation_fails_with_http_exception(client: TestClient):
+def test_post_confirmation_fails_with_http_exception(client: TestClient) -> None:
     response = client.post(
         "/accounts/payments/confirmation/", json=sample_paybill_deposit_response
     )
@@ -100,7 +101,7 @@ def test_post_confirmation_fails_with_http_exception(client: TestClient):
 
 def test_post_withdraw_fails_on_insufficient_balance(
     client: TestClient, mocker: MockerFixture
-):
+) -> None:
     mocker.patch("app.accounts.routes.account.process_b2c_payment", return_value=None)
     response = client.post("/accounts/withdraw/", data={"amount": "70000"})
 
@@ -110,7 +111,7 @@ def test_post_withdraw_fails_on_insufficient_balance(
 
 def test_post_withdraw_fails_if_previous_request_exists(
     client: TestClient, mocker: MockerFixture
-):
+) -> None:
     redis.flushall()  # Clear all values from redis
     mocker.patch("app.accounts.routes.account.process_b2c_payment", return_value=None)
     mocker.patch(  # Inflate user's balance by ksh50
@@ -130,7 +131,7 @@ def test_post_withdraw_fails_if_previous_request_exists(
 
 def test_post_withdraw_succeeds_in_calling_process_b2c_payment(
     client: TestClient, mocker: MockerFixture
-):
+) -> None:
     redis.flushall()  # Clear all values from redis
     mock_process_b2c_payment = mocker.patch(
         "app.accounts.routes.account.process_b2c_payment", return_value=None
@@ -142,3 +143,27 @@ def test_post_withdraw_succeeds_in_calling_process_b2c_payment(
 
     assert ("field_errors" in response.context) is False
     assert mock_process_b2c_payment.call_count == 1
+
+
+def test_post_withdrawal_result_successfully_calls_process_b2c_payment_result_func(
+    client: TestClient, mocker: MockerFixture
+) -> None:
+    mock_client = mocker.patch("fastapi.Request.client")
+    mock_client.host = MPESA_WHITE_LISTED_IPS[0]
+
+    mock_process_b2c_payment_result = mocker.patch(
+        "app.accounts.routes.account.process_b2c_payment_result", return_value=None
+    )
+    client.post("/accounts/payments/result/", json=sample_successful_b2c_result)
+
+    assert mock_process_b2c_payment_result.call_count == 1
+
+
+def test_post_withdrawal_result_successfully_fails_with_http_exception(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/accounts/payments/result/", json=sample_successful_b2c_result
+    )
+
+    assert "Forbidden" in response.context["server_errors"]

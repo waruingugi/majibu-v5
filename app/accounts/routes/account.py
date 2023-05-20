@@ -11,6 +11,7 @@ from app.accounts.utils import (
     process_mpesa_stk,
     process_mpesa_paybill_payment,
     process_b2c_payment,
+    process_b2c_payment_result,
 )
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.accounts.daos.account import transaction_dao
@@ -207,12 +208,16 @@ async def post_confirmation(
 async def post_withdrawal_result(
     request: Request,
     withdrawal_response_in: WithdrawalResultSerializer,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
 ):
     """Callback URL to receive response after posting withdrawal request to M-Pesa"""
     if request.client.host not in MPESA_WHITE_LISTED_IPS:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
-    return withdrawal_response_in
+    background_tasks.add_task(
+        process_b2c_payment_result, db, withdrawal_response_in.Result
+    )
 
 
 @router.post("/payments/timeout/")
