@@ -15,6 +15,7 @@ from app.core.helpers import (
     md5_hash,
     format_mpesa_result_params_to_dict,
     format_mpesa_receiver_details,
+    format_b2c_mpesa_date_to_timestamp,
 )
 from app.accounts.constants import (
     MpesaAccountTypes,
@@ -339,41 +340,47 @@ def process_b2c_payment_result(
 ):
     """Process B2C payment"""
     logger.info("Processing B2C payment result.")
-    withrawal_request = withdrawal_dao.get_not_none(
-        db, conversation_id=mpesa_b2c_result.ConversationID
-    )
-
-    result_parameters = mpesa_b2c_result.ResultParameters
-    result_parameter = result_parameters.ResultParameter
-
-    if result_parameter is not None:
-        result_params = format_mpesa_result_params_to_dict(result_parameter)
-        phone, full_name = format_mpesa_receiver_details(
-            result_params["ReceiverPartyPublicName"]
+    try:
+        withrawal_request = withdrawal_dao.get_not_none(
+            db, conversation_id=mpesa_b2c_result.ConversationID
         )
 
-        updated_withdrawal_request = {
-            "result_code": mpesa_b2c_result.ResultCode,
-            "result_description": mpesa_b2c_result.ResultDesc,
-            "transaction_id": mpesa_b2c_result.TransactionID,
-            "transaction_amount": result_params["TransactionAmount"],
-            "working_account_available_funds": result_params[
-                "B2CWorkingAccountAvailableFunds"
-            ],
-            "utility_account_available_funds": result_params[
-                "B2CUtilityAccountAvailableFunds"
-            ],
-            "transaction_date": result_params["ReceiverPartyPublicName"],
-            "phone_number": phone,
-            "full_name": full_name,
-            "charges_paid_account_available_funds": result_params[
-                "B2CChargesPaidAccountAvailableFunds"
-            ],
-            "external_response": json.dumps(mpesa_b2c_result.dict()),
-        }
+        result_parameters = mpesa_b2c_result.ResultParameters
+        result_parameter = result_parameters.ResultParameter
 
-        withdrawal_dao.update(
-            db, db_obj=withrawal_request, obj_in=updated_withdrawal_request
-        )
-    else:
+        if result_parameter is not None:
+            result_params = format_mpesa_result_params_to_dict(result_parameter)
+            time_stamp = format_b2c_mpesa_date_to_timestamp(
+                result_params["TransactionCompletedDateTime"]
+            )
+            phone, full_name = format_mpesa_receiver_details(
+                result_params["ReceiverPartyPublicName"]
+            )
+
+            updated_withdrawal_request = {
+                "result_code": mpesa_b2c_result.ResultCode,
+                "result_description": mpesa_b2c_result.ResultDesc,
+                "transaction_id": mpesa_b2c_result.TransactionID,
+                "transaction_amount": result_params["TransactionAmount"],
+                "working_account_available_funds": result_params[
+                    "B2CWorkingAccountAvailableFunds"
+                ],
+                "utility_account_available_funds": result_params[
+                    "B2CUtilityAccountAvailableFunds"
+                ],
+                "transaction_date": time_stamp,
+                "phone_number": phone,
+                "full_name": full_name,
+                "charges_paid_account_available_funds": result_params[
+                    "B2CChargesPaidAccountAvailableFunds"
+                ],
+                "external_response": json.dumps(mpesa_b2c_result.dict()),
+            }
+
+            withdrawal_dao.update(
+                db, db_obj=withrawal_request, obj_in=updated_withdrawal_request
+            )
+
+    except Exception as e:
         logger.warning(f"Received invalid B2C response: {mpesa_b2c_result.dict()}")
+        raise B2CPaymentFailed(str(e))

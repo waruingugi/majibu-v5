@@ -144,15 +144,21 @@ _is_valid_transaction_service = validator("service", pre=True, allow_reuse=True)
 
 def format_mpesa_receiver_details(receiver_string):
     parts = receiver_string.split(" - ")
-    phone_number = parts[0].strip()
+    phone_number = f"+{parts[0].strip()}"
     full_name = parts[1].strip()
     return phone_number, full_name
 
 
 def format_mpesa_result_params_to_dict(result_parameters):
+    """Format value in serializer into a key - value dict"""
     result_dict = {}
-    for item in result_parameters:
-        key = item["Key"]
-        value = item["Value"]
-        result_dict[key] = value
+    for serialized_item in result_parameters:
+        item = serialized_item.dict()
+        result_dict[item["Key"]] = item["Value"]
+
     return result_dict
+
+
+def format_b2c_mpesa_date_to_timestamp(date_string):
+    datetime_obj = datetime.strptime(date_string, "%d.%m.%Y %H:%M:%S")
+    return datetime_obj

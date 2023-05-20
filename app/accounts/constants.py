@@ -9,11 +9,19 @@ MPESA_PAYMENT_DEPOSIT = (
 )
 
 # M-Pesa STKPush deposit description
-STKPUSH_DEPOSIT_DESCRPTION = "Deposit of Ksh {} " "for account {} using M-Pesa STKPush."
+STKPUSH_DEPOSIT_DESCRPTION = "Deposit of Ksh {} for account {} using M-Pesa STKPush."
 
 # M-Pesa direct paybill payment description
-PAYBILL_DEPOSIT_DESCRIPTION = (
-    "Deposit of Ksh {} " "for account {} using M-Pesa paybill."
+PAYBILL_DEPOSIT_DESCRIPTION = "Deposit of Ksh {} for account {} using M-Pesa paybill."
+
+# M-Pesa B2C payment description
+PAYBILL_B2C_DESCRIPTION = "Payment of Ksh {} for account {} using B2C payment."
+
+# SMS message sent to user on M-Pesa withdrawal
+MPESA_PAYMENT_WITHDRAW = (
+    "You've successfully withdrawn Ksh{} for your account {}. "
+    "New balance is Ksh{}. "
+    "Thank your for choosing Majibu!"
 )
 
 

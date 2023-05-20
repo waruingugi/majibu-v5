@@ -3,7 +3,8 @@ import json
 from typing import Callable
 
 from app.accounts.tests.test_data import (
-    sample_transaction_instance_info,
+    sample_positive_transaction_instance_info,
+    sample_negative_transaction_instance_info,
     sample_b2c_response,
     mock_stk_push_response,
     serialized_call_back,
@@ -19,32 +20,49 @@ from app.accounts.daos.mpesa import mpesa_payment_dao, withdrawal_dao
 from app.core.config import settings
 
 
-def test_create_transaction_instance_succesfully(
+def test_create_positive_transaction_instance_succesfully(
     db: Session, delete_transcation_model_instances: Callable
 ) -> None:
     """Test created transaction instance has correct default values"""
-    obj_in = TransactionCreateSerializer(**sample_transaction_instance_info)
+    obj_in = TransactionCreateSerializer(**sample_positive_transaction_instance_info)
     db_obj = transaction_dao.create(db, obj_in=obj_in)
 
-    assert db_obj.account == sample_transaction_instance_info["account"]
+    assert db_obj.account == sample_positive_transaction_instance_info["account"]
     assert db_obj.charge == 1.00
     assert db_obj.initial_balance == 0.00
     assert db_obj.final_balance == 1.00
 
 
+def test_create_negative_transaction_instance_succesfully(
+    db: Session, delete_transcation_model_instances: Callable
+) -> None:
+    """Test created withdrawal transaction instance has correct default values"""
+    data = sample_positive_transaction_instance_info.copy()
+    data["amount"] = 100
+    obj_in = TransactionCreateSerializer(**data)
+    transaction_dao.create(db, obj_in=obj_in)
+
+    obj_in = TransactionCreateSerializer(**sample_negative_transaction_instance_info)
+    db_obj = transaction_dao.create(db, obj_in=obj_in)
+
+    assert db_obj.account == sample_negative_transaction_instance_info["account"]
+    assert db_obj.charge == 36.00
+    assert db_obj.initial_balance == 100.00
+    assert db_obj.final_balance == 64.00
+
+
 def test_new_transaction_shows_correct_final_balance(
     db: Session, delete_transcation_model_instances: Callable
 ) -> None:
-    obj_in = TransactionCreateSerializer(**sample_transaction_instance_info)
+    obj_in = TransactionCreateSerializer(**sample_positive_transaction_instance_info)
     transaction_dao.create(db, obj_in=obj_in)
 
     # Then create a new transaction
-    sample_transaction_instance_info["external_transaction_id"] = "NLJ7RT61SB"
-    sample_transaction_instance_info["amount"] = 9.0
+    data = sample_positive_transaction_instance_info.copy()
+    data["external_transaction_id"] = "NLJ7RT61SB"
+    data["amount"] = 9.0
 
-    db_obj = transaction_dao.create(
-        db, obj_in=TransactionCreateSerializer(**sample_transaction_instance_info)
-    )
+    db_obj = transaction_dao.create(db, obj_in=TransactionCreateSerializer(**data))
 
     assert db_obj.final_balance == 10.00
     assert db_obj.initial_balance == 1.00
@@ -53,13 +71,14 @@ def test_new_transaction_shows_correct_final_balance(
 def test_transaction_dao_shows_correct_user_balance(
     db: Session, delete_transcation_model_instances: Callable
 ) -> None:
-    sample_transaction_instance_info["amount"] = 9.55
+    sample_positive_transaction_instance_info["amount"] = 9.55
 
     transaction_dao.create(
-        db, obj_in=TransactionCreateSerializer(**sample_transaction_instance_info)
+        db,
+        obj_in=TransactionCreateSerializer(**sample_positive_transaction_instance_info),
     )
     user_balance = transaction_dao.get_user_balance(
-        db, account=sample_transaction_instance_info["account"]
+        db, account=sample_positive_transaction_instance_info["account"]
     )
 
     assert float(user_balance) == 9.55
@@ -67,7 +86,7 @@ def test_transaction_dao_shows_correct_user_balance(
 
 def test_mpesa_payment_is_created_successfully(
     db: Session, delete_previous_mpesa_payment_transactions: Callable
-):
+) -> None:
     data = mock_stk_push_response
 
     db_obj = mpesa_payment_dao.create(
@@ -90,7 +109,7 @@ def test_mpesa_payment_is_created_successfully(
 
 def test_mpesa_payment_is_updated_successfully(
     db: Session, delete_previous_mpesa_payment_transactions: Callable
-):
+) -> None:
     data = mock_stk_push_response
 
     mpesa_payment_dao.create(

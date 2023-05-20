@@ -7,7 +7,7 @@ from app.accounts.serializers.account import (
     TransactionUpdateSerializer,
 )
 from app.accounts.constants import TransactionCashFlow, TransactionServices
-from app.accounts.constants import MPESA_PAYMENT_DEPOSIT
+from app.accounts.constants import MPESA_PAYMENT_DEPOSIT, MPESA_PAYMENT_WITHDRAW
 
 from app.notifications.daos.notifications import notifications_dao
 from app.notifications.serializers.notifications import CreateNotificationSerializer
@@ -33,10 +33,15 @@ class TransactionDao(
 
         if values["cash_flow"] == TransactionCashFlow.INWARD.value:
             charge = values["amount"] - values["fee"] - values["tax"]
+            values["final_balance"] = (
+                initial_final_balance + charge
+            )  # New final balance
         else:  # If transaction is outward
             charge = values["amount"] + values["fee"] + values["tax"]
+            values["final_balance"] = (
+                initial_final_balance - charge
+            )  # New final balance
 
-        values["final_balance"] = initial_final_balance + charge  # New final balance
         values["initial_balance"] = initial_final_balance  # Original balance
         values["charge"] = charge
 
@@ -54,6 +59,15 @@ class TransactionDao(
                 db_obj.amount, db_obj.account, db_obj.final_balance
             )
             type = NotificationTypes.DEPOSIT.value
+
+        if (
+            db_obj.cash_flow == TransactionCashFlow.OUTWARD.value
+            and db_obj.service == TransactionServices.MPESA.value
+        ):  # Means if the transaction is an M-Pesa Deposit
+            message = MPESA_PAYMENT_WITHDRAW.format(
+                db_obj.amount, db_obj.account, db_obj.final_balance
+            )
+            type = NotificationTypes.WITHDRAW.value
 
         notifications_dao.send_notification(
             db,
