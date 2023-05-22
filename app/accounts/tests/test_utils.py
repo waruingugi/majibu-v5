@@ -177,7 +177,7 @@ def test_process_mpesa_stk_successfully_creates_transaction_instance(
     assert transaction.cash_flow == TransactionCashFlow.INWARD.value
     assert transaction.service == TransactionServices.MPESA.value
     assert transaction.status == TransactionStatuses.SUCCESSFUL.value
-    assert transaction.type == TransactionTypes.PAYMENT.value
+    assert transaction.type == TransactionTypes.DEPOSIT.value
     assert float(transaction.final_balance) == float(1.0)
 
 
@@ -225,7 +225,7 @@ def test_process_mpesa_paybill_payment_creates_model_instance(
     assert transaction.cash_flow == TransactionCashFlow.INWARD.value
     assert transaction.service == TransactionServices.MPESA.value
     assert transaction.status == TransactionStatuses.SUCCESSFUL.value
-    assert transaction.type == TransactionTypes.PAYMENT.value
+    assert transaction.type == TransactionTypes.DEPOSIT.value
     assert float(transaction.amount) == float(
         serialized_paybill_deposit_response.TransAmount
     )

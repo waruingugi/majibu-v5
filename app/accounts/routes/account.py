@@ -41,6 +41,9 @@ async def get_wallet(
 ):
     """Get wallet page"""
     wallet_balance = transaction_dao.get_user_balance(db, account=user.phone)
+    transaction_history = transaction_dao.search(
+        db, {"order_by": ["-created_at"], "account": user.phone}
+    )[:7]
 
     return templates.TemplateResponse(
         f"{template_prefix}wallet.html",
@@ -48,6 +51,7 @@ async def get_wallet(
             "request": request,
             "title": "Wallet",
             "current_balance": wallet_balance,
+            "transaction_history": transaction_history,
         },
     )
 
@@ -149,9 +153,11 @@ async def post_withdraw(
         background_tasks.add_task(
             process_b2c_payment, db, user=user, amount=withdraw.amount
         )
-        redirect_url = request.url_for("get_withdraw_success")
+        redirect_url = request.url_for("get_withdraw_success", amount=withdraw.amount)
 
-        return RedirectResponse(redirect_url, status_code=302)
+        return RedirectResponse(
+            redirect_url, status_code=302, background=background_tasks
+        )
 
     return templates.TemplateResponse(
         f"{template_prefix}withdraw.html",
@@ -163,15 +169,16 @@ async def post_withdraw(
     )
 
 
-@router.get("/withdraw/success", response_class=HTMLResponse)
+@router.get("/withdraw/success/{amount}", response_class=HTMLResponse)
 async def get_withdraw_success(
     request: Request,
+    amount: int,
     _: User = Depends(get_current_active_user),
 ):
     """Get withdraw success page"""
     return templates.TemplateResponse(
         f"{template_prefix}withdraw_success.html",
-        {"request": request, "title": "Withdraw"},
+        {"request": request, "title": "Withdraw", "amount": amount},
     )
 
 
@@ -245,6 +252,7 @@ async def post_withdrawal_time_out(
 # Query B2C pending transactions or use retry feature
 # Fix payment func names
 # Deposit history
+# Pagination
 # Models
 # Test models
 # Account - mpesa

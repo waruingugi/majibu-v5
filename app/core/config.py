@@ -12,6 +12,10 @@ import app
 project_dir = dirname(app.__file__)
 templates = Jinja2Templates(directory=project_dir)
 
+# Global filters
+# Add comma to digits. Example: 1000 -> 1,000
+templates.env.filters["commafy"] = lambda v: "{:,}".format(v)
+
 
 # Settings
 class Settings(BaseSettings):

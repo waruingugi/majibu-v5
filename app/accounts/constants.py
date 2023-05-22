@@ -49,7 +49,8 @@ class TransactionCashFlow(str, Enum):
 
 class TransactionTypes(str, Enum):
     REWARD = "REWARD"
-    PAYMENT = "PAYMENT"
+    DEPOSIT = "DEPOSIT"
+    WITHDRAWAL = "WITHDRAWAL"
     BONUS = "BONUS"
 
 
