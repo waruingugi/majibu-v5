@@ -60,6 +60,9 @@ class Settings(BaseSettings):
 
     SUPERUSER_PHONE: str
 
+    SESSION_AMOUNT: int = 200
+    SESSION_FEE: float = 17.50
+
     MPESA_B2C_CHARGE: int = 16
     MPESA_B2C_CONSUMER_KEY: str
     MPESA_B2C_SECRET: str

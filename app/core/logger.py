@@ -13,6 +13,7 @@ UNPREFERRED_REDIRECT_URLS = [
     "auth/validate-phone/",
     "auth/validate-otp/",
     "auth/logout",
+    "session/preferred-redirect/",
 ]
 
 
