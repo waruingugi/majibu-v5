@@ -12,6 +12,10 @@ import app
 project_dir = dirname(app.__file__)
 templates = Jinja2Templates(directory=project_dir)
 
+# Global filters
+# Add comma to digits. Example: 1000 -> 1,000
+templates.env.filters["commafy"] = lambda v: "{:,}".format(v)
+
 
 # Settings
 class Settings(BaseSettings):
@@ -61,7 +65,7 @@ class Settings(BaseSettings):
     MPESA_B2C_SECRET: str
     MPESA_B2C_URL: str
     MPESA_B2C_PASSWORD: str
-    MPESA_B2C_SHORTCODE: str
+    MPESA_B2C_SHORT_CODE: str
     MPESA_B2C_INITIATOR_NAME: str
     MPESA_B2C_QUEUE_TIMEOUT_URL: str
     MPESA_B2C_RESULT_URL: str

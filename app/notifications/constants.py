@@ -13,6 +13,7 @@ class NotificationProviders(str, Enum):
 class NotificationTypes(str, Enum):
     OTP = "OTP"
     DEPOSIT = "DEPOSIT"
+    WITHDRAW = "WITHDRAW"
 
 
 class NotificationStatuses(str, Enum):

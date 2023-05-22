@@ -2,19 +2,28 @@ import unittest
 from unittest.mock import MagicMock, patch
 from sqlalchemy.orm import Session
 from typing import Callable
+import pytest
 
 from app.accounts.utils import (
     get_mpesa_access_token,
     initiate_mpesa_stkpush_payment,
     trigger_mpesa_stkpush_payment,
+    initiate_b2c_payment,
+    process_b2c_payment,
+    process_b2c_payment_result,
 )
+from app.core.config import redis, settings
+from app.core.helpers import md5_hash
+from app.users.daos.user import user_dao
+from app.users.serializers.user import UserCreateSerializer
+
+from app.accounts.daos.mpesa import withdrawal_dao
 from app.accounts.constants import (
     TransactionCashFlow,
     TransactionServices,
     TransactionStatuses,
     TransactionTypes,
 )
-from app.core.config import redis, settings
 from app.accounts.constants import MpesaAccountTypes
 from app.accounts.tests.test_data import (
     serialized_call_back,
@@ -22,8 +31,14 @@ from app.accounts.tests.test_data import (
     mock_stk_push_response,
     mpesa_reference_no,
     serialized_paybill_deposit_response,
+    sample_b2c_response,
+    sample_failed_b2c_response,
+    sample_successful_b2c_result,
 )
-from app.accounts.serializers.mpesa import MpesaPaymentCreateSerializer
+from app.accounts.serializers.mpesa import (
+    MpesaPaymentCreateSerializer,
+    WithdrawalResultBodySerializer,
+)
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.accounts.daos.account import transaction_dao
 from app.accounts.utils import process_mpesa_stk, process_mpesa_paybill_payment
@@ -138,6 +153,8 @@ class TestMpesaSTKPush(unittest.TestCase):
 
 def test_process_mpesa_stk_successfully_creates_transaction_instance(
     db: Session,
+    delete_previous_mpesa_payment_transactions: Callable,
+    delete_transcation_model_instances: Callable,
 ) -> None:
     data = mock_stk_push_response
 
@@ -160,7 +177,7 @@ def test_process_mpesa_stk_successfully_creates_transaction_instance(
     assert transaction.cash_flow == TransactionCashFlow.INWARD.value
     assert transaction.service == TransactionServices.MPESA.value
     assert transaction.status == TransactionStatuses.SUCCESSFUL.value
-    assert transaction.type == TransactionTypes.PAYMENT.value
+    assert transaction.type == TransactionTypes.DEPOSIT.value
     assert float(transaction.final_balance) == float(1.0)
 
 
@@ -208,10 +225,135 @@ def test_process_mpesa_paybill_payment_creates_model_instance(
     assert transaction.cash_flow == TransactionCashFlow.INWARD.value
     assert transaction.service == TransactionServices.MPESA.value
     assert transaction.status == TransactionStatuses.SUCCESSFUL.value
-    assert transaction.type == TransactionTypes.PAYMENT.value
+    assert transaction.type == TransactionTypes.DEPOSIT.value
     assert float(transaction.amount) == float(
         serialized_paybill_deposit_response.TransAmount
     )
     assert float(transaction.final_balance) == float(
         serialized_paybill_deposit_response.TransAmount
     )
+
+
+class TestMpesaB2CPayment(unittest.TestCase):
+    mock_response = MagicMock()
+
+    @patch("app.accounts.utils.get_mpesa_access_token")
+    def test_initiate_b2c_payment_returns_correct_response(
+        self, mock_get_mpesa_access_token
+    ):
+        mock_get_mpesa_access_token.return_value = "random_token"
+
+        with patch("app.accounts.utils.requests") as mock_requests:
+            self.mock_response.json.return_value = sample_b2c_response
+            mock_requests.post.return_value = self.mock_response
+
+            response = initiate_b2c_payment(
+                amount=1,
+                party_b=settings.SUPERUSER_PHONE,
+            )
+
+            assert response == self.mock_response.json()
+
+    @patch("app.accounts.utils.get_mpesa_access_token")
+    def test_initiate_b2c_payment_returns_none_if_error_in_response(
+        self, mock_get_mpesa_access_token
+    ):
+        mock_get_mpesa_access_token.return_value = "random_token"
+
+        with patch("app.accounts.utils.requests") as mock_requests:
+            sample_b2c_response["ResponseCode"] = "1"
+            self.mock_response.json.return_value = sample_b2c_response
+            mock_requests.post.return_value = self.mock_response
+
+            response = initiate_b2c_payment(
+                amount=1,
+                party_b=settings.SUPERUSER_PHONE,
+            )
+
+            assert response is None
+
+
+def test_process_b2c_payment_creates_withdrawal_instance(
+    db: Session, delete_withdrawal_model_instances: Callable
+) -> None:
+    with patch("app.accounts.utils.initiate_b2c_payment") as mock_initiate_b2c_payment:
+        mock_initiate_b2c_payment.return_value = sample_b2c_response
+
+        user = user_dao.get_or_create(
+            db, obj_in=UserCreateSerializer(phone=settings.SUPERUSER_PHONE)
+        )
+        process_b2c_payment(db, user=user, amount=1)
+
+        db_obj = withdrawal_dao.get(
+            db, conversation_id=sample_b2c_response["ConversationID"]
+        )
+        cached_data = redis.get(md5_hash(f"{user.phone}:withdraw_request"))
+
+        assert db_obj is not None
+        assert cached_data is not None
+        assert (
+            db_obj.originator_conversation_id
+            == sample_b2c_response["OriginatorConversationID"]
+        )
+
+
+def test_process_b2c_payment_fails_to_create_withdrawal_instance_if_response_is_none(
+    db: Session, delete_withdrawal_model_instances: Callable
+) -> None:
+    with patch("app.accounts.utils.initiate_b2c_payment") as mock_initiate_b2c_payment:
+        mock_initiate_b2c_payment.return_value = None
+
+        user = user_dao.get_or_create(
+            db, obj_in=UserCreateSerializer(phone=settings.SUPERUSER_PHONE)
+        )
+        process_b2c_payment(db, user=user, amount=1)
+
+        db_obj = withdrawal_dao.get(
+            db, conversation_id=sample_b2c_response["ConversationID"]
+        )
+
+        assert db_obj is None
+
+
+def test_process_b2c_payment_raises_exception_on_error_response(
+    db: Session, delete_withdrawal_model_instances: Callable
+) -> None:
+    with patch("app.accounts.utils.initiate_b2c_payment") as mock_initiate_b2c_payment:
+        mock_initiate_b2c_payment.return_value = sample_failed_b2c_response
+
+        user = user_dao.get_or_create(
+            db, obj_in=UserCreateSerializer(phone=settings.SUPERUSER_PHONE)
+        )
+        with pytest.raises(Exception):
+            process_b2c_payment(db, user=user, amount=1)
+
+            db_obj = withdrawal_dao.get(
+                db, conversation_id=sample_b2c_response["ConversationID"]
+            )
+
+            assert db_obj is None
+
+
+def test_process_b2c_payment_result_update_withdrawal_instance(
+    db: Session, delete_withdrawal_model_instances: Callable
+) -> None:
+    with patch("app.accounts.utils.initiate_b2c_payment") as mock_initiate_b2c_payment:
+        mock_initiate_b2c_payment.return_value = sample_b2c_response
+
+        user = user_dao.get_or_create(
+            db, obj_in=UserCreateSerializer(phone=settings.SUPERUSER_PHONE)
+        )
+        process_b2c_payment(db, user=user, amount=1)
+
+        withdrawal_result_in = WithdrawalResultBodySerializer(
+            **sample_successful_b2c_result["Result"]
+        )
+        process_b2c_payment_result(db, withdrawal_result_in)
+
+        db_obj = withdrawal_dao.get_not_none(
+            db, conversation_id=sample_b2c_response["ConversationID"]
+        )
+
+        assert db_obj.phone_number == settings.SUPERUSER_PHONE
+        assert db_obj.transaction_amount == 10.0
+        assert db_obj.transaction_id == withdrawal_result_in.TransactionID

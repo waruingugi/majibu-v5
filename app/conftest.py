@@ -8,13 +8,21 @@ from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
 from app.core.config import settings
 from app.core.deps import get_current_active_user
-from app.accounts.daos.mpesa import mpesa_payment_dao
+from app.accounts.daos.mpesa import mpesa_payment_dao, withdrawal_dao
 from app.accounts.daos.account import transaction_dao
 
 
 from sqlalchemy.orm import Session
 from typing import Generator
 import pytest
+
+
+@pytest.fixture
+def delete_withdrawal_model_instances(db: Session) -> None:
+    # Delete previously existing rows in Transactions model
+    previous_withdrawals = withdrawal_dao.get_all(db)
+    for transaction in previous_withdrawals:
+        withdrawal_dao.remove(db, id=transaction.id)
 
 
 @pytest.fixture

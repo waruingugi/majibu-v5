@@ -71,14 +71,17 @@ class MpesaDirectPaymentSerializer(BaseModel):
 
 
 class WithdrawalBaseSerializer(BaseModel):
-    ConversationID: str
-    OriginatorConversationID: str
-    ResponseCode: str
-    ResponseDescription: str
+    conversation_id: str
+    originator_conversation_id: str
+    response_code: str
+    response_description: str
 
 
 class WithdrawalCreateSerializer(WithdrawalBaseSerializer):
-    pass
+    conversation_id: str
+    originator_conversation_id: str
+    response_code: str
+    response_description: str
 
 
 class WithdrawalUpdateSerializer(WithdrawalBaseSerializer):
@@ -105,7 +108,7 @@ class WithdrawalResultBodySerializer(BaseModel):
     OriginatorConversationID: str
     ConversationID: str
     TransactionID: str
-    ResultParameters: Optional[WithdrawalResultBodyParaments] = None
+    ResultParameters: WithdrawalResultBodyParaments
     ReferenceData: WithdrawalReferenceItemSerializer
 
 

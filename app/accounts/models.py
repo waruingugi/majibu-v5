@@ -13,7 +13,7 @@ class Transactions(Base):
         String, nullable=False, unique=True, default=generate_transaction_code
     )
     account = mapped_column(String, nullable=False)
-    external_transaction_id = mapped_column(String, nullable=False)
+    external_transaction_id = mapped_column(String, unique=True, nullable=False)
     initial_balance = mapped_column(Numeric, server_default=text("0.0"), default=0)
     final_balance = mapped_column(Numeric, server_default=text("0.0"), default=0)
     cash_flow = mapped_column(String, nullable=False)
@@ -139,6 +139,7 @@ class Withdrawals(Base):
 
     conversation_id = mapped_column(
         String,
+        unique=True,
         comment=(
             "This is a global unique identifier for the transaction request returned by the API "
             "proxy upon successful request submission."

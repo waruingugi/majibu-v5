@@ -42,11 +42,11 @@ mock_stk_push_result = {
 }
 
 # Transaction instance to be saved in Transaction model
-sample_transaction_instance_info = {
+sample_positive_transaction_instance_info = {
     "account": settings.SUPERUSER_PHONE,
     "external_transaction_id": mpesa_reference_no,
     "cash_flow": "INWARD",
-    "type": "PAYMENT",
+    "type": "DEPOSIT",
     "status": "SUCCESSFUL",
     "service": "MPESA",
     "description": "",
@@ -55,6 +55,22 @@ sample_transaction_instance_info = {
     "tax": 0.0,
     "external_response": json.dumps({}),
 }
+
+
+sample_negative_transaction_instance_info = {
+    "account": settings.SUPERUSER_PHONE,
+    "external_transaction_id": "RANDOMTRANSID45",
+    "cash_flow": "OUTWARD",
+    "type": "WITHDRAWAL",
+    "status": "SUCCESSFUL",
+    "service": "MPESA",
+    "description": "",
+    "amount": 20.0,
+    "fee": settings.MPESA_B2C_CHARGE,
+    "tax": 0.0,
+    "external_response": json.dumps({}),
+}
+
 
 # Sample pf failed STKPush response
 sample_failed_stk_push_response = {
@@ -126,14 +142,19 @@ sample_b2c_response = {
     "ResponseCode": "0",
     "ResponseDescription": "Accept the service request successfully.",
 }
+sample_failed_b2c_response = {
+    "requestId": "11728-2929992-1",
+    "errorCode": "401.002.01",
+    "errorMessage": "Error Occurred - Invalid Access Token - BJGFGOXv5aZnw90KkA4TDtu4Xdyf",
+}
 
 sample_failed_b2c_result = {
     "Result": {
         "ResultType": 0,
         "ResultCode": 2,
         "ResultDesc": "Declined due to limit rule",
-        "OriginatorConversationID": "22250-3928810-1",
-        "ConversationID": "AG_20230517_20102330edbb3fee8a88",
+        "OriginatorConversationID": "16740-34861180-1",
+        "ConversationID": "AG_20191219_00005797af5d7d75f652",
         "TransactionID": "REH91PXYJ7",
         "ResultParameters": None,
         "ReferenceData": {
@@ -150,8 +171,8 @@ sample_successful_b2c_result = {
         "ResultType": 0,
         "ResultCode": 0,
         "ResultDesc": "The service request is processed successfully.",
-        "OriginatorConversationID": "88599-22310068-1",
-        "ConversationID": "AG_20230517_20400a1efc7357012ce8",
+        "OriginatorConversationID": "16740-34861180-1",
+        "ConversationID": "AG_20191219_00005797af5d7d75f652",
         "TransactionID": "REH3SOIU9T",
         "ResultParameters": {
             "ResultParameter": [

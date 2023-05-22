@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.db.dao import CRUDDao, ChangedObjState
 from app.accounts.models import MpesaPayments, Withdrawals
 from app.accounts.daos.account import transaction_dao
@@ -16,7 +17,7 @@ from app.accounts.constants import (
     TransactionServices,
     TransactionStatuses,
 )
-from app.accounts.constants import STKPUSH_DEPOSIT_DESCRPTION
+from app.accounts.constants import STKPUSH_DEPOSIT_DESCRPTION, PAYBILL_B2C_DESCRIPTION
 
 
 class MpesaPaymentDao(
@@ -40,7 +41,7 @@ class MpesaPaymentDao(
                     account=db_obj.phone_number,
                     external_transaction_id=db_obj.receipt_number,
                     cash_flow=TransactionCashFlow.INWARD.value,
-                    type=TransactionTypes.PAYMENT.value,
+                    type=TransactionTypes.DEPOSIT.value,
                     status=TransactionStatuses.SUCCESSFUL.value,
                     service=TransactionServices.MPESA.value,
                     description=description,
@@ -58,7 +59,35 @@ mpesa_payment_dao = MpesaPaymentDao(MpesaPayments)
 class WithdrawalDao(
     CRUDDao[Withdrawals, WithdrawalCreateSerializer, WithdrawalUpdateSerializer]
 ):
-    pass
+    def on_post_update(
+        self, db: Session, db_obj: Withdrawals, changed: ChangedObjState
+    ) -> None:
+
+        if (
+            db_obj.result_code == 0  # If Mpesa transacation is successful
+            and db_obj.transaction_id is not None  # Must have a valid M-Pesa Reference
+            and db_obj.transaction_amount is not None  # Must have an amount
+        ):
+            description = PAYBILL_B2C_DESCRIPTION.format(
+                db_obj.transaction_amount, db_obj.phone_number
+            )
+
+            transaction_dao.create(
+                db,
+                obj_in=TransactionCreateSerializer(
+                    account=db_obj.phone_number,
+                    external_transaction_id=db_obj.transaction_id,
+                    cash_flow=TransactionCashFlow.OUTWARD.value,
+                    type=TransactionTypes.WITHDRAWAL.value,
+                    status=TransactionStatuses.SUCCESSFUL.value,
+                    service=TransactionServices.MPESA.value,
+                    description=description,
+                    amount=db_obj.transaction_amount,
+                    fee=settings.MPESA_B2C_CHARGE,
+                    tax=0.0,  # No tax for withdrawals
+                    external_response=db_obj.external_response,
+                ),
+            )
 
 
 withdrawal_dao = WithdrawalDao(Withdrawals)

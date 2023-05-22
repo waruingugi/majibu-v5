@@ -10,6 +10,8 @@ from app.accounts.utils import (
     trigger_mpesa_stkpush_payment,
     process_mpesa_stk,
     process_mpesa_paybill_payment,
+    process_b2c_payment,
+    process_b2c_payment_result,
 )
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.accounts.daos.account import transaction_dao
@@ -39,6 +41,9 @@ async def get_wallet(
 ):
     """Get wallet page"""
     wallet_balance = transaction_dao.get_user_balance(db, account=user.phone)
+    transaction_history = transaction_dao.search(
+        db, {"order_by": ["-created_at"], "account": user.phone}
+    )[:7]
 
     return templates.TemplateResponse(
         f"{template_prefix}wallet.html",
@@ -46,6 +51,7 @@ async def get_wallet(
             "request": request,
             "title": "Wallet",
             "current_balance": wallet_balance,
+            "transaction_history": transaction_history,
         },
     )
 
@@ -126,6 +132,7 @@ async def get_withdraw(
 @router.post("/withdraw/", response_class=HTMLResponse)
 async def post_withdraw(
     request: Request,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
     withdraw: WithdrawSerializer = Depends(),
@@ -141,8 +148,16 @@ async def post_withdraw(
 
     elif redis.get(md5_hash(f"{user.phone}:withdraw_request")):
         withdraw.field_errors.append(ErrorCodes.SIMILAR_WITHDRAWAL_REQUEST.value)
+
     else:
-        pass
+        background_tasks.add_task(
+            process_b2c_payment, db, user=user, amount=withdraw.amount
+        )
+        redirect_url = request.url_for("get_withdraw_success", amount=withdraw.amount)
+
+        return RedirectResponse(
+            redirect_url, status_code=302, background=background_tasks
+        )
 
     return templates.TemplateResponse(
         f"{template_prefix}withdraw.html",
@@ -151,6 +166,19 @@ async def post_withdraw(
             "title": "Withdraw",
             "field_errors": withdraw.field_errors,
         },
+    )
+
+
+@router.get("/withdraw/success/{amount}", response_class=HTMLResponse)
+async def get_withdraw_success(
+    request: Request,
+    amount: int,
+    _: User = Depends(get_current_active_user),
+):
+    """Get withdraw success page"""
+    return templates.TemplateResponse(
+        f"{template_prefix}withdraw_success.html",
+        {"request": request, "title": "Withdraw", "amount": amount},
     )
 
 
@@ -187,9 +215,16 @@ async def post_confirmation(
 async def post_withdrawal_result(
     request: Request,
     withdrawal_response_in: WithdrawalResultSerializer,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
 ):
     """Callback URL to receive response after posting withdrawal request to M-Pesa"""
-    return withdrawal_response_in
+    if request.client.host not in MPESA_WHITE_LISTED_IPS:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
+    background_tasks.add_task(
+        process_b2c_payment_result, db, withdrawal_response_in.Result
+    )
 
 
 @router.post("/payments/timeout/")
@@ -210,12 +245,14 @@ async def post_withdrawal_time_out(
 # Make request, send request
 # Wait for response, if response in previous db
 # Update to success and save to transactions
+# check transaction values if success
 # Save response to db
 # If valid callback update db model instance else fail
 # Celery
 # Query B2C pending transactions or use retry feature
 # Fix payment func names
 # Deposit history
+# Pagination
 # Models
 # Test models
 # Account - mpesa
