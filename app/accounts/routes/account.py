@@ -43,7 +43,9 @@ async def get_wallet(
     wallet_balance = transaction_dao.get_user_balance(db, account=user.phone)
     transaction_history = transaction_dao.search(
         db, {"order_by": ["-created_at"], "account": user.phone}
-    )[:7]
+    )[
+        :7
+    ]  # Show only 7 transactions due to design limitations
 
     return templates.TemplateResponse(
         f"{template_prefix}wallet.html",

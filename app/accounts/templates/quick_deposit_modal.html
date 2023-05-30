@@ -1,0 +1,30 @@
+<div class="modal fade" role="dialog" tabindex="-1" id="quick-deposit">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header pt-3 pb-2 border-0">
+                <h4 class="modal-title w-100 text-center">Quick Deposit</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+
+                </button>
+            </div>
+            <div class="modal-body py-0">
+                <div class="p-2 bg-light border-warning" style="border-radius: 5px;border-left-style: solid;border-left-color: var(--bs-blue);">
+                    <span>You have insufficient funds to play this session</span>
+                    <ul class="list-unstyled my-1 text-muted">
+                        <li class="d-flex flex-row justify-content-between">
+                            <span>Available balance</span><span class="fs-6">Ksh {{ wallet_balance }}</span>
+                        </li>
+                        <li class="d-flex flex-row justify-content-between">
+                            <span>Amount needed</span><span class="fs-6">Ksh 200</span>
+                        </li>
+                    </ul>
+                </div>
+                <form class="mt-2" role="form" action="{{ url_for('post_deposit') }}" method="POST">
+                    <label class="form-label mb-1">Deposit now using M-Pesa</label>
+                    <input class="form-control" type="number" name="amount" placeholder="Amount to deposit (Ksh)" required="" min="1" max="5000" value="200">
+                    <button class="btn btn-primary d-block w-100 my-3" id="btn-preferred" type="submit">Deposit Funds</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

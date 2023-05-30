@@ -53,17 +53,13 @@ def get_mpesa_access_token(
     """
     logger.info("Retrieving M-Pesa token...")
 
-    access_token = redis.get("mpesa_access_token")
+    access_token = (
+        redis.get("mpesa_b2c_access_token")
+        if IS_B2C
+        else redis.get("mpesa_access_token")
+    )
 
-    if access_token:
-        access_token = (
-            str(access_token, "utf-8")
-            if isinstance(access_token, bytes)
-            else access_token
-        )
-
-    """Always get B2C token because it's a different token"""
-    if not access_token or IS_B2C:
+    if not access_token:
         url = settings.MPESA_TOKEN_URL
         auth = requests.auth.HTTPBasicAuth(MPESA_CONSUMER_KEY, MPESA_SECRET)
 
@@ -75,7 +71,11 @@ def get_mpesa_access_token(
         timeout = int(res["expires_in"]) - 200
 
         # Store the token in the cache for future requests
-        redis.set("mpesa_access_token", access_token, ex=timeout)
+        (
+            redis.set("mpesa_b2c_access_token", access_token, ex=timeout)
+            if IS_B2C
+            else redis.set("mpesa_access_token", access_token, ex=timeout)
+        )
 
     return access_token
 
@@ -124,6 +124,7 @@ def initiate_mpesa_stkpush_payment(
         }
         response = requests.post(api_url, json=data, headers=headers, verify=True)
         response_data = response.json()
+        logger.info(f"Received M-Pesa STKPush response: {response_data}")
 
         if response_data["ResponseCode"] == "0":  # 0 means response is ok
             return response_data
