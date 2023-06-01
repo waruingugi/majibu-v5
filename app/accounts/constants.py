@@ -1,4 +1,5 @@
 from enum import Enum
+from app.core.config import settings
 
 
 # SMS message sent to user on M-Pesa deposit
@@ -20,6 +21,7 @@ PAYBILL_B2C_DESCRIPTION = "Payment of Ksh {} for account {} using B2C payment."
 # SMS message sent to user on M-Pesa withdrawal
 MPESA_PAYMENT_WITHDRAW = (
     "You've successfully withdrawn Ksh{} for your account {}. "
+    f"Transaction cost Ksh{settings.MPESA_B2C_CHARGE}. "
     "New balance is Ksh{}. "
     "Thank your for choosing Majibu!"
 )
