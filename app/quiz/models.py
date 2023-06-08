@@ -14,5 +14,7 @@ class Choices(Base):
 
 
 class Answers(Base):
-    question_id = mapped_column(String, ForeignKey("questions.id", ondelete="CASCADE"))
+    question_id = mapped_column(
+        String, ForeignKey("questions.id", ondelete="CASCADE"), unique=True
+    )
     choice_id = mapped_column(String, ForeignKey("choices.id", ondelete="CASCADE"))

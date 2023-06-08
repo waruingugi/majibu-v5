@@ -24,3 +24,15 @@ class ChoiceCreateSerializer(ChoiceBaseSerializer):
 
 class ChoiceUpdateSerializer(ChoiceBaseSerializer):
     choice_text: str | None
+
+
+class AnswerBaseSerializer(BaseModel):
+    question_id: str
+
+
+class AnswerCreateSerializer(AnswerBaseSerializer):
+    choice_id: str
+
+
+class AnswerUpdateSerializer(AnswerBaseSerializer):
+    choice_id: str | None
