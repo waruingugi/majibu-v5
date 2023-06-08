@@ -5,6 +5,7 @@ from app.accounts.constants import (
     TransactionStatuses,
     TransactionServices,
 )
+from app.commons.constants import Categories
 from app.errors.custom import ErrorCodes
 from app.core.raw_logger import logger
 from app.core.config import settings
@@ -133,12 +134,21 @@ _is_valid_transaction_status = validator("status", pre=True, allow_reuse=True)(
 )
 
 
-def is_valid_transaction_service(value: str):
+def is_valid_transaction_service(value: str) -> str | None:
     return value_exists_in_enum(value, TransactionServices)
 
 
 _is_valid_transaction_service = validator("service", pre=True, allow_reuse=True)(
     is_valid_transaction_service
+)
+
+
+def is_valid_category(value: str) -> str | None:
+    return value_exists_in_enum(value, Categories)
+
+
+_is_valid_category = validator("category", pre=True, allow_reuse=True)(
+    is_valid_category
 )
 
 

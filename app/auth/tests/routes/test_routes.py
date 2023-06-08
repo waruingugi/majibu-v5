@@ -87,4 +87,4 @@ def test_post_otp_verification_redirects_on_valid_otp(
     response = client.post(
         "/auth/validate-otp/" + settings.SUPERUSER_PHONE, data={"otp": "0987"}
     )
-    assert response.template.name == "sessions/templates/home.html"
+    assert response.template.name == "sessions/templates/summary.html"
