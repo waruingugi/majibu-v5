@@ -90,3 +90,10 @@ class InvalidEnumValue(Exception):
 
     def __init__(self, message: str = "An invalid enum value was provided") -> None:
         self.message = message
+
+
+class QuestionExistsInASession(Exception):
+    """The specified object was not found"""
+
+    def __init__(self, message: str) -> None:
+        self.message = message

@@ -239,17 +239,6 @@ async def post_withdrawal_time_out(
     pass
 
 
-# B2C
-# Create withdrawaø request save to db
-# Save request to redis
-# If request in redis - a similar request already exists
-# If request exists in db in the last 3 mins, raise error
-# Make request, send request
-# Wait for response, if response in previous db
-# Update to success and save to transactions
-# check transaction values if success
-# Save response to db
-# If valid callback update db model instance else fail
 # Celery
 # Query B2C pending transactions or use retry feature
 # Fix payment func names

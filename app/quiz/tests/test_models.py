@@ -9,7 +9,7 @@ from app.quiz.serializers.quiz import (
 )
 
 
-def test_create_question(db: Session) -> None:
+def test_create_question_instance(db: Session) -> None:
     """Test question can be created successfully"""
     question_text = "Random question"
     question_in = QuestionCreateSerializer(
@@ -21,7 +21,7 @@ def test_create_question(db: Session) -> None:
     assert question.category == Categories.FOOTBALL.value
 
 
-def test_update_question(db: Session) -> None:
+def test_update_question_instance(db: Session) -> None:
     """Test question can be updated successfully"""
     invalid_question = "Invalid question"
     question = question_dao.create(

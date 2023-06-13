@@ -92,6 +92,8 @@ class Settings(BaseSettings):
 
     MONETARY_DECIMAL_PLACES: int = 2  # Decimal places to use for all monetary values
 
+    QUESTIONS_IN_SESSION: int = 5
+
     class Config:
         env_file = ".env"
         case_sensitive = True
