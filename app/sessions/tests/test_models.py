@@ -47,3 +47,20 @@ def test_session_creation_enforces_question_uniqueness(db: Session) -> None:
             ],  # In reality, these are unique UUID
         )
         session_dao.create(db, obj_in=data_in)
+
+
+def test_session_has_required_no_of_questions(db: Session) -> None:
+    """Test fails if session has invalid number of questions"""
+    with pytest.raises(Exception):
+        data_in = SessionCreateSerializer(
+            category=Categories.FOOTBALL.value,
+            questions=[
+                "1RBVS",
+                "2WEBAN",
+                "3FGTK",
+                "4FBNA",
+                "5QWNC",
+                "6TNAV",
+            ],  # In reality, these are unique UUID
+        )
+        session_dao.create(db, obj_in=data_in)

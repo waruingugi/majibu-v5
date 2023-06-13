@@ -93,7 +93,14 @@ class InvalidEnumValue(Exception):
 
 
 class QuestionExistsInASession(Exception):
-    """The specified object was not found"""
+    """Question exists in another session"""
 
     def __init__(self, message: str) -> None:
         self.message = message
+
+
+class FewQuestionsInSession(Exception):
+    """Session has invalid number of questions"""
+
+    def __init__(self) -> None:
+        self.message = ErrorCodes.SESSION_HAS_INVALID_NO_OF_QUESTIONS.value

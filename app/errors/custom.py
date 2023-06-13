@@ -19,3 +19,6 @@ class ErrorCodes(str, Enum):
         "A previous withdrawal request is being processed. " "Please try again later."
     )
     B2C_PAYMENT_FAILED = "An error ocurred while initiating a B2C payment."
+    SESSION_HAS_INVALID_NO_OF_QUESTIONS = (
+        "Session has invalid questions number of questions"
+    )
