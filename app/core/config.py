@@ -93,6 +93,7 @@ class Settings(BaseSettings):
     MONETARY_DECIMAL_PLACES: int = 2  # Decimal places to use for all monetary values
 
     QUESTIONS_IN_SESSION: int = 5
+    SESSION_RESULT_DECIMAL_PLACES: int = 7  # High accuracy to pevent draws
 
     class Config:
         env_file = ".env"
