@@ -94,6 +94,7 @@ class Settings(BaseSettings):
 
     QUESTIONS_IN_SESSION: int = 5
     SESSION_RESULT_DECIMAL_PLACES: int = 7  # High accuracy to pevent draws
+    SESSION_DURATION: int = 15  # How long the session lasts
 
     class Config:
         env_file = ".env"
