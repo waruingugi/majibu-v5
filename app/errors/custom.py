@@ -22,3 +22,4 @@ class ErrorCodes(str, Enum):
     SESSION_HAS_INVALID_NO_OF_QUESTIONS = (
         "Session has invalid questions number of questions"
     )
+    MAINTENANCE_MODE = "The business is currently under going maintenance."

@@ -104,3 +104,12 @@ class FewQuestionsInSession(Exception):
 
     def __init__(self) -> None:
         self.message = ErrorCodes.SESSION_HAS_INVALID_NO_OF_QUESTIONS.value
+
+
+class BusinessInMaintenanceMode(HttpErrorException):
+    def __init__(self) -> None:
+        super(BusinessInMaintenanceMode, self).__init__(
+            status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+            error_code=ErrorCodes.MAINTENANCE_MODE.name,
+            error_message=ErrorCodes.MAINTENANCE_MODE.value,
+        )

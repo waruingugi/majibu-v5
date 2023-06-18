@@ -1,13 +1,18 @@
 from fastapi import Request, APIRouter, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
+from typing import Callable
 
 from app.sessions.serializers.session import SessionCategoryFormSerializer
 from app.users.models import User
 from app.accounts.daos.account import transaction_dao
 from app.commons.constants import Categories
 from app.core.config import templates, settings
-from app.core.deps import get_current_active_user_or_none, get_db
+from app.core.deps import (
+    get_current_active_user_or_none,
+    get_db,
+    business_is_open,
+)
 from app.core.logger import LoggingRoute
 
 
@@ -59,6 +64,7 @@ async def get_home(
 async def post_session(
     request: Request,
     category: SessionCategoryFormSerializer,
+    _: Callable = Depends(business_is_open),
 ):
     """Redirect to a preferred page otherwise go to homepage"""
     redirect_url = request.cookies.get(
@@ -80,15 +86,16 @@ async def get_preferred_redirect(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-# JS check balance
 # Remove docs
 # Submit form
+# Submit form test
+# Check if business is open
+# Check if user has enough funds and no withdrawals in queue
 # Check if user has an active session
 # Check if session category is available
 # If not available choose random session in category user has not played
 # If availabe choose same session id
 # If no availabe, raise no available session error
-# Check balance is sufficient and no recent withdrawals
 # Deduct from wallet balance
 # Auto fill results with null values
 # Set in session has(user + session id) for 30 minutes

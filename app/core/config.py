@@ -96,6 +96,10 @@ class Settings(BaseSettings):
     SESSION_RESULT_DECIMAL_PLACES: int = 7  # High accuracy to pevent draws
     SESSION_DURATION: int = 15  # How long the session lasts
 
+    MAINTENANCE_MODE: int = 0
+    BUSINESS_OPENS_AT: str
+    BUSINESS_CLOSES_AT: str
+
     class Config:
         env_file = ".env"
         case_sensitive = True
