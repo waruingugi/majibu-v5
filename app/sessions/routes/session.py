@@ -2,6 +2,7 @@ from fastapi import Request, APIRouter, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
 from typing import Callable
+from http import HTTPStatus
 
 from app.sessions.serializers.session import SessionCategoryFormSerializer
 from app.users.models import User
@@ -37,6 +38,7 @@ async def get_home(
     request: Request,
     user: User = Depends(get_current_active_user_or_none),
     db: Session = Depends(get_db),
+    business_is_open: Callable = Depends(business_is_open),
 ):
     """Display session summary"""
     has_sufficient_balance = False
@@ -56,6 +58,11 @@ async def get_home(
             "has_sufficient_balance": has_sufficient_balance,
             "wallet_balance": wallet_balance,
             "categories": Categories.list_(),
+            "business_opens_at": settings.BUSINESS_OPENS_AT,
+            "business_closes_at": settings.BUSINESS_CLOSES_AT,
+            "business_is_open": business_is_open,
+            "session_amount": settings.SESSION_AMOUNT,
+            "session_fee": settings.SESSION_FEE,
         },
     )
 
@@ -64,14 +71,15 @@ async def get_home(
 async def post_session(
     request: Request,
     category: SessionCategoryFormSerializer,
-    _: Callable = Depends(business_is_open),
+    business_is_open: Callable = Depends(business_is_open),
 ):
-    """Redirect to a preferred page otherwise go to homepage"""
-    redirect_url = request.cookies.get(
-        "preferred_redirect_to", request.url_for("get_home")
-    )
+    if business_is_open:
+        """Do some work here if business is open"""
+        pass
 
-    return RedirectResponse(redirect_url, status_code=302)
+    return RedirectResponse(
+        request.url_for("off_business_hours"), status_code=HTTPStatus.TEMPORARY_REDIRECT
+    )
 
 
 @router.get("/preferred-redirect/", response_class=HTMLResponse)
@@ -84,6 +92,22 @@ async def get_preferred_redirect(
     )
 
     return RedirectResponse(redirect_url, status_code=302)
+
+
+@router.get("/off-business-hours/", response_class=HTMLResponse)
+async def off_business_hours(
+    request: Request,
+):
+    """Show page when user tries to play outside business hours"""
+    return templates.TemplateResponse(
+        f"{template_prefix}off_business_hours.html",
+        {
+            "request": request,
+            "title": "Please try again later",
+            "business_opens_at": settings.BUSINESS_OPENS_AT,
+            "business_closes_at": settings.BUSINESS_CLOSES_AT,
+        },
+    )
 
 
 # Remove docs

@@ -3,6 +3,7 @@
 {% block content %}
     {% include "auth/templates/login_modal.html" %}
     {% include "accounts/templates/quick_deposit_modal.html" %}
+    {% include "templates/business_closed_modal.html" %}
     {% include "templates/navbar.html" %}
 
     <section id="content-full-height" class="py-4 bg-light">
@@ -38,9 +39,9 @@
                                         <small class="text-black-50" style="font-size: 12px;">*Fee waiver applied by admin</small>
                                         <ul class="list-unstyled small">
                                             <li class="text-black-50 d-flex flex-row justify-content-between"><span>Time</span><span class="font-monospace">15 seconds</span></li>
-                                            <li class="d-flex flex-row justify-content-between"><span>Amount</span><span class="font-monospace">Ksh 200</span></li>
-                                            <li class="d-flex flex-row justify-content-between"><span>Fee</span><span class="font-monospace"><span style="text-decoration: line-through;">Ksh 17.50</span></span></li>
-                                            <li class="d-flex flex-row justify-content-between"><span><strong>Possible payout</strong></span><span class="font-monospace"><small><strong>Ksh&nbsp;</strong></small><strong>400</strong></span></li>
+                                            <li class="d-flex flex-row justify-content-between"><span>Amount</span><span class="font-monospace">Ksh {{ session_amount }}</span></li>
+                                            <li class="d-flex flex-row justify-content-between"><span>Fee</span><span class="font-monospace"><span style="text-decoration: line-through;">Ksh {{ session_fee }}</span></span></li>
+                                            <li class="d-flex flex-row justify-content-between"><span><strong>Possible payout</strong></span><span class="font-monospace"><small><strong>Ksh&nbsp;</strong></small><strong>1000</strong></span></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -59,9 +60,9 @@
                                     </div>
     
                                     <div class="col-12 col-lg-5 py-2 px-1">
-                                        <a id="btn-preferred" href="{{ url_for('get_home') }}" class="confirm btn btn-light d-block w-100" role="button">
+                                        <button id="btn-preferred" class="confirm btn btn-light d-block w-100" type="submit">
                                             <span class="animate__animated animate__flash"><strong>Play Now</strong></span>
-                                        </a>
+                                        </button>
                                     </div>
                                     
                                 </div>
@@ -84,19 +85,29 @@
         document.querySelector(".confirm").addEventListener("click", function(event) {
             // Check if the user is logged in
             var is_logged_in = JSON.parse('{{ is_logged_in | tojson }}');
+
+            // Check user has sufficient balance
             var has_sufficient_balance = JSON.parse('{{ has_sufficient_balance | tojson }}');
 
-            
-            const login_modal = new bootstrap.Modal(document.getElementById('login'));
-            const quick_deposit_modal = new bootstrap.Modal(document.getElementById('quick-deposit'));
+            // Check business is in operating hours
+            var business_is_open = JSON.parse('{{ business_is_open | tojson }}');
 
+            const login_modal = new bootstrap.Modal(document.getElementById('login'));
+            const off_business_hours_modal = new bootstrap.Modal(document.getElementById('off-business-hours'));
+            const quick_deposit_modal = new bootstrap.Modal(document.getElementById('quick-deposit'));
 
             if (!is_logged_in) {
                 // User is not logged in, prevent the default action of the href button
                 event.preventDefault();
 
                 // Show the login modal
-                login_modal.show()
+                login_modal.show();
+            } else if (!business_is_open) {
+                // Check business is in operating hours
+                event.preventDefault();
+
+                // Show the off business hours modal
+                off_business_hours_modal.show();
             } else if (!has_sufficient_balance) {
                 // If user does not sufficient balance, prevent the default action of the href button
                 event.preventDefault();
@@ -114,9 +125,11 @@
         function selectRadioButton(div) {
             var radioButton = div.querySelector('input[type="radio"]');
             radioButton.checked = true;
-          }
+        }
           
 
     </script>
+        
+
 
 {% endblock %}
