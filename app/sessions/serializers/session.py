@@ -26,3 +26,18 @@ class SessionCreateSerializer(SesssionBaseSerializer):
 class SessionUpdateSerializer(SesssionBaseSerializer):
     category: str | None
     questions: List[str] | None
+
+
+class DuoSessionBaseSerializer(BaseModel):
+    party_a: str
+    session_id: str
+
+
+class DuoSessionCreateSerializer(DuoSessionBaseSerializer):
+    amount: float
+
+
+class DuoSessionUpdateSerializer(DuoSessionBaseSerializer):
+    party_b: str | None
+    status: bool | None
+    winner_id: str | None

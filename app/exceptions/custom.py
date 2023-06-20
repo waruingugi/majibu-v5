@@ -18,6 +18,13 @@ class ObjectDoesNotExist(Exception):
         self.message = message
 
 
+class DuoSessionFailedOnUpdate(Exception):
+    """An exception happened when updating a DuoSession instance"""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
 class InvalidToken(HttpErrorException):
     def __init__(self) -> None:
         super(InvalidToken, self).__init__(

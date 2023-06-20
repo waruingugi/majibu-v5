@@ -1,14 +1,32 @@
 from sqlalchemy.orm import Session
 
+from app.exceptions.custom import DuoSessionFailedOnUpdate
 from app.db.dao import CRUDDao
 from app.core.helpers import convert_list_to_string
 from app.core.config import settings
 from app.exceptions.custom import QuestionExistsInASession, FewQuestionsInSession
-from app.sessions.models import Sessions
+from app.sessions.models import Sessions, DuoSession
 from app.sessions.serializers.session import (
     SessionCreateSerializer,
     SessionUpdateSerializer,
+    DuoSessionCreateSerializer,
+    DuoSessionUpdateSerializer,
 )
+
+
+class DuoSessionDao(
+    CRUDDao[DuoSession, DuoSessionCreateSerializer, DuoSessionUpdateSerializer]
+):
+    def on_pre_update(
+        self, db: Session, db_obj: DuoSession, values: dict, orig_values: dict
+    ) -> None:
+        """Run validation checks before updating DuoSession instance"""
+        if db_obj.party_a == values["party_b"]:
+            raise DuoSessionFailedOnUpdate(
+                f"Can not pair user id{db_obj.party_a} to themselves"
+            )
+
+        return super().on_pre_update(db, db_obj, values, orig_values)
 
 
 class SessionDao(CRUDDao[Sessions, SessionCreateSerializer, SessionUpdateSerializer]):
