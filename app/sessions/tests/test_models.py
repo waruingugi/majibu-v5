@@ -1,11 +1,15 @@
 from sqlalchemy.orm import Session
+from typing import Callable
+import pytest
 
 from app.commons.constants import Categories
-from app.sessions.daos.session import session_dao
+from app.sessions.daos.session import session_dao, duo_session_dao
+from app.users.daos.user import user_dao
 from app.sessions.serializers.session import (
     SessionCreateSerializer,
+    DuoSessionCreateSerializer,
 )
-import pytest
+from app.core.config import settings
 
 
 def test_create_session_instance(db: Session) -> None:
@@ -64,3 +68,23 @@ def test_session_has_required_no_of_questions(db: Session) -> None:
             ],  # In reality, these are unique UUID
         )
         session_dao.create(db, obj_in=data_in)
+
+
+def test_create_duo_session_instance(
+    db: Session,
+    create_session_instance: Callable,
+    create_user_instance: Callable,
+) -> None:
+    """Test DuoSession can be created in model"""
+    session = session_dao.get_not_none(db)
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    data_in = DuoSessionCreateSerializer(
+        party_a=user.id, session_id=session.id, amount=settings.SESSION_AMOUNT
+    )
+    duo_session = duo_session_dao.create(db, obj_in=data_in)
+
+    assert duo_session.party_a == user.id
+    assert duo_session.party_b is None
+
+    assert duo_session.session_id == session.id
+    assert duo_session.amount == settings.SESSION_AMOUNT

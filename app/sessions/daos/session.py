@@ -26,7 +26,8 @@ class DuoSessionDao(
                 f"Can not pair user id{db_obj.party_a} to themselves"
             )
 
-        return super().on_pre_update(db, db_obj, values, orig_values)
+
+duo_session_dao = DuoSessionDao(DuoSession)
 
 
 class SessionDao(CRUDDao[Sessions, SessionCreateSerializer, SessionUpdateSerializer]):
