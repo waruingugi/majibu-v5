@@ -29,11 +29,12 @@ class SessionUpdateSerializer(SesssionBaseSerializer):
 
 
 class DuoSessionBaseSerializer(BaseModel):
-    party_a: str
-    session_id: str
+    pass
 
 
 class DuoSessionCreateSerializer(DuoSessionBaseSerializer):
+    session_id: str
+    party_a: str
     amount: float
 
 
