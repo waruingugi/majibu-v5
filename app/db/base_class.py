@@ -2,18 +2,15 @@ from sqlalchemy.orm import DeclarativeBase, declared_attr
 from sqlalchemy import DateTime, String
 from sqlalchemy.orm import mapped_column
 from sqlalchemy_utils import get_columns
-from typing import Dict
 
-import uuid
+from typing import Dict
 from datetime import datetime
+
+from app.commons.utils import generate_uuid
 
 
 def get_current_datetime() -> datetime:
     return datetime.now()
-
-
-def generate_uuid() -> str:
-    return str(uuid.uuid4())
 
 
 class Base(DeclarativeBase):

@@ -22,6 +22,7 @@ from phonenumbers import (
     PhoneNumberFormat,
 )
 from pydantic import validator
+from typing import List
 from hashlib import md5, sha256
 from datetime import datetime
 import hmac
@@ -172,3 +173,8 @@ def format_mpesa_result_params_to_dict(result_parameters):
 def format_b2c_mpesa_date_to_timestamp(date_string):
     datetime_obj = datetime.strptime(date_string, "%d.%m.%Y %H:%M:%S")
     return datetime_obj
+
+
+def convert_list_to_string(list_value: List[str]) -> str:
+    """Convert list to string"""
+    return ", ".join(map(str, set(list_value))) if list_value else ""

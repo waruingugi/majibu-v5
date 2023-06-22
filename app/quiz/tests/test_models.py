@@ -1,15 +1,21 @@
 from sqlalchemy.orm import Session
+from typing import Callable
 
 from app.commons.constants import Categories
-from app.quiz.daos.quiz import question_dao, choice_dao, answer_dao
+from app.core.config import settings
+
+from app.sessions.daos.session import session_dao
+from app.users.daos.user import user_dao
+from app.quiz.daos.quiz import question_dao, choice_dao, answer_dao, result_dao
 from app.quiz.serializers.quiz import (
     QuestionCreateSerializer,
     ChoiceCreateSerializer,
     AnswerCreateSerializer,
+    ResultCreateSerializer,
 )
 
 
-def test_create_question(db: Session) -> None:
+def test_create_question_instance(db: Session) -> None:
     """Test question can be created successfully"""
     question_text = "Random question"
     question_in = QuestionCreateSerializer(
@@ -21,7 +27,7 @@ def test_create_question(db: Session) -> None:
     assert question.category == Categories.FOOTBALL.value
 
 
-def test_update_question(db: Session) -> None:
+def test_update_question_instance(db: Session) -> None:
     """Test question can be updated successfully"""
     invalid_question = "Invalid question"
     question = question_dao.create(
@@ -39,7 +45,7 @@ def test_update_question(db: Session) -> None:
     assert updated_question.category == Categories.FOOTBALL.value
 
 
-def test_create_choice(db: Session) -> None:
+def test_create_choice_instance(db: Session) -> None:
     """Test create question"""
     question_in = QuestionCreateSerializer(
         question_text="Random question", category=Categories.FOOTBALL.value
@@ -56,8 +62,8 @@ def test_create_choice(db: Session) -> None:
     assert choice.question_id == question.id
 
 
-def test_create_answer(db: Session) -> None:
-    """Test create answer"""
+def test_create_answer_instance(db: Session) -> None:
+    """Test create answer instance"""
     question_in = QuestionCreateSerializer(
         question_text="Random question", category=Categories.FOOTBALL.value
     )
@@ -76,3 +82,26 @@ def test_create_answer(db: Session) -> None:
 
     assert answer.choice_id == choice.id
     assert answer.question_id == question.id
+
+
+def test_create_results_instance(
+    db: Session, create_user_instance: Callable, create_session_instance: Callable
+) -> None:
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    session = session_dao.get_not_none(db, category=Categories.BIBLE.value)
+
+    result_in = ResultCreateSerializer(user_id=user.id, session_id=session.id)
+    result = result_dao.create(db, obj_in=result_in)
+
+    assert result.user_id == user.id
+    assert result.session_id == session.id
+
+    assert result.speed == 0.0
+    assert result.total_answered == 0.0
+
+    assert result.percentage == 0.0
+    assert result.score == 0.0
+
+    assert result.is_active is False
+    time_diff = (result.expires_at - result.created_at).total_seconds()
+    assert round(time_diff) == settings.SESSION_DURATION

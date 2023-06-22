@@ -1,5 +1,6 @@
-from typing import Generator, Dict
+from typing import Generator, Dict, Callable
 from sqlalchemy.orm import Session, load_only
+from datetime import datetime, timedelta
 
 from app.db.session import SessionLocal
 from app.core.security import (
@@ -17,6 +18,7 @@ from app.exceptions.custom import (
     IncorrectCredentials,
     InactiveAccount,
     InsufficientUserPrivileges,
+    BusinessInMaintenanceMode,
 )
 
 from jose import JWTError, jwt
@@ -87,6 +89,7 @@ async def get_current_user_or_none(
     db: Session = Depends(get_db),
     token_payload: dict = Depends(get_decoded_token_or_none),
 ) -> User | None:
+    """Get current user or return None"""
     if token_payload is not None:
         user = user_dao.get(
             db,
@@ -103,6 +106,7 @@ async def get_current_user(
     db: Session = Depends(get_db),
     token_payload: dict = Depends(get_decoded_token),
 ) -> User:
+    """Get current user"""
     user = user_dao.get(
         db,
         id=token_payload["user_id"],
@@ -117,6 +121,7 @@ async def get_current_user(
 async def get_current_active_user_or_none(
     current_user: User = Security(get_current_user_or_none),
 ) -> User | None:
+    """Get current active user or return None"""
     if current_user:
         if current_user.is_active:
             return current_user
@@ -127,6 +132,7 @@ async def get_current_active_user_or_none(
 async def get_current_active_user(
     current_user: User = Security(get_current_user),
 ) -> User:
+    """Get current active user"""
     if not current_user.is_active:
         raise InactiveAccount
     return current_user
@@ -135,6 +141,57 @@ async def get_current_active_user(
 async def get_current_active_superuser(
     current_user: User = Security(get_current_user),
 ) -> User:
+    """Get current active user"""
     if not user_dao.is_superuser(current_user):
         raise InsufficientUserPrivileges
     return current_user
+
+
+async def business_in_maintenance_mode() -> None:
+    """Raise error if business is in maintenance mode."""
+    if settings.MAINTENANCE_MODE:
+        raise BusinessInMaintenanceMode
+
+
+async def business_is_open(
+    _: Callable = Depends(business_in_maintenance_mode),
+) -> bool:
+    """Check business is open or business is within operating hours"""
+    utc_now = datetime.utcnow()
+
+    # Calculate the current time in EAT
+    eat_offset = timedelta(hours=3)  # EAT offset is 3 hours ahead of UTC = Nairobi time
+    eat_now = utc_now + eat_offset
+
+    # Extract the time components from open_time and close_time
+    open_hour, open_minute = map(int, settings.BUSINESS_OPENS_AT.split(":"))
+    close_hour, close_minute = map(int, settings.BUSINESS_CLOSES_AT.split(":"))
+
+    # Create datetime objects for the current time, open time, and close time
+    current_datetime = datetime(
+        year=eat_now.year,
+        month=eat_now.month,
+        day=eat_now.day,
+        hour=eat_now.hour,
+        minute=eat_now.minute,
+    )
+    business_opens_at = datetime(
+        year=eat_now.year,
+        month=eat_now.month,
+        day=eat_now.day,
+        hour=open_hour,
+        minute=open_minute,
+    )
+    business_closes_at = datetime(
+        year=eat_now.year,
+        month=eat_now.month,
+        day=eat_now.day,
+        hour=close_hour,
+        minute=close_minute,
+    )
+
+    # Check if the current time is within the specified range
+    if business_opens_at <= current_datetime <= business_closes_at:
+        return True
+    else:
+        return False

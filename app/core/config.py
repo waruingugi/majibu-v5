@@ -60,8 +60,8 @@ class Settings(BaseSettings):
 
     SUPERUSER_PHONE: str
 
-    SESSION_AMOUNT: int = 200
-    SESSION_FEE: float = 17.50
+    SESSION_AMOUNT: int = 500
+    SESSION_FEE: float = 45.0
 
     MPESA_B2C_CHARGE: int = 16
     MPESA_B2C_CONSUMER_KEY: str
@@ -91,6 +91,14 @@ class Settings(BaseSettings):
     )
 
     MONETARY_DECIMAL_PLACES: int = 2  # Decimal places to use for all monetary values
+
+    QUESTIONS_IN_SESSION: int = 5
+    SESSION_RESULT_DECIMAL_PLACES: int = 7  # High accuracy to pevent draws
+    SESSION_DURATION: int = 15  # How long the session lasts
+
+    MAINTENANCE_MODE: int = 0
+    BUSINESS_OPENS_AT: str
+    BUSINESS_CLOSES_AT: str
 
     class Config:
         env_file = ".env"

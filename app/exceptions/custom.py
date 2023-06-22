@@ -18,6 +18,13 @@ class ObjectDoesNotExist(Exception):
         self.message = message
 
 
+class DuoSessionFailedOnUpdate(Exception):
+    """An exception happened when updating a DuoSession instance"""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
 class InvalidToken(HttpErrorException):
     def __init__(self) -> None:
         super(InvalidToken, self).__init__(
@@ -90,3 +97,26 @@ class InvalidEnumValue(Exception):
 
     def __init__(self, message: str = "An invalid enum value was provided") -> None:
         self.message = message
+
+
+class QuestionExistsInASession(Exception):
+    """Question exists in another session"""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
+class FewQuestionsInSession(Exception):
+    """Session has invalid number of questions"""
+
+    def __init__(self) -> None:
+        self.message = ErrorCodes.SESSION_HAS_INVALID_NO_OF_QUESTIONS.value
+
+
+class BusinessInMaintenanceMode(HttpErrorException):
+    def __init__(self) -> None:
+        super(BusinessInMaintenanceMode, self).__init__(
+            status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+            error_code=ErrorCodes.MAINTENANCE_MODE.name,
+            error_message=ErrorCodes.MAINTENANCE_MODE.value,
+        )

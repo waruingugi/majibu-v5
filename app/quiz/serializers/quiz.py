@@ -1,4 +1,5 @@
 from app.commons.serializers.commons import CategoryBaseSerializer
+
 from pydantic import BaseModel
 
 
@@ -36,3 +37,25 @@ class AnswerCreateSerializer(AnswerBaseSerializer):
 
 class AnswerUpdateSerializer(AnswerBaseSerializer):
     choice_id: str | None
+
+
+class ResultBaseSerializer(BaseModel):
+    user_id: str
+    session_id: str
+
+
+class ResultCreateSerializer(ResultBaseSerializer):
+    pass
+    # percentage: float = 0.0
+    # total_answered: int = 0
+    # speed: float = 0.0
+    # time_taken: float = 0.0
+    # score: float = 0.0
+
+
+class ResultUpdateSerializer(BaseModel):
+    percentage: float = 0.0
+    total_answered: int = 0
+    speed: float = 0.0
+    time_taken: float = 0.0
+    score: float = 0.0
