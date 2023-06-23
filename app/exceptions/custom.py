@@ -114,9 +114,33 @@ class FewQuestionsInSession(Exception):
 
 
 class BusinessInMaintenanceMode(HttpErrorException):
+    """Business is under going maintenance"""
+
     def __init__(self) -> None:
         super(BusinessInMaintenanceMode, self).__init__(
             status_code=HTTPStatus.SERVICE_UNAVAILABLE,
             error_code=ErrorCodes.MAINTENANCE_MODE.name,
             error_message=ErrorCodes.MAINTENANCE_MODE.value,
+        )
+
+
+class WithdrawalRequestInQueue(HttpErrorException):
+    """A previous withdrawal request is acting as a blocker"""
+
+    def __init__(self) -> None:
+        super(WithdrawalRequestInQueue, self).__init__(
+            status_code=HTTPStatus.TOO_MANY_REQUESTS,
+            error_code=ErrorCodes.SIMILAR_WITHDRAWAL_REQUEST.name,
+            error_message=ErrorCodes.SIMILAR_WITHDRAWAL_REQUEST.value,
+        )
+
+
+class InsufficientUserBalance(HttpErrorException):
+    """User has insufficient balance in their wallet"""
+
+    def __init__(self) -> None:
+        super(InsufficientUserBalance, self).__init__(
+            status_code=HTTPStatus.PAYMENT_REQUIRED,
+            error_code=ErrorCodes.INSUFFICIENT_BALANCE.name,
+            error_message=ErrorCodes.INSUFFICIENT_BALANCE.value,
         )

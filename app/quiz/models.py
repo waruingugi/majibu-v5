@@ -80,6 +80,6 @@ class Results(Base):
     )
     is_active = mapped_column(
         Boolean,
-        default=False,
+        default=True,
         comment=("If these results can be used to create pair with another user"),
     )
