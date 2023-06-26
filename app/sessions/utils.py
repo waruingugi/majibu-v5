@@ -11,13 +11,16 @@ from app.core.deps import (
     get_current_active_user,
 )
 from app.core.config import redis
-from app.sessions.filters import DuoSessionFilter
+from app.sessions.filters import DuoSessionFilter, SessionFilter
 from app.sessions.constants import DuoSessionStatuses
 from app.sessions.daos.session import duo_session_dao, session_dao
-from app.sessions.filters import SessionFilter
 from app.quiz.daos.quiz import result_dao
 from app.quiz.models import Results
-from app.exceptions.custom import WithdrawalRequestInQueue, InsufficientUserBalance
+from app.exceptions.custom import (
+    WithdrawalRequestInQueue,
+    InsufficientUserBalance,
+    SessionInQueue,
+)
 
 
 class QueryAvailableSession:
@@ -44,13 +47,29 @@ class QueryAvailableSession:
         self.user = self.user if user is None else user
         self.category = category
 
-        self.played_session_ids = self.query_sessions_played()
-        available_session_ids = self.query_available_pending_duo_sessions()
+        active_results = self.query_no_pending_results()
 
-        if not available_session_ids:
-            available_session_ids = self.query_available_sessions()
+        if not active_results:
+            self.played_session_ids = self.query_sessions_played()
+            available_session_ids = self.query_available_pending_duo_sessions()
 
-        return random.choice(available_session_ids) if available_session_ids else None
+            if not available_session_ids:
+                available_session_ids = self.query_available_sessions()
+
+            return (
+                random.choice(available_session_ids) if available_session_ids else None
+            )
+
+        raise SessionInQueue
+
+    def query_no_pending_results(self) -> bool:
+        """Return True if user has a pending session.
+        User can only play one session at a time"""
+        active_results = result_dao.get_or_none(
+            self.db, user_id=self.user.id, is_active=True
+        )
+
+        return True if active_results else False
 
     def query_sessions_played(self) -> list:
         """Query Results and get all session ids played by a user"""
@@ -70,9 +89,10 @@ class QueryAvailableSession:
             self.db,
             search_filter=DuoSessionFilter(
                 status=DuoSessionStatuses.PENDING.value,
-                session__category=self.category,
-                session__id__not_in=self.played_session_ids,
-            ),  # type: ignore
+                session=SessionFilter(
+                    id__not_in=self.played_session_ids,
+                ),  # type: ignore
+            ),
         )
 
         available_session_ids = list(

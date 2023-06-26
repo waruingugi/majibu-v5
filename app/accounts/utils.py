@@ -175,7 +175,7 @@ def process_mpesa_stk(
     checkout_request_id = mpesa_response_in.CheckoutRequestID
 
     mpesa_payment = mpesa_payment_dao.get_or_none(
-        db, {"checkout_request_id": checkout_request_id}
+        db, checkout_request_id=checkout_request_id
     )
 
     if mpesa_payment:

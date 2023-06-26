@@ -144,3 +144,14 @@ class InsufficientUserBalance(HttpErrorException):
             error_code=ErrorCodes.INSUFFICIENT_BALANCE.name,
             error_message=ErrorCodes.INSUFFICIENT_BALANCE.value,
         )
+
+
+class SessionInQueue(HttpErrorException):
+    """User has a session that is still being processed"""
+
+    def __init__(self) -> None:
+        super(SessionInQueue, self).__init__(
+            status_code=HTTPStatus.TOO_MANY_REQUESTS,
+            error_code=ErrorCodes.SESSION_IN_QUEUE.name,
+            error_message=ErrorCodes.SESSION_IN_QUEUE.value,
+        )

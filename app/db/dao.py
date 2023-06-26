@@ -303,17 +303,15 @@ class ReadDao(Generic[ModelType]):
         return obj
 
     def get_or_none(
-        self: Union[Any, DaoInterface],
+        self,
         db: Session,
-        search_filter: Filter | Dict,
+        load_options: Optional[Sequence[LoadOption]] = None,
+        **filters,
     ) -> ModelType | None:
-        query = db.query(self.model)
-        query = _create_filtered_query(query, search_filter)
-
-        if not query:
+        obj = self.get(db, load_options, **filters)
+        if not obj:
             return None
-
-        return query.first()  # type: ignore
+        return obj
 
     def get_all(
         self,

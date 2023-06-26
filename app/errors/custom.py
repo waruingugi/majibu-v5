@@ -24,3 +24,7 @@ class ErrorCodes(str, Enum):
         "Session has invalid questions number of questions"
     )
     MAINTENANCE_MODE = "The business is currently under going maintenance."
+    SESSION_IN_QUEUE = (
+        "Your previous session is still being processed. "
+        "Please try again once you're paired or refunded"
+    )

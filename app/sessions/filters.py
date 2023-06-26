@@ -1,4 +1,4 @@
-from fastapi_sqlalchemy_filter import Filter
+from fastapi_sqlalchemy_filter import Filter, FilterDepends, with_prefix
 from typing import List
 from app.sessions.models import DuoSession, Sessions
 
@@ -13,6 +13,7 @@ class SessionBaseFilter(Filter):
 
 class SessionFilter(SessionBaseFilter):
     id__not_in: List[str] | None
+    id__in: List[str] | None
 
 
 class DuoSessionBaseFilter(Filter):
@@ -27,6 +28,4 @@ class DuoSessionBaseFilter(Filter):
 
 class DuoSessionFilter(DuoSessionBaseFilter):
     status: str | None
-    session__category: str | None
-    session__id__in: List[str] | None
-    session__id__not_in: List[str] | None
+    session: SessionFilter = FilterDepends(with_prefix("session", SessionFilter))
