@@ -34,9 +34,13 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
 
     @app.exception_handler(429)
-    async def custom_429_handler(request, __):
-        server_errors: List = ["Too many requests, please try again later"]
-
+    async def custom_429_handler(request, exc):
+        server_errors = format_exception(exc)
+        server_errors = (
+            server_errors
+            if server_errors
+            else ["Too many requests, please try again later"]
+        )
         return templates.TemplateResponse(
             template,
             {

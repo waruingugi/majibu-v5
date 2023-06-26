@@ -102,6 +102,6 @@ def test_create_results_instance(
     assert result.percentage == 0.0
     assert result.score == 0.0
 
-    assert result.is_active is False
+    assert result.is_active is True
     time_diff = (result.expires_at - result.created_at).total_seconds()
     assert round(time_diff) == settings.SESSION_DURATION

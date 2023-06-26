@@ -11,7 +11,7 @@ def get_engine() -> Engine:
     return create_engine(
         SQLALCHEMY_DATABASE_URI,
         future=True,
-        echo=True,
+        echo=False,
         pool_pre_ping=True,
         connect_args={
             "application_name": "majibu",
@@ -25,7 +25,7 @@ def get_async_engine() -> AsyncEngine:
     return create_async_engine(
         ASYNC_SQLALCHEMY_DATABASE_URI,
         pool_pre_ping=True,
-        echo=True,
+        echo=False,
         connect_args={
             "server_settings": {
                 "application_name": "majibu",

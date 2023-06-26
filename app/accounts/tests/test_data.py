@@ -56,6 +56,20 @@ sample_positive_transaction_instance_info = {
     "external_response": json.dumps({}),
 }
 
+sample_transaction_instance_deposit_1000 = {
+    "account": settings.SUPERUSER_PHONE,
+    "external_transaction_id": mpesa_reference_no,
+    "cash_flow": "INWARD",
+    "type": "DEPOSIT",
+    "status": "SUCCESSFUL",
+    "service": "MPESA",
+    "description": "",
+    "amount": 1000.0,
+    "fee": 0.0,
+    "tax": 0.0,
+    "external_response": json.dumps({}),
+}
+
 
 sample_negative_transaction_instance_info = {
     "account": settings.SUPERUSER_PHONE,

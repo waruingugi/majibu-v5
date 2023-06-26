@@ -12,7 +12,7 @@ from app.users.serializers.user import UserCreateSerializer
 from app.sessions.daos.session import session_dao, duo_session_dao
 from app.sessions.serializers.session import SessionCreateSerializer
 
-from app.core.config import settings
+from app.core.config import settings, redis
 from app.core.deps import get_current_active_user
 from app.accounts.daos.mpesa import mpesa_payment_dao, withdrawal_dao
 from app.accounts.daos.account import transaction_dao
@@ -21,6 +21,11 @@ from app.accounts.daos.account import transaction_dao
 from sqlalchemy.orm import Session
 from typing import Generator
 import pytest
+
+
+@pytest.fixture
+def flush_redis() -> None:
+    redis.flushall()
 
 
 @pytest.fixture

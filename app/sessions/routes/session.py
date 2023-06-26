@@ -72,14 +72,18 @@ async def get_home(
 @router.post("/summary/", response_class=HTMLResponse)
 async def post_session(
     request: Request,
-    category: SessionCategoryFormSerializer,
+    category_in: SessionCategoryFormSerializer = Depends(),
     business_is_open: Callable = Depends(business_is_open),
     user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
     query_available_session: QueryAvailableSession = Depends(QueryAvailableSession),
 ):
+    if business_is_open:
+        query_available_session(category=category_in.category, user=user)
+
+    # Invalid or fishy request, so we logout the user
+    # They shouldn't be able to post if business is closed
     return RedirectResponse(
-        request.url_for("off_business_hours"), status_code=HTTPStatus.TEMPORARY_REDIRECT
+        request.url_for("logout"), status_code=HTTPStatus.FOUND.value
     )
 
 
@@ -95,20 +99,20 @@ async def get_preferred_redirect(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.get("/off-business-hours/", response_class=HTMLResponse)
-async def off_business_hours(
-    request: Request,
-):
-    """Show page when user tries to play outside business hours"""
-    return templates.TemplateResponse(
-        f"{template_prefix}off_business_hours.html",
-        {
-            "request": request,
-            "title": "Please try again later",
-            "business_opens_at": settings.BUSINESS_OPENS_AT,
-            "business_closes_at": settings.BUSINESS_CLOSES_AT,
-        },
-    )
+# @router.get("/off-business-hours/", response_class=HTMLResponse)
+# async def off_business_hours(
+#     request: Request,
+# ):
+#     """Show page when user tries to play outside business hours"""
+#     return templates.TemplateResponse(
+#         f"{template_prefix}off_business_hours.html",
+#         {
+#             "request": request,
+#             "title": "Please try again later",
+#             "business_opens_at": settings.BUSINESS_OPENS_AT,
+#             "business_closes_at": settings.BUSINESS_CLOSES_AT,
+#         },
+#     )
 
 
 # Remove docs

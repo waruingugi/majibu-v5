@@ -322,8 +322,9 @@ def process_b2c_payment(db: Session, *, user: User, amount: int):
         # That effectively only limits a user to 1 successful withdrawal
         # each 2 minutes
         hashed_withdrawal_request = md5_hash(f"{user.phone}:withdraw_request")
-        timeout = 60 * 2  # 2 minutes
-        redis.set(hashed_withdrawal_request, amount, ex=timeout)
+        redis.set(
+            hashed_withdrawal_request, amount, ex=settings.WITHDRAWAL_BUFFER_PERIOD
+        )
         phone = user.phone.replace("+", "")
 
         data = initiate_b2c_payment(amount=amount, party_b=phone)
