@@ -85,7 +85,7 @@ def test_create_answer_instance(db: Session) -> None:
 
 
 def test_create_results_instance(
-    db: Session, create_user_instance: Callable, create_session_instance: Callable
+    db: Session, create_super_user_instance: Callable, create_session_instance: Callable
 ) -> None:
     user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
     session = session_dao.get_not_none(db, category=Categories.BIBLE.value)

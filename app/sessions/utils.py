@@ -90,6 +90,7 @@ class QueryAvailableSession:
             search_filter=DuoSessionFilter(
                 status=DuoSessionStatuses.PENDING.value,
                 session=SessionFilter(
+                    category=self.category,
                     id__not_in=self.played_session_ids,
                 ),  # type: ignore
             ),

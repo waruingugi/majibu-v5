@@ -5,7 +5,7 @@ from app.db.base import Base
 from app.main import app
 
 from app.commons.constants import Categories
-from app.commons.utils import generate_uuid
+from app.commons.utils import generate_uuid, random_phone
 
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
@@ -29,11 +29,18 @@ def flush_redis() -> None:
 
 
 @pytest.fixture
-def create_user_instance(db: Session) -> None:
+def create_super_user_instance(db: Session) -> None:
     """Create a user"""
     user_dao.get_or_create(
         db, obj_in=UserCreateSerializer(phone=settings.SUPERUSER_PHONE)
     )
+
+
+@pytest.fixture
+def create_user_model_instances(db: Session) -> None:
+    """Create several user model instances"""
+    for i in range(10):
+        user_dao.get_or_create(db, obj_in=UserCreateSerializer(phone=random_phone()))
 
 
 @pytest.fixture
