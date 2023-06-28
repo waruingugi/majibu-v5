@@ -7,7 +7,7 @@ from pytest_mock import MockerFixture
 from app.commons.utils import generate_uuid
 from app.commons.constants import Categories
 from app.core.config import settings
-from app.sessions.daos.session import session_dao
+from app.sessions.daos.session import session_dao, duo_session_dao
 from app.sessions.serializers.session import SessionCreateSerializer
 from app.quiz.daos.quiz import result_dao
 
@@ -42,6 +42,14 @@ def delete_result_model_instances(db: Session) -> None:
     results = result_dao.get_all(db)
     for result in results:
         result_dao.remove(db, id=result.id)
+
+
+@pytest.fixture
+def delete_duo_session_model_instances(db: Session) -> None:
+    """Delete previously existing rows in DuoSession model"""
+    existing_duo_sessions = duo_session_dao.get_all(db)
+    for duo_session in existing_duo_sessions:
+        duo_session_dao.remove(db, id=duo_session.id)
 
 
 @pytest.fixture

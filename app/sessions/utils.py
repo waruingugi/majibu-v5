@@ -23,7 +23,7 @@ from app.exceptions.custom import (
 )
 
 
-class QueryAvailableSession:
+class GetAvailableSession:
     def __init__(
         self,
         db: Session = Depends(get_db),
@@ -100,7 +100,8 @@ class QueryAvailableSession:
             map(lambda x: x.session_id, available_pending_duo_sessions)
         )
 
-        return available_session_ids
+        # Remove duplicates and return list
+        return list(dict.fromkeys(available_session_ids))
 
     def query_available_sessions(self) -> list:
         """Query Sessions model by category for an id the user has not played."""

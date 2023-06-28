@@ -4,6 +4,7 @@ from fastapi import Form
 from typing import List
 
 from app.core.helpers import _is_valid_category
+from app.core.config import settings
 from app.commons.serializers.commons import BaseFormSerializer
 
 
@@ -35,7 +36,7 @@ class DuoSessionBaseSerializer(BaseModel):
 class DuoSessionCreateSerializer(DuoSessionBaseSerializer):
     session_id: str
     party_a: str
-    amount: float
+    amount: float = settings.SESSION_AMOUNT
 
 
 class DuoSessionUpdateSerializer(DuoSessionBaseSerializer):

@@ -5,7 +5,7 @@ from typing import Callable
 from http import HTTPStatus
 
 from app.sessions.serializers.session import SessionCategoryFormSerializer
-from app.sessions.utils import QueryAvailableSession
+from app.sessions.utils import GetAvailableSession
 from app.users.models import User
 from app.accounts.daos.account import transaction_dao
 from app.commons.constants import Categories
@@ -75,10 +75,10 @@ async def post_session(
     category_in: SessionCategoryFormSerializer = Depends(),
     business_is_open: Callable = Depends(business_is_open),
     user: User = Depends(get_current_active_user),
-    query_available_session: QueryAvailableSession = Depends(QueryAvailableSession),
+    get_available_session: GetAvailableSession = Depends(GetAvailableSession),
 ):
     if business_is_open:
-        query_available_session(category=category_in.category, user=user)
+        get_available_session(category=category_in.category, user=user)
 
     # Invalid or fishy request, so we logout the user
     # They shouldn't be able to post if business is closed
