@@ -4,6 +4,7 @@ from enum import Enum
 class ErrorCodes(str, Enum):
     INVALID_PHONENUMBER = "The phone number {} is not valid"
     INVALID_OTP = "The code you entered is not correct. Please try again"
+    INSUFFICIENT_BALANCE = "You have insufficient balance. Please top up and try again"
     OBJECT_NOT_FOUND = "The specified object does not exist"
     NO_CHANGES_DETECTED = "No changes were detected"
     INACTIVE_ACCOUNT = "This account is currently inactive. Please contact support"
@@ -23,3 +24,7 @@ class ErrorCodes(str, Enum):
         "Session has invalid questions number of questions"
     )
     MAINTENANCE_MODE = "The business is currently under going maintenance."
+    SESSION_IN_QUEUE = (
+        "Your previous session is still being processed. "
+        "Please try again once you're paired or refunded"
+    )

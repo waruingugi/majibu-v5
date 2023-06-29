@@ -85,7 +85,7 @@ def test_create_answer_instance(db: Session) -> None:
 
 
 def test_create_results_instance(
-    db: Session, create_user_instance: Callable, create_session_instance: Callable
+    db: Session, create_super_user_instance: Callable, create_session_instance: Callable
 ) -> None:
     user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
     session = session_dao.get_not_none(db, category=Categories.BIBLE.value)
@@ -102,6 +102,6 @@ def test_create_results_instance(
     assert result.percentage == 0.0
     assert result.score == 0.0
 
-    assert result.is_active is False
+    assert result.is_active is True
     time_diff = (result.expires_at - result.created_at).total_seconds()
     assert round(time_diff) == settings.SESSION_DURATION

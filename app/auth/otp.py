@@ -86,4 +86,5 @@ def validate_otp(data_in: ValidateOTPSerializer):
             secret=totp_data["secret"],
         )
 
+    logger.info(f"Invalid OTP shared by {data_in.phone}")
     return False

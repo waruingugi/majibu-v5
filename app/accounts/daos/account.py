@@ -21,14 +21,15 @@ class TransactionDao(
         self, db: Session, id: str, values: dict, orig_values: dict
     ) -> None:
         """Calculate total charge before creating transaction instance"""
-        latest_transaction = self.get_or_none(
+        latest_transactions = self.search(
             db, {"order_by": ["-created_at"], "account": values["account"]}
         )
 
         initial_final_balance = 0.0
         charge = 0.0
 
-        if latest_transaction:
+        if latest_transactions:
+            latest_transaction = latest_transactions[0]
             initial_final_balance = float(latest_transaction.final_balance)
 
         if values["cash_flow"] == TransactionCashFlow.INWARD.value:
@@ -80,11 +81,13 @@ class TransactionDao(
         )
 
     def get_user_balance(self, db: Session, *, account: str) -> float:
-        latest_transaction = self.get_or_none(
+        latest_transactions = self.search(
             db, {"order_by": ["-created_at"], "account": account}
         )
         current_balance = 0.00
-        if latest_transaction:
+
+        if latest_transactions:
+            latest_transaction = latest_transactions[0]
             current_balance = latest_transaction.final_balance
 
         return current_balance

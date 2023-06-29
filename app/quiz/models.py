@@ -2,7 +2,7 @@ from app.db.base_class import Base
 from app.core.config import settings
 
 from sqlalchemy import Float, text, DateTime, Boolean
-from sqlalchemy.orm import mapped_column
+from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy import String, Text, ForeignKey, Integer
 
 
@@ -80,6 +80,9 @@ class Results(Base):
     )
     is_active = mapped_column(
         Boolean,
-        default=False,
+        default=True,
         comment=("If these results can be used to create pair with another user"),
     )
+
+    user = relationship("User", backref="result")
+    session = relationship("Sessions", backref="result")

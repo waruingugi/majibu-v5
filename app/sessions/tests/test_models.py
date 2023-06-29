@@ -75,7 +75,7 @@ def test_session_has_required_no_of_questions(db: Session) -> None:
 def test_create_duo_session_instance(
     db: Session,
     create_session_instance: Callable,
-    create_user_instance: Callable,
+    create_super_user_instance: Callable,
 ) -> None:
     """Test DuoSession can be created in model"""
     session = session_dao.get_not_none(db)
@@ -95,7 +95,7 @@ def test_create_duo_session_instance(
 def test_update_duo_session_instance(
     db: Session,
     create_session_instance: Callable,
-    create_user_instance: Callable,
+    create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
 ):
     """Test DuoSession can be updated in model"""
@@ -130,7 +130,7 @@ def test_update_duo_session_instance(
 def test_updated_duo_session_fails_if_user_is_the_same(
     db: Session,
     create_session_instance: Callable,
-    create_user_instance: Callable,
+    create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
 ):
     """Test DuoSession fails to pair the same user to themselves"""

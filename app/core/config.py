@@ -100,6 +100,8 @@ class Settings(BaseSettings):
     BUSINESS_OPENS_AT: str
     BUSINESS_CLOSES_AT: str
 
+    WITHDRAWAL_BUFFER_PERIOD: int = 120  # Once every 2 minutes
+
     class Config:
         env_file = ".env"
         case_sensitive = True

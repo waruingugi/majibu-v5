@@ -9,5 +9,5 @@ class UserTypes(str, Enum):  # Also acts as role names
 
     @classmethod
     def list_(cls) -> List:
-        user_type = {type.value for type in cls}
-        return list(user_type)
+        user_types = {type.value for type in cls}
+        return list(user_types)

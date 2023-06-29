@@ -9,6 +9,7 @@ logging.basicConfig(
     handlers=[logging.StreamHandler(sys.stdout)],
     format="[%(asctime)s] %(levelname)s - %(message)s",
 )
+logging.getLogger("sqlalchemy.engine").setLevel(logging.ERROR)
 
 
 @lru_cache

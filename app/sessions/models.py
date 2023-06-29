@@ -1,9 +1,10 @@
 from app.db.base_class import Base
 from app.core.config import settings
+from app.sessions.constants import DuoSessionStatuses
 
 from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import String, Text, ForeignKey, Float, Boolean
+from sqlalchemy import String, Text, ForeignKey, Float
 from typing import List
 
 
@@ -12,7 +13,7 @@ class Sessions(Base):
     _questions = mapped_column("questions", Text())
 
     @hybrid_property
-    def questions(self) -> List[int]:
+    def questions(self) -> List[str]:
         return self._questions.replace(" ", "").split(",")
 
 
@@ -27,7 +28,7 @@ class DuoSession(Base):
         nullable=True,
         comment="This is the Amount that was transacted.",
     )
-    status = mapped_column(Boolean, default=True)
+    status = mapped_column(String, default=DuoSessionStatuses.PENDING.value)
     winner_id = mapped_column(String, nullable=True)
 
     session = relationship("Sessions", backref="duo_session")

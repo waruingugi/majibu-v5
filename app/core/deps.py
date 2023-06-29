@@ -8,6 +8,7 @@ from app.core.security import (
     OptionalAuth2PasswordBearerWithCookie,
 )
 from app.auth.utils.token import check_access_token_is_valid
+from app.accounts.daos.account import transaction_dao
 from app.core.config import settings, redis
 from app.core.helpers import md5_hash
 from app.users.models import User
@@ -195,3 +196,12 @@ async def business_is_open(
         return True
     else:
         return False
+
+
+def has_sufficient_balance(
+    db: Session, *, user: User, amount: float = settings.SESSION_AMOUNT
+) -> bool:
+    """Assert that the user has sufficient balance to meet required amount"""
+    wallet_balance = transaction_dao.get_user_balance(db, account=user.phone)
+    balance_is_sufficient = wallet_balance >= amount
+    return balance_is_sufficient

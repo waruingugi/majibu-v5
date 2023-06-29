@@ -5,12 +5,14 @@ from typing import Callable
 from http import HTTPStatus
 
 from app.sessions.serializers.session import SessionCategoryFormSerializer
+from app.sessions.utils import GetAvailableSession
 from app.users.models import User
 from app.accounts.daos.account import transaction_dao
 from app.commons.constants import Categories
 from app.core.config import templates, settings
 from app.core.deps import (
     get_current_active_user_or_none,
+    get_current_active_user,
     get_db,
     business_is_open,
 )
@@ -41,13 +43,13 @@ async def get_home(
     business_is_open: Callable = Depends(business_is_open),
 ):
     """Display session summary"""
-    has_sufficient_balance = False
+    float_is_sufficient = False
     wallet_balance = 0.0
 
     # If user is logged in, check if they have sufficient balance to proceed
     if user is not None:
         wallet_balance = transaction_dao.get_user_balance(db, account=user.phone)
-        has_sufficient_balance = wallet_balance >= settings.SESSION_AMOUNT
+        float_is_sufficient = wallet_balance >= settings.SESSION_AMOUNT
 
     return templates.TemplateResponse(
         f"{template_prefix}summary.html",
@@ -55,7 +57,7 @@ async def get_home(
             "request": request,
             "title": "Summary",
             "is_logged_in": False if user is None else True,
-            "has_sufficient_balance": has_sufficient_balance,
+            "has_sufficient_balance": float_is_sufficient,
             "wallet_balance": wallet_balance,
             "categories": Categories.list_(),
             "business_opens_at": settings.BUSINESS_OPENS_AT,
@@ -70,15 +72,18 @@ async def get_home(
 @router.post("/summary/", response_class=HTMLResponse)
 async def post_session(
     request: Request,
-    category: SessionCategoryFormSerializer,
+    category_in: SessionCategoryFormSerializer = Depends(),
     business_is_open: Callable = Depends(business_is_open),
+    user: User = Depends(get_current_active_user),
+    get_available_session: GetAvailableSession = Depends(GetAvailableSession),
 ):
     if business_is_open:
-        """Do some work here if business is open"""
-        pass
+        get_available_session(category=category_in.category, user=user)
 
+    # Invalid or fishy request, so we logout the user
+    # They shouldn't be able to post if business is closed
     return RedirectResponse(
-        request.url_for("off_business_hours"), status_code=HTTPStatus.TEMPORARY_REDIRECT
+        request.url_for("logout"), status_code=HTTPStatus.FOUND.value
     )
 
 
@@ -94,37 +99,38 @@ async def get_preferred_redirect(
     return RedirectResponse(redirect_url, status_code=302)
 
 
-@router.get("/off-business-hours/", response_class=HTMLResponse)
-async def off_business_hours(
-    request: Request,
-):
-    """Show page when user tries to play outside business hours"""
-    return templates.TemplateResponse(
-        f"{template_prefix}off_business_hours.html",
-        {
-            "request": request,
-            "title": "Please try again later",
-            "business_opens_at": settings.BUSINESS_OPENS_AT,
-            "business_closes_at": settings.BUSINESS_CLOSES_AT,
-        },
-    )
+# @router.get("/off-business-hours/", response_class=HTMLResponse)
+# async def off_business_hours(
+#     request: Request,
+# ):
+#     """Show page when user tries to play outside business hours"""
+#     return templates.TemplateResponse(
+#         f"{template_prefix}off_business_hours.html",
+#         {
+#             "request": request,
+#             "title": "Please try again later",
+#             "business_opens_at": settings.BUSINESS_OPENS_AT,
+#             "business_closes_at": settings.BUSINESS_CLOSES_AT,
+#         },
+#     )
 
 
 # Remove docs
 # Submit form
 # Submit form test
-# Check if business is open
-# Check if user has enough funds and no withdrawals in queue
-# Check if user has an active session
-# Check if session category is available
-# If not available choose random session in category user has not played
-# If availabe choose same session id
-# If no availabe, raise no available session error
-# Deduct from wallet balance
-# Auto fill results with null values
+# Check user has sufficient balance *
+# Check redis has no user withdrawals in queue *
+# Check user has no active session
+# Check if session category is available:
+# If not raise error
+# If it is choose same session id in session
+# Atomic block
+# Deduct balance, save to redis deduction
+# Autofill results with null values
 # Set in session has(user + session id) for 30 minutes
 # Saved values in redis are: user_id, session_id, expire_time(no submissions from user),
 # Redirect to questions page
+
 
 # On submission
 # Check if time is valid, not expired
