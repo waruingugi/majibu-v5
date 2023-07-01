@@ -114,12 +114,3 @@ class GetAvailableSession:
 
         available_session_ids = list(map(lambda x: x.id, available_sessions))
         return available_session_ids
-
-
-# Test filters
-# receive category name: call other function
-# Query sessions in duo session which are pending and category
-# Query user sessions in result and category
-# sessions - result = get session
-# If not:
-# Get any session in sessions where category and not in played sessions

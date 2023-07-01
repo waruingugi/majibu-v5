@@ -116,15 +116,9 @@ async def get_preferred_redirect(
 
 
 # Remove docs
-# Submit form
-# Submit form test
-# Check user has sufficient balance *
-# Check redis has no user withdrawals in queue *
-# Check user has no active session
-# Check if session category is available:
-# If not raise error
-# If it is choose same session id in session
+# Function receives session id and user
 # Atomic block
+# Create result, save to redis on post create
 # Deduct balance, save to redis deduction
 # Autofill results with null values
 # Set in session has(user + session id) for 30 minutes
