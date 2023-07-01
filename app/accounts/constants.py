@@ -29,6 +29,14 @@ MPESA_PAYMENT_WITHDRAW = (
     "Thank your for choosing Majibu!"
 )
 
+# SMS message to user on wallet deduction to play a session
+WALLET_DEDUCTION_FOR_SESSION = (
+    "{} Confirmed. "
+    f"Withdraw Ksh{settings.SESSION_AMOUNT} from account "
+    "{} for Majibu session. "
+    "New balance is Ksh{}."
+)
+
 
 class B2CMpesaCommandIDs(str, Enum):
     SALARYPAYMENT = "SalaryPayment"

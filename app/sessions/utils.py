@@ -136,7 +136,7 @@ class GetAvailableSession:
         return available_session_ids
 
 
-def create_session(db: Session, user: User, session_id: str) -> str | None:
+def create_session(db: Session, *, user: User, session_id: str) -> str | None:
     """Create a result instance for the user
     This includes deducting user balance for a user"""
     if has_sufficient_balance(db, user=user):  # A redudancy check

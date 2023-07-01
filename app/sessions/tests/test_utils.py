@@ -7,14 +7,23 @@ import pytest
 from app.core.config import settings
 from app.commons.constants import Categories
 
-from app.sessions.utils import GetAvailableSession
+from app.sessions.utils import (
+    GetAvailableSession,
+    create_session,
+)
 from app.sessions.daos.session import session_dao
 from app.sessions.serializers.session import DuoSessionCreateSerializer
 
 from app.users.daos.user import user_dao
+from app.accounts.daos.account import transaction_dao
+from app.accounts.constants import (
+    TransactionServices,
+    TransactionCashFlow,
+)
+
 from app.quiz.daos.quiz import result_dao
 from app.quiz.serializers.quiz import ResultCreateSerializer
-from app.exceptions.custom import SessionInQueue
+from app.exceptions.custom import SessionInQueue, InsufficientUserBalance
 
 
 def test_query_available_sessions_fails_if_active_results(
@@ -177,3 +186,44 @@ def test_query_available_sessions_returns_correct_list(
 
     for sesion_id in played_sessions:
         assert sesion_id not in available_sessions
+
+
+def test_create_session_deducts_from_user_wallet_balance(
+    db: Session,
+    create_super_user_instance: Callable,
+    create_sesion_model_instances: Callable,
+    mock_user_has_sufficient_balance: Callable,
+    delete_result_model_instances: Callable,
+    delete_transcation_model_instances: Callable,
+):
+    """Test that the function create_session creates a result model instance
+    Test that the function create_session deducts from the users wallet the correct values"""
+    session = session_dao.get_not_none(db)
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+
+    result_id = create_session(db, user=user, session_id=session.id)
+
+    transaction_obj = transaction_dao.get_not_none(
+        db, service=TransactionServices.MAJIBU.value
+    )
+    result = result_dao.get_not_none(db)
+
+    assert result_id is not None
+    assert result.session_id == session.id
+    assert transaction_obj.amount == settings.SESSION_AMOUNT
+    assert transaction_obj.cash_flow == TransactionCashFlow.OUTWARD.value
+    assert transaction_obj.service == TransactionServices.MAJIBU.value
+
+
+def test_create_session_fails_for_insufficient_wallet_balance(
+    db: Session,
+    create_super_user_instance: Callable,
+    create_sesion_model_instances: Callable,
+    delete_result_model_instances: Callable,
+    delete_transcation_model_instances: Callable,
+):
+    session = session_dao.get_not_none(db)
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+
+    with pytest.raises(InsufficientUserBalance):
+        create_session(db, user=user, session_id=session.id)

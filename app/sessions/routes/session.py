@@ -122,6 +122,7 @@ async def get_preferred_redirect(
 # Deduct balance, save to redis deduction
 # Autofill results with null values
 # Set in session has(user + session id) for 30 minutes
+# Dict: user_id, result_id,
 # Saved values in redis are: user_id, session_id, expire_time(no submissions from user),
 # Redirect to questions page
 
