@@ -3,18 +3,32 @@ from fastapi import Depends
 from typing import Optional
 import random
 
-from app.users.models import User
-from app.core.helpers import md5_hash
 from app.core.deps import (
     has_sufficient_balance,
     get_db,
     get_current_active_user,
 )
-from app.core.config import redis
+from app.core.config import redis, settings
+from app.core.raw_logger import logger
+from app.core.helpers import md5_hash, generate_transaction_code
+
+from app.users.models import User
+from app.accounts.daos.account import transaction_dao
+from app.accounts.constants import (
+    TransactionCashFlow,
+    TransactionTypes,
+    TransactionStatuses,
+    TransactionServices,
+    SESSION_WITHDRAWAL_DESCRIPTION,
+)
+from app.accounts.serializers.account import TransactionCreateSerializer
+
+from app.quiz.daos.quiz import result_dao
+from app.quiz.serializers.quiz import ResultCreateSerializer
 from app.sessions.filters import DuoSessionFilter, SessionFilter
 from app.sessions.constants import DuoSessionStatuses
 from app.sessions.daos.session import duo_session_dao, session_dao
-from app.quiz.daos.quiz import result_dao
+
 from app.quiz.models import Results
 from app.exceptions.custom import (
     WithdrawalRequestInQueue,
@@ -30,6 +44,7 @@ class GetAvailableSession:
         user: User = Depends(get_current_active_user),
     ) -> None:
         """Run validation checks before searching for a session for the user"""
+        logger.info(f"Running session validation checks for {user.phone}")
         self.db = db
         self.user = user
         self.category, self.played_session_ids = None, None
@@ -47,19 +62,24 @@ class GetAvailableSession:
         self.user = self.user if user is None else user
         self.category = category
 
+        logger.info(f"Query available session for {self.user.phone}")
+
         active_results = self.query_no_pending_results()
 
         if not active_results:
+            logger.info(f"No active results for {self.user.phone}")
             self.played_session_ids = self.query_sessions_played()
             available_session_ids = self.query_available_pending_duo_sessions()
 
             if not available_session_ids:
+                logger.info(f"No available pending sessions for {self.user.phone}")
                 available_session_ids = self.query_available_sessions()
 
             return (
                 random.choice(available_session_ids) if available_session_ids else None
             )
 
+        logger.info(f"A session already exists for {self.user.phone}")
         raise SessionInQueue
 
     def query_no_pending_results(self) -> bool:
@@ -114,3 +134,40 @@ class GetAvailableSession:
 
         available_session_ids = list(map(lambda x: x.id, available_sessions))
         return available_session_ids
+
+
+def create_session(db: Session, user: User, session_id: str) -> str | None:
+    """Create a result instance for the user
+    This includes deducting user balance for a user"""
+    if has_sufficient_balance(db, user=user):  # A redudancy check
+        description = SESSION_WITHDRAWAL_DESCRIPTION.format(user.phone, session_id)
+
+        # Withdraw the session amount from the user's wallet
+        logger.info(
+            "Create withdrawal request for user {user.phone} for session id: {session_id}"
+        )
+        transaction_dao.create(
+            db,
+            obj_in=TransactionCreateSerializer(
+                account=user.phone,
+                external_transaction_id=generate_transaction_code(),
+                cash_flow=TransactionCashFlow.OUTWARD.value,
+                type=TransactionTypes.WITHDRAWAL.value,
+                status=TransactionStatuses.SUCCESSFUL.value,
+                service=TransactionServices.MAJIBU.value,
+                description=description,
+                amount=settings.SESSION_AMOUNT,
+                fee=0.0,  # No fee for session withdrawals
+                tax=0.0,  # No tax for session withdrawals
+            ),
+        )
+
+        # Create the result instance
+        # This is what will be updated when they post their answers
+        result_in = ResultCreateSerializer(user_id=user.id, session_id=session_id)
+        result_obj = result_dao.create(db, obj_in=result_in)
+
+        return result_obj.id
+
+    # If user balance is not sufficient, raise error: a redudancy check
+    raise InsufficientUserBalance

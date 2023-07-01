@@ -18,6 +18,9 @@ PAYBILL_DEPOSIT_DESCRIPTION = "Deposit of Ksh {} for account {} using M-Pesa pay
 # M-Pesa B2C payment description
 PAYBILL_B2C_DESCRIPTION = "Payment of Ksh {} for account {} using B2C payment."
 
+# Withdrawal to play session description
+SESSION_WITHDRAWAL_DESCRIPTION = "Withdrawal by user {} for session id: {}."
+
 # SMS message sent to user on M-Pesa withdrawal
 MPESA_PAYMENT_WITHDRAW = (
     "You've successfully withdrawn Ksh{} for your account {}. "
