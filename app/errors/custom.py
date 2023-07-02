@@ -28,3 +28,6 @@ class ErrorCodes(str, Enum):
         "Your previous session is still being processed. "
         "Please try again once you're paired or refunded"
     )
+    NO_AVAILABLE_SESSION = (
+        "There are no available sessions at the moment. Please try again later"
+    )

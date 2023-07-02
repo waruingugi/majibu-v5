@@ -5,8 +5,9 @@ from typing import Callable
 from http import HTTPStatus
 
 from app.sessions.serializers.session import SessionCategoryFormSerializer
-from app.sessions.utils import GetAvailableSession
+from app.sessions.utils import GetAvailableSession, create_session
 from app.users.models import User
+from app.exceptions.custom import NoAvailabeSession
 from app.accounts.daos.account import transaction_dao
 from app.commons.constants import Categories
 from app.core.config import templates, settings
@@ -76,9 +77,16 @@ async def post_session(
     business_is_open: Callable = Depends(business_is_open),
     user: User = Depends(get_current_active_user),
     get_available_session: GetAvailableSession = Depends(GetAvailableSession),
+    db: Session = Depends(get_db),
 ):
     if business_is_open:
-        get_available_session(category=category_in.category, user=user)
+        session_id = get_available_session(category=category_in.category, user=user)
+
+        if session_id is not None:
+            create_session(db, user=user, session_id=session_id)
+            # redirect here
+        else:
+            raise NoAvailabeSession
 
     # Invalid or fishy request, so we logout the user
     # They shouldn't be able to post if business is closed
@@ -97,39 +105,3 @@ async def get_preferred_redirect(
     )
 
     return RedirectResponse(redirect_url, status_code=302)
-
-
-# @router.get("/off-business-hours/", response_class=HTMLResponse)
-# async def off_business_hours(
-#     request: Request,
-# ):
-#     """Show page when user tries to play outside business hours"""
-#     return templates.TemplateResponse(
-#         f"{template_prefix}off_business_hours.html",
-#         {
-#             "request": request,
-#             "title": "Please try again later",
-#             "business_opens_at": settings.BUSINESS_OPENS_AT,
-#             "business_closes_at": settings.BUSINESS_CLOSES_AT,
-#         },
-#     )
-
-
-# Remove docs
-# Function receives session id and user
-# Atomic block
-# Create result, save to redis on post create
-# Deduct balance, save to redis deduction
-# Autofill results with null values
-# Set in session has(user + session id) for 30 minutes
-# Dict: user_id, result_id,
-# Saved values in redis are: user_id, session_id, expire_time(no submissions from user),
-# Redirect to questions page
-
-
-# On submission
-# Check if time is valid, not expired
-# If expired, raise can not be submitted due to time out
-# Calculate results, save to db
-# Is active true column in results db: it means was played within last 30 minutes
-# Once paired or refunded create duo session with appropriate status

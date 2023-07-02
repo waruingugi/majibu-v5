@@ -155,3 +155,14 @@ class SessionInQueue(HttpErrorException):
             error_code=ErrorCodes.SESSION_IN_QUEUE.name,
             error_message=ErrorCodes.SESSION_IN_QUEUE.value,
         )
+
+
+class NoAvailabeSession(HttpErrorException):
+    """User has a session that is still being processed"""
+
+    def __init__(self) -> None:
+        super(NoAvailabeSession, self).__init__(
+            status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+            error_code=ErrorCodes.NO_AVAILABLE_SESSION.name,
+            error_message=ErrorCodes.NO_AVAILABLE_SESSION.value,
+        )

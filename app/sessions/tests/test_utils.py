@@ -222,6 +222,7 @@ def test_create_session_fails_for_insufficient_wallet_balance(
     delete_result_model_instances: Callable,
     delete_transcation_model_instances: Callable,
 ):
+    """Test that the function raises an exception if user has insufficient balance"""
     session = session_dao.get_not_none(db)
     user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
 

@@ -163,7 +163,7 @@ def create_session(db: Session, *, user: User, session_id: str) -> str | None:
         )
 
         # Create the result instance
-        # This is what will be updated when they post their answers
+        # This is what will be updated when a user posts their answers
         result_in = ResultCreateSerializer(user_id=user.id, session_id=session_id)
         result_obj = result_dao.create(db, obj_in=result_in)
 
