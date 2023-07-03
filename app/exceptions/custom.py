@@ -158,11 +158,22 @@ class SessionInQueue(HttpErrorException):
 
 
 class NoAvailabeSession(HttpErrorException):
-    """User has a session that is still being processed"""
+    """No available session was found for the user"""
 
     def __init__(self) -> None:
         super(NoAvailabeSession, self).__init__(
             status_code=HTTPStatus.SERVICE_UNAVAILABLE,
             error_code=ErrorCodes.NO_AVAILABLE_SESSION.name,
             error_message=ErrorCodes.NO_AVAILABLE_SESSION.value,
+        )
+
+
+class SessionExpired(HttpErrorException):
+    """User requested a session past the expires_at field value in the Results model"""
+
+    def __init__(self) -> None:
+        super(SessionExpired, self).__init__(
+            status_code=HTTPStatus.BAD_REQUEST,
+            error_code=ErrorCodes.SESSION_EXPIRED.name,
+            error_message=ErrorCodes.SESSION_EXPIRED.value,
         )
