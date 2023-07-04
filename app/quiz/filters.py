@@ -35,6 +35,6 @@ class ChoiceBaseFilter(Filter):
         model = Choices
 
 
-class ChoiceFilter(Filter):
+class ChoiceFilter(ChoiceBaseFilter):
     choice_text: str | None = None
     question_id__in: List[str] | None = None

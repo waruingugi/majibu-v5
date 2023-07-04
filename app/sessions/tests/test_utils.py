@@ -26,7 +26,7 @@ from app.quiz.serializers.quiz import ResultCreateSerializer
 from app.exceptions.custom import SessionInQueue, InsufficientUserBalance
 
 
-def test_query_available_sessions_fails_if_active_results(
+def test_get_available_sessions_fails_if_active_results(
     db: Session,
     mocker: MockerFixture,
     create_super_user_instance: Callable,
