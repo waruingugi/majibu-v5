@@ -64,11 +64,10 @@ def test_get_questions_returns_correct_db_instances(
 
 def test_get_choices_returns_correct_db_instances(
     db: Session,
-    mocker: MockerFixture,
     create_super_user_instance: Callable,
     create_question_model_instances: Callable,
     delete_result_model_instances: Callable,
-):
+) -> None:
     """Test that the function get_choices() returns correct db instances"""
     user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
     session = session_dao.get_not_none(db, category=Categories.BIBLE.value)
@@ -84,3 +83,34 @@ def test_get_choices_returns_correct_db_instances(
 
     for choice in choices_obj:
         assert choice.id in choice_ids
+
+
+def test_compose_quiz_returns_correct_dictionary(
+    db: Session,
+    mocker: MockerFixture,
+    create_super_user_instance: Callable,
+    create_choice_model_instances: Callable,
+    delete_result_model_instances: Callable,
+) -> None:
+    """Test that the function compoze_quiz returns correct db instances"""
+    mock_datetime = mocker.patch("app.quiz.utils.datetime")
+    mock_datetime.now.return_value = datetime.now() - timedelta(
+        seconds=settings.SESSION_DURATION
+    )
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    session = session_dao.get_not_none(db, category=Categories.BIBLE.value)
+
+    result_in = ResultCreateSerializer(user_id=user.id, session_id=session.id)
+    result_obj = result_dao.create(db, obj_in=result_in)
+
+    get_session_questions = GetSessionQuestions(db, user)
+
+    quiz = get_session_questions(result_id=result_obj.id)
+    choices = [choice for choice in choice_dao.get_all(db)]
+
+    assert quiz is not None
+
+    for choice in choices:
+        for key, value in quiz.items():
+            if choice.id in value:
+                assert key == choice.question_id

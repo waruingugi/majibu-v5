@@ -5,9 +5,10 @@ import pytest
 from app.commons.constants import Categories
 from app.commons.utils import generate_uuid
 from app.quiz.serializers.quiz import QuestionCreateSerializer, ChoiceCreateSerializer
+from app.quiz.daos.quiz import question_dao, choice_dao
 from app.sessions.serializers.session import SessionCreateSerializer
 from app.sessions.daos.session import session_dao
-from app.quiz.daos.quiz import question_dao, choice_dao
+from app.core.config import settings
 
 
 @pytest.fixture
@@ -39,7 +40,8 @@ def create_choice_model_instances(
     session = session_dao.get_not_none(db)
 
     for question_id in session.questions:
-        choice_in = ChoiceCreateSerializer(
-            question_id=question_id, choice_text=generate_uuid()
-        )
-        choice_dao.create(db, obj_in=choice_in)
+        for i in range(settings.CHOICES_IN_QUESTION):
+            choice_in = ChoiceCreateSerializer(
+                question_id=question_id, choice_text=generate_uuid()
+            )
+            choice_dao.create(db, obj_in=choice_in)
