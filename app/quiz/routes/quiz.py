@@ -13,7 +13,7 @@ from app.core.logger import LoggingRoute
 
 
 router = APIRouter(route_class=LoggingRoute)
-template_prefix = "sessions/templates/"
+template_prefix = "quiz/templates/"
 
 
 @router.get("/questions/{result_id}", response_class=HTMLResponse)
