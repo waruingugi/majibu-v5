@@ -25,6 +25,13 @@ class DuoSessionFailedOnUpdate(Exception):
         self.message = message
 
 
+class ChoicesDAOFailedOnCreate(Exception):
+    """An exception happened when creating a Choice instance"""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
 class InvalidToken(HttpErrorException):
     def __init__(self) -> None:
         super(InvalidToken, self).__init__(
