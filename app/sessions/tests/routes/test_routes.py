@@ -1,13 +1,15 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+from pytest_mock import MockerFixture
 from typing import Callable
 
 from app.main import app
 from app.errors.custom import ErrorCodes
 from app.commons.constants import Categories
+from app.sessions.utils import GetAvailableSession
 
-from app.accounts.serializers.account import TransactionCreateSerializer
 from app.accounts.daos.account import transaction_dao
+from app.accounts.serializers.account import TransactionCreateSerializer
 from app.accounts.tests.test_data import sample_transaction_instance_deposit_1000
 
 from app.core.deps import business_is_open
@@ -41,6 +43,7 @@ def test_post_session_fails_if_there_is_a_recent_withdrawal(
     flush_redis: Callable,
     delete_transcation_model_instances: Callable,
 ):
+    """Test that the request fails if user made a withdrawal recently"""
     app.dependency_overrides[
         business_is_open
     ] = lambda: False  # Mock business is closed; return False
@@ -56,3 +59,22 @@ def test_post_session_fails_if_there_is_a_recent_withdrawal(
     )
 
     assert response.context["server_errors"] == [ErrorCodes.SIMILAR_WITHDRAWAL_REQUEST]
+
+
+def test_post_session_raises_no_available_session_exception(
+    db: Session,
+    client: TestClient,
+    mocker: MockerFixture,
+):
+    """Test that the request redirects if no session was found for the user"""
+    app.dependency_overrides[
+        business_is_open
+    ] = lambda: True  # Mock business is open; return True
+    app.dependency_overrides[
+        GetAvailableSession
+    ] = lambda: lambda category, user: None  # Fancy one liner to mock class
+    response = client.post(
+        "/session/summary/", data={"category": Categories.FOOTBALL.value}
+    )
+
+    assert response.context["server_errors"] == [ErrorCodes.NO_AVAILABLE_SESSION]

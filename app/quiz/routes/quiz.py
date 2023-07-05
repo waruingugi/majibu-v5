@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
 from app.users.models import User
-from app.commons.constants import Categories
+from app.quiz.utils import GetSessionQuestions
 from app.core.config import templates
 from app.core.deps import (
     get_current_active_user,
@@ -22,11 +22,14 @@ async def get_questions(
     result_id: str,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_active_user),
+    get_session_questions=Depends(GetSessionQuestions),
 ):
     """Get questions and choices page"""
+    quiz = get_session_questions(result_id=result_id)
+
     return templates.TemplateResponse(
-        f"{template_prefix}home.html",
-        {"request": request, "title": "Home", "categories": Categories.list_()},
+        f"{template_prefix}questions.html",
+        {"request": request, "title": "Quiz", "quiz": quiz},
     )
 
 

@@ -83,8 +83,12 @@ async def post_session(
         session_id = get_available_session(category=category_in.category, user=user)
 
         if session_id is not None:
-            create_session(db, user=user, session_id=session_id)
-            # redirect here
+            result_id = create_session(db, user=user, session_id=session_id)
+
+            return RedirectResponse(
+                request.url_for("get_questions", result_id=result_id),
+                status_code=HTTPStatus.FOUND.value,
+            )
         else:
             raise NoAvailabeSession
 
