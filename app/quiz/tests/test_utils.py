@@ -109,6 +109,7 @@ def test_compose_quiz_returns_correct_dictionary(
     choices = [choice for choice in choice_dao.get_all(db)]
 
     assert quiz is not None
+    assert len(quiz) == settings.QUESTIONS_IN_SESSION
 
     for choice in choices:
         for key, value in quiz.items():
