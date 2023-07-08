@@ -7,7 +7,11 @@ from app.accounts.serializers.account import (
     TransactionUpdateSerializer,
 )
 from app.accounts.constants import TransactionCashFlow, TransactionServices
-from app.accounts.constants import MPESA_PAYMENT_DEPOSIT, MPESA_PAYMENT_WITHDRAW
+from app.accounts.constants import (
+    MPESA_PAYMENT_DEPOSIT,
+    MPESA_PAYMENT_WITHDRAW,
+    WALLET_DEDUCTION_FOR_SESSION,
+)
 
 from app.notifications.daos.notifications import notifications_dao
 from app.notifications.serializers.notifications import CreateNotificationSerializer
@@ -69,6 +73,15 @@ class TransactionDao(
                 db_obj.amount, db_obj.account, db_obj.final_balance
             )
             type = NotificationTypes.WITHDRAW.value
+
+        if (
+            db_obj.cash_flow == TransactionCashFlow.OUTWARD.value
+            and db_obj.service == TransactionServices.MAJIBU.value
+        ):  # Means if the transaction was a withdrawal for a session
+            message = WALLET_DEDUCTION_FOR_SESSION.format(
+                db_obj.transaction_id, db_obj.account, db_obj.final_balance
+            )
+            type = NotificationTypes.SESSION.value
 
         notifications_dao.send_notification(
             db,

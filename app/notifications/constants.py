@@ -14,6 +14,7 @@ class NotificationTypes(str, Enum):
     OTP = "OTP"
     DEPOSIT = "DEPOSIT"
     WITHDRAW = "WITHDRAW"
+    SESSION = "SESSION"
 
 
 class NotificationStatuses(str, Enum):

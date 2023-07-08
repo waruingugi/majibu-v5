@@ -18,12 +18,23 @@ PAYBILL_DEPOSIT_DESCRIPTION = "Deposit of Ksh {} for account {} using M-Pesa pay
 # M-Pesa B2C payment description
 PAYBILL_B2C_DESCRIPTION = "Payment of Ksh {} for account {} using B2C payment."
 
+# Withdrawal to play session description
+SESSION_WITHDRAWAL_DESCRIPTION = "Withdrawal by user {} for session id: {}."
+
 # SMS message sent to user on M-Pesa withdrawal
 MPESA_PAYMENT_WITHDRAW = (
     "You've successfully withdrawn Ksh{} for your account {}. "
     f"Transaction cost Ksh{settings.MPESA_B2C_CHARGE}. "
     "New balance is Ksh{}. "
     "Thank your for choosing Majibu!"
+)
+
+# SMS message to user on wallet deduction to play a session
+WALLET_DEDUCTION_FOR_SESSION = (
+    "{} Confirmed. "
+    f"Withdraw Ksh{settings.SESSION_AMOUNT} from account "
+    "{} for Majibu session. "
+    "New balance is Ksh{}."
 )
 
 

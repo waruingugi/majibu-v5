@@ -6,6 +6,7 @@ from app.main import app
 
 from app.commons.constants import Categories
 from app.commons.utils import generate_uuid, random_phone
+from app.quiz.daos.quiz import result_dao
 
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
@@ -54,6 +55,22 @@ def create_session_instance(db: Session) -> None:
             category=Categories.BIBLE.value, questions=question_ids
         ),
     )
+
+
+@pytest.fixture
+def delete_session_model_instances(db: Session) -> None:
+    """Delete all existing rows in Sessions model"""
+    sessions = session_dao.get_all(db)
+    for session in sessions:
+        session_dao.remove(db, id=session.id)
+
+
+@pytest.fixture
+def delete_result_model_instances(db: Session) -> None:
+    """Delete all existing rows in Results model"""
+    results = result_dao.get_all(db)
+    for result in results:
+        result_dao.remove(db, id=result.id)
 
 
 @pytest.fixture

@@ -25,6 +25,13 @@ class DuoSessionFailedOnUpdate(Exception):
         self.message = message
 
 
+class ChoicesDAOFailedOnCreate(Exception):
+    """An exception happened when creating a Choice instance"""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
 class InvalidToken(HttpErrorException):
     def __init__(self) -> None:
         super(InvalidToken, self).__init__(
@@ -154,4 +161,26 @@ class SessionInQueue(HttpErrorException):
             status_code=HTTPStatus.TOO_MANY_REQUESTS,
             error_code=ErrorCodes.SESSION_IN_QUEUE.name,
             error_message=ErrorCodes.SESSION_IN_QUEUE.value,
+        )
+
+
+class NoAvailabeSession(HttpErrorException):
+    """No available session was found for the user"""
+
+    def __init__(self) -> None:
+        super(NoAvailabeSession, self).__init__(
+            status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+            error_code=ErrorCodes.NO_AVAILABLE_SESSION.name,
+            error_message=ErrorCodes.NO_AVAILABLE_SESSION.value,
+        )
+
+
+class SessionExpired(HttpErrorException):
+    """User requested a session past the expires_at field value in the Results model"""
+
+    def __init__(self) -> None:
+        super(SessionExpired, self).__init__(
+            status_code=HTTPStatus.BAD_REQUEST,
+            error_code=ErrorCodes.SESSION_EXPIRED.name,
+            error_message=ErrorCodes.SESSION_EXPIRED.value,
         )

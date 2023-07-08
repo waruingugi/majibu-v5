@@ -241,17 +241,6 @@ async def post_withdrawal_time_out(
 
 # Celery
 # Query B2C pending transactions or use retry feature
-# Fix payment func names
-# Deposit history
 # Pagination
-# Models
-# Test models
-# Account - mpesa
 # Protect docs
-# Opening soon template run on close
-# Top banner to join whatsapp group - comming soon
-# No more sessions
 # Host on heroku, buy domain
-# Create models
-# Create tests
-# Create serializers

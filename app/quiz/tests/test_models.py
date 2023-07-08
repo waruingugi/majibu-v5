@@ -1,7 +1,10 @@
 from sqlalchemy.orm import Session
 from typing import Callable
+import pytest
 
+from app.exceptions.custom import ChoicesDAOFailedOnCreate
 from app.commons.constants import Categories
+from app.commons.utils import generate_uuid
 from app.core.config import settings
 
 from app.sessions.daos.session import session_dao
@@ -46,7 +49,7 @@ def test_update_question_instance(db: Session) -> None:
 
 
 def test_create_choice_instance(db: Session) -> None:
-    """Test create question"""
+    """Test create question and choice instance"""
     question_in = QuestionCreateSerializer(
         question_text="Random question", category=Categories.FOOTBALL.value
     )
@@ -60,6 +63,24 @@ def test_create_choice_instance(db: Session) -> None:
 
     assert choice.choice_text == choice_text
     assert choice.question_id == question.id
+
+
+def test_create_choice_fails_if_max_choices_exceeded(db: Session) -> None:
+    question_in = QuestionCreateSerializer(
+        question_text="Random question", category=Categories.FOOTBALL.value
+    )
+    question = question_dao.create(db, obj_in=question_in)
+    exceed_choices = settings.CHOICES_IN_QUESTION + 1
+
+    with pytest.raises(ChoicesDAOFailedOnCreate):
+        for i in range(exceed_choices):
+            choice_text = generate_uuid()  # Random choice text
+            choice_dao.create(
+                db,
+                obj_in=ChoiceCreateSerializer(
+                    question_id=question.id, choice_text=choice_text
+                ),
+            )
 
 
 def test_create_answer_instance(db: Session) -> None:

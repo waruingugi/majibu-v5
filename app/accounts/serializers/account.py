@@ -42,7 +42,7 @@ class TransactionCreateSerializer(TransactionBaseSerializer):
     amount: float
     fee: float
     tax: float
-    external_response: Json | None
+    external_response: Json | None = None
 
 
 class TransactionUpdateSerializer(TransactionBaseSerializer):

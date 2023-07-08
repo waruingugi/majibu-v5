@@ -9,15 +9,6 @@ from app.commons.constants import Categories
 from app.core.config import settings
 from app.sessions.daos.session import session_dao, duo_session_dao
 from app.sessions.serializers.session import SessionCreateSerializer
-from app.quiz.daos.quiz import result_dao
-
-
-@pytest.fixture
-def delete_session_model_instances(db: Session) -> None:
-    """Delete all existing rows in Results model"""
-    sessions = session_dao.get_all(db)
-    for session in sessions:
-        session_dao.remove(db, id=session.id)
 
 
 @pytest.fixture
@@ -34,14 +25,6 @@ def create_sesion_model_instances(
                 category=random.choice(Categories.list_()), questions=question_ids
             ),
         )
-
-
-@pytest.fixture
-def delete_result_model_instances(db: Session) -> None:
-    """Delete all existing rows in Results model"""
-    results = result_dao.get_all(db)
-    for result in results:
-        result_dao.remove(db, id=result.id)
 
 
 @pytest.fixture
