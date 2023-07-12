@@ -85,7 +85,7 @@ def test_get_choices_returns_correct_db_instances(
         assert choice.id in choice_ids
 
 
-def test_compose_quiz_returns_correct_dictionary(
+def test_compose_quiz_returns_correct_list(
     db: Session,
     mocker: MockerFixture,
     create_super_user_instance: Callable,
@@ -111,7 +111,10 @@ def test_compose_quiz_returns_correct_dictionary(
     assert quiz is not None
     assert len(quiz) == settings.QUESTIONS_IN_SESSION
 
-    for choice in choices:
-        for key, value in quiz.items():
-            if choice.id in value:
-                assert key == choice.question_id
+    for quiz_object in quiz:
+        choices = quiz_object["choices"]
+
+        for choice in choices:
+            assert quiz_object["id"] == choice["question_id"]
+            assert quiz_object["question_text"] is not None
+            assert choice["choice_text"] is not None

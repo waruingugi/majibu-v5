@@ -77,22 +77,54 @@ class GetSessionQuestions:
         )
         return choices_obj
 
-    def compose_quiz(self) -> dict:
-        """Compile questions and choices to create a quiz"""
+    def compose_quiz(self) -> list:
+        """Compile questions and choices to create a quiz.
+        Returned object should follow QuizObjectSerializer format"""
         logger.info(f"Compiling quiz for {self.user.phone}")
-        quiz = {}
+        quiz = []
 
         for question in self.questions_obj:
+            quiz_object = {}
             choices = []
+            quiz_object = {
+                "id": question.id,
+                "question_text": question.question_text,
+            }
 
             for choice in self.choices_obj:
                 if choice.question_id == question.id:
-                    choices.append(choice.choice_text)
+                    choices.append(
+                        {
+                            "id": choice.id,
+                            "question_id": choice.question_id,
+                            "choice_text": choice.choice_text,
+                        }
+                    )
 
-            quiz[question.question_text] = choices
+            quiz_object["choices"] = choices
+            quiz.append(quiz_object)
 
         return quiz
 
+
+"""
+[
+    {
+        'id': '',
+        'question_text': '',
+        'choices': [
+            {
+                'id': '',
+                'choice_text': ''
+            },
+            {
+                'id': '',
+                'choice_text': ''
+            }
+        ]
+    }
+]
+"""
 
 # If time expired, raise error for post
 # Query sessions model for session id
