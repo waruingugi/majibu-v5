@@ -9,12 +9,19 @@ from app.core.config import settings
 
 from app.sessions.daos.session import session_dao
 from app.users.daos.user import user_dao
-from app.quiz.daos.quiz import question_dao, choice_dao, answer_dao, result_dao
+from app.quiz.daos.quiz import (
+    question_dao,
+    choice_dao,
+    answer_dao,
+    result_dao,
+    user_answer_dao,
+)
 from app.quiz.serializers.quiz import (
     QuestionCreateSerializer,
     ChoiceCreateSerializer,
     AnswerCreateSerializer,
     ResultCreateSerializer,
+    UserAnswerCreateSerializer,
 )
 
 
@@ -108,6 +115,7 @@ def test_create_answer_instance(db: Session) -> None:
 def test_create_results_instance(
     db: Session, create_super_user_instance: Callable, create_session_instance: Callable
 ) -> None:
+    """Test create results instance"""
     user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
     session = session_dao.get_not_none(db, category=Categories.BIBLE.value)
 
@@ -130,6 +138,26 @@ def test_create_results_instance(
 
 def test_create_user_answers_instance(
     db: Session,
+    create_super_user_instance: Callable,
     create_choice_model_instances: Callable,
 ) -> None:
-    pass
+    """Test create user answers instance"""
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    session = session_dao.get_not_none(db, category=Categories.BIBLE.value)
+    questions = session.questions
+
+    for question_id in questions:
+        choice = choice_dao.get_not_none(db, question_id=question_id)
+        user_answer_in = UserAnswerCreateSerializer(
+            user_id=user.id,
+            question_id=question_id,
+            session_id=session.id,
+            choice_id=choice.id,
+        )
+
+        user_answer_dao.create(db, obj_in=user_answer_in)
+
+    user_answers = user_answer_dao.get_all(db, user_id=user.id, session_id=session.id)
+
+    assert user_answers is not None
+    assert len(user_answers) == settings.QUESTIONS_IN_SESSION

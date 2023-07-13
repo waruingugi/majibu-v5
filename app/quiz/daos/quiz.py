@@ -1,10 +1,11 @@
+from typing import Any, Dict
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
-from app.db.dao import CRUDDao
+from app.db.dao import CRUDDao, DaoInterface
 from app.core.config import settings
 from app.exceptions.custom import ChoicesDAOFailedOnCreate
-from app.quiz.models import Questions, Choices, Answers, Results
+from app.quiz.models import Questions, Choices, Answers, Results, UserAnswers
 from app.quiz.serializers.quiz import (
     QuestionCreateSerializer,
     QuestionUpdateSerializer,
@@ -14,10 +15,14 @@ from app.quiz.serializers.quiz import (
     AnswerUpdateSerializer,
     ResultCreateSerializer,
     ResultUpdateSerializer,
+    UserAnswerCreateSerializer,
+    UserAnswerUpdateSerializer,
 )
 
 
 class ResultDao(CRUDDao[Results, ResultCreateSerializer, ResultUpdateSerializer]):
+    """Result DAO"""
+
     def create(self, db: Session, *, obj_in: ResultCreateSerializer) -> Results:
         """Assign the expires_at variable a value on creating instance"""
         session_start_time = datetime.now()
@@ -49,6 +54,8 @@ result_dao = ResultDao(Results)
 class QuestionDao(
     CRUDDao[Questions, QuestionCreateSerializer, QuestionUpdateSerializer]
 ):
+    """Question DAO"""
+
     pass
 
 
@@ -56,6 +63,8 @@ question_dao = QuestionDao(Questions)
 
 
 class ChoiceDao(CRUDDao[Choices, ChoiceCreateSerializer, ChoiceUpdateSerializer]):
+    """Choice DAO"""
+
     def on_pre_create(
         self, db: Session, id: str, values: dict, orig_values: dict
     ) -> None:
@@ -73,7 +82,28 @@ choice_dao = ChoiceDao(Choices)
 
 
 class AnswerDao(CRUDDao[Answers, AnswerCreateSerializer, AnswerUpdateSerializer]):
+    """Answer DAO"""
+
     pass
 
 
 answer_dao = AnswerDao(Answers)
+
+
+class UserAnswerDao(
+    CRUDDao[UserAnswers, UserAnswerCreateSerializer, UserAnswerUpdateSerializer]
+):
+    """UserAnswer DAO"""
+
+    def update(
+        self: Any | DaoInterface,
+        db: Session,
+        *,
+        db_obj: UserAnswers,
+        obj_in: UserAnswerUpdateSerializer | Dict[str, Any],
+    ) -> None:
+        """Prevent updates on UserAnswers Model. Once an instance is created, it can not be updated"""
+        pass
+
+
+user_answer_dao = UserAnswerDao(UserAnswers)
