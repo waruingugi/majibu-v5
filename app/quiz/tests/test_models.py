@@ -126,3 +126,10 @@ def test_create_results_instance(
     assert result.is_active is True
     time_diff = (result.expires_at - result.created_at).total_seconds()
     assert round(time_diff) == settings.SESSION_DURATION
+
+
+def test_create_user_answers_instance(
+    db: Session,
+    create_choice_model_instances: Callable,
+) -> None:
+    pass

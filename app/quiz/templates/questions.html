@@ -23,8 +23,8 @@
 
                                                 {% for choice in quiz_object['choices'] %}
                                                     <div class="form-check m-2">
-                                                        <input class="form-check-input" type="radio" name="{{ quiz_object['id'] }}" value="{{ choice['choice_text'] }}">
-                                                        <label class="form-check-label" for="{{ choice['id'] }}">{{ choice['choice_text'] }}</label>
+                                                        <input class="form-check-input" type="radio" name="{{ quiz_object['id'] }}" value="{{ choice['id'] }}">
+                                                        <label class="form-check-label" for="{{ quiz_object['id'] }}">{{ choice['choice_text'] }}</label>
                                                     </div>
                                                 {% endfor %}
                                                 
@@ -37,7 +37,7 @@
 
                                                 {% for choice in quiz_object['choices'] %}
                                                     <div class="form-check m-2">
-                                                        <input class="form-check-input" type="radio" name="{{ quiz_object['id'] }}" value="{{ choice['choice_text'] }}">
+                                                        <input class="form-check-input" type="radio" name="{{ quiz_object['id'] }}" value="{{ choice['id'] }}">
                                                         <label class="form-check-label" for="{{ quiz_object['id'] }}">{{ choice['choice_text'] }}</label>
                                                     </div>
                                                 {% endfor %}

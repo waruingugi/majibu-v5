@@ -148,6 +148,10 @@ async def post_answers(
     # user: User = Depends(get_current_active_user),
     # get_session_questions=Depends(GetSessionQuestions),
 ):
+    # form_data = await request.form()
+    # import pdb
+
+    # pdb.set_trace()
     quiz = [
         {
             "id": "fdcddb3e-9c97-4c56-b38a-bce474dab82a",
@@ -263,8 +267,8 @@ async def post_answers(
 
 
 # Remove docs
-# If time is expired on get request, raise error
-
+# Save useranswers
+# Calculate score
 
 # On submission
 # Check if time is valid, not expired

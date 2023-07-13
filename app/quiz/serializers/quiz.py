@@ -52,6 +52,21 @@ class AnswerUpdateSerializer(AnswerBaseSerializer):
     choice_id: str | None
 
 
+class UserAnswerBaseSerializer(BaseModel):
+    user_id: str
+    question_id: str
+    session_id: str
+    choice_id: str
+
+
+class UserAnswerCreateSerializer(UserAnswerBaseSerializer):
+    pass
+
+
+class UserAnswerUpdateSerializer(UserAnswerBaseSerializer):
+    pass
+
+
 class ResultBaseSerializer(BaseModel):
     user_id: str
     session_id: str
@@ -59,11 +74,6 @@ class ResultBaseSerializer(BaseModel):
 
 class ResultCreateSerializer(ResultBaseSerializer):
     pass
-    # percentage: float = 0.0
-    # total_answered: int = 0
-    # speed: float = 0.0
-    # time_taken: float = 0.0
-    # score: float = 0.0
 
 
 class ResultUpdateSerializer(BaseModel):

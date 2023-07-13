@@ -7,23 +7,40 @@ from sqlalchemy import String, Text, ForeignKey, Integer
 
 
 class Questions(Base):
+    """Questions Model"""
+
     category = mapped_column(String, nullable=False)
     question_text = mapped_column(Text, nullable=False)
 
 
 class Choices(Base):
+    """Choices Model"""
+
     question_id = mapped_column(String, ForeignKey("questions.id", ondelete="CASCADE"))
     choice_text = mapped_column(Text, nullable=False)
 
 
 class Answers(Base):
+    """Answers Model"""
+
     question_id = mapped_column(
         String, ForeignKey("questions.id", ondelete="CASCADE"), unique=True
     )
     choice_id = mapped_column(String, ForeignKey("choices.id", ondelete="CASCADE"))
 
 
+class UserAnswers(Base):
+    """UserAnswers Model: Save user answers"""
+
+    user_id = mapped_column(String, ForeignKey("user.id", ondelete="CASCADE"))
+    question_id = mapped_column(String, ForeignKey("questions.id", ondelete="CASCADE"))
+    choice_id = mapped_column(String, ForeignKey("choices.id", ondelete="CASCADE"))
+    session_id = mapped_column(String, ForeignKey("sessions.id", ondelete="CASCADE"))
+
+
 class Results(Base):
+    """Results Model"""
+
     user_id = mapped_column(String, ForeignKey("user.id", ondelete="CASCADE"))
     session_id = mapped_column(String, ForeignKey("sessions.id", ondelete="CASCADE"))
     percentage = mapped_column(

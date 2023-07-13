@@ -125,14 +125,3 @@ class GetSessionQuestions:
     }
 ]
 """
-
-# If time expired, raise error for post
-# Query sessions model for session id
-# Query questions model for questions in list
-# Query choices model for choices in list
-# Sequence: {question_text: [choice, choice]} use map
-# Create empty dict
-# Loop through questions_obj
-# Loop throuch choices_obj
-# If question id same in both
-# Append to dictionary
