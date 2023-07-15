@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Union
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
@@ -104,6 +104,19 @@ class UserAnswerDao(
     ) -> None:
         """Prevent updates on UserAnswers Model. Once an instance is created, it can not be updated"""
         pass
+
+    def get_or_create(
+        self,
+        db: Session,
+        obj_in: Union[UserAnswerCreateSerializer, UserAnswerUpdateSerializer],
+    ) -> UserAnswers:
+        """Get or create a user answer"""
+        db_obj = self.get(db, user_id=obj_in.user_id, question_id=obj_in.question_id)
+        if not db_obj:
+            user_answer_data = UserAnswerCreateSerializer(**obj_in.dict())
+            db_obj = self.create(db, obj_in=user_answer_data)
+
+        return db_obj
 
 
 user_answer_dao = UserAnswerDao(UserAnswers)

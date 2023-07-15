@@ -77,10 +77,8 @@ class ResultCreateSerializer(ResultBaseSerializer):
 
 
 class ResultUpdateSerializer(BaseModel):
-    percentage: float = 0.0
+    total_correct: int = 0
     total_answered: int = 0
-    speed: float = 0.0
-    time_taken: float = 0.0
     score: float = 0.0
 
 

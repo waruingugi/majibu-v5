@@ -20,7 +20,10 @@ from app.quiz.daos.quiz import (
     answer_dao,
 )
 from app.quiz.filters import QuestionFilter, ChoiceFilter
-from app.quiz.serializers.quiz import UserAnswerCreateSerializer
+from app.quiz.serializers.quiz import (
+    UserAnswerCreateSerializer,
+    ResultUpdateSerializer,
+)
 from app.quiz.models import Results
 from app.users.models import User
 
@@ -127,13 +130,29 @@ class CalculateScore:
         self, *, form_data: dict, result_id: str, user: Optional[User] = None
     ) -> dict | None:
         self.form_data = form_data
+        self.user = self.user if user is None else user
         self.result = result_dao.get_not_none(self.db, id=result_id)
-
-        self.total_correct, self.total_answered = 0, 0
 
         submitted_in_time = self.session_is_submitted_in_time()
         if submitted_in_time:
-            pass
+            total_answered = self.create_user_answers()
+            total_correct = self.get_total_correct_questions()
+
+            total_answered_score = self.calculate_total_answered_score(total_answered)
+            total_correct_answered_score = self.calculate_correct_answered_score(
+                total_correct
+            )
+
+            final_score = self.calculate_final_score(
+                total_answered_score, total_correct_answered_score
+            )
+
+            result_in = ResultUpdateSerializer(
+                total_correct=total_correct,
+                total_answered=total_answered,
+                score=final_score,
+            )
+            result_dao.update(self.db, db_obj=self.result, obj_in=result_in)
 
     def session_is_submitted_in_time(self) -> bool | None:
         """Assert the session answers were submitted in time"""
@@ -147,10 +166,11 @@ class CalculateScore:
 
         return True
 
-    def create_user_answers(self) -> None:
+    def create_user_answers(self) -> int:
         """Save user answers to UserAnswers model"""
+        total_answered = 0
         for question_id, choice_id in self.form_data.items():
-            self.total_answered += 1
+            total_answered += 1
             user_answer_in = UserAnswerCreateSerializer(
                 user_id=self.user.id,
                 question_id=question_id,
@@ -158,28 +178,33 @@ class CalculateScore:
                 choice_id=choice_id,
             )
 
-            user_answer_dao.create(self.db, obj_in=user_answer_in)
+            user_answer_dao.get_or_create(self.db, obj_in=user_answer_in)
 
-    def get_total_correct_questions(self) -> None:
+        return total_answered
+
+    def get_total_correct_questions(self) -> int:
         """Calculate total questions user got correct"""
+        total_correct = 0
         for question_id, choice_id in self.form_data.items():
             answer = answer_dao.get_not_none(self.db, question_id=question_id)
 
             if choice_id == answer.choice_id:
-                self.total_correct += 1
+                total_correct += 1
 
-    def calculate_total_answered_score(self) -> float:
+        return total_correct
+
+    def calculate_total_answered_score(self, total_answered: int) -> float:
         """Calculate total answered score"""
         total_answered_score = settings.SESSION_TOTAL_ANSWERED_WEIGHT * (
-            self.total_answered / settings.QUESTIONS_IN_SESSION
+            total_answered / settings.QUESTIONS_IN_SESSION
         )
 
         return total_answered_score
 
-    def calculate_correct_answered_score(self) -> float:
+    def calculate_correct_answered_score(self, total_correct) -> float:
         """Calculate total correct score"""
         total_correct_score = settings.SESSION_CORRECT_ANSWERED_WEIGHT * (
-            self.total_correct / settings.QUESTIONS_IN_SESSION
+            total_correct / settings.QUESTIONS_IN_SESSION
         )
 
         return total_correct_score
@@ -199,6 +224,7 @@ class CalculateScore:
 # Save number of correct answers
 # Save number of questions answered
 # check if submitted before
+# On call, should we return final score or raise error
 # On pairing, if results is none for late submission, refund without bonus
 
 # CorrectWeight = 0.8 (to give more weight to the number of correct answers)

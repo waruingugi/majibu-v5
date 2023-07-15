@@ -153,9 +153,39 @@ def test_create_user_answers_instance(
             choice_id=choice.id,
         )
 
-        user_answer_dao.create(db, obj_in=user_answer_in)
+        user_answer_dao.get_or_create(db, obj_in=user_answer_in)
 
     user_answers = user_answer_dao.get_all(db, user_id=user.id, session_id=session.id)
 
     assert user_answers is not None
     assert len(user_answers) == settings.QUESTIONS_IN_SESSION
+
+
+# def test_update_user_answers_instance(
+#     db: Session,
+#     create_super_user_instance: Callable,
+#     create_choice_model_instances: Callable,
+# ) -> None:
+#     user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+#     session = session_dao.get_not_none(db, category=Categories.BIBLE.value)
+#     question_id = session.questions[0]
+
+#     choice = choice_dao.get_not_none(db, question_id=question_id)
+#     user_answer_in = UserAnswerCreateSerializer(
+#         user_id=user.id,
+#         question_id=question_id,
+#         session_id=session.id,
+#         choice_id=choice.id,
+#     )
+
+#     db_obj = user_answer_dao.create(db, obj_in=user_answer_in)
+
+#     new_user_answer_in = UserAnswerCreateSerializer(
+#         user_id=user.id,
+#         question_id=question_id,
+#         session_id=session.id,
+#         choice_id=generate_uuid(),  # Random choice_id
+#     )
+#     new_user_answer = user_answer_dao.update(
+#         db, db_obj=db_obj, obj_in=new_user_answer_in
+#     )
