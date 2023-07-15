@@ -73,17 +73,17 @@ class Results(Base):
     #     default=0.0,
     #     comment=("The total of how fast the user is during the session"),
     # )
-    time_taken = mapped_column(
-        Float(
-            asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
-        ),
-        nullable=True,
-        server_default=text("0.0"),
-        default=0.0,
-        comment=(
-            "Time taken to play the session(that is, to answer questions) in milliseconds"
-        ),
-    )
+    # time_taken = mapped_column(
+    #     Float(
+    #         asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
+    #     ),
+    #     nullable=True,
+    #     server_default=text("0.0"),
+    #     default=0.0,
+    #     comment=(
+    #         "Time taken to play the session(that is, to answer questions) in milliseconds"
+    #     ),
+    # )
     score = mapped_column(
         Float(
             asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
