@@ -184,3 +184,14 @@ class SessionExpired(HttpErrorException):
             error_code=ErrorCodes.SESSION_EXPIRED.name,
             error_message=ErrorCodes.SESSION_EXPIRED.value,
         )
+
+
+class LateSessionSubmission(HttpErrorException):
+    """User requested a session past the expires_at field value in the Results model"""
+
+    def __init__(self) -> None:
+        super(LateSessionSubmission, self).__init__(
+            status_code=HTTPStatus.BAD_REQUEST,
+            error_code=ErrorCodes.LATE_SESSION_SUBMISSION.name,
+            error_message=ErrorCodes.LATE_SESSION_SUBMISSION.value,
+        )

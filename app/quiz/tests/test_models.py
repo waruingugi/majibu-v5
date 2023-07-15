@@ -125,10 +125,7 @@ def test_create_results_instance(
     assert result.user_id == user.id
     assert result.session_id == session.id
 
-    assert result.speed == 0.0
     assert result.total_answered == 0.0
-
-    assert result.percentage == 0.0
     assert result.score == 0.0
 
     assert result.is_active is True

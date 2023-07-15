@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 # from app.users.models import User
 # from app.quiz.utils import GetSessionQuestions
+from app.quiz.utils import CalculateScore
 from app.core.config import templates
 from app.core.deps import (
     # get_current_active_user,
@@ -147,11 +148,13 @@ async def post_answers(
     db: Session = Depends(get_db),
     # user: User = Depends(get_current_active_user),
     # get_session_questions=Depends(GetSessionQuestions),
+    calculate_score=Depends(CalculateScore),
 ):
-    # form_data = await request.form()
-    # import pdb
+    form_data = await request.form()
+    import pdb
 
-    # pdb.set_trace()
+    pdb.set_trace()
+    calculate_score(form_data._dict)
     quiz = [
         {
             "id": "fdcddb3e-9c97-4c56-b38a-bce474dab82a",
@@ -273,7 +276,7 @@ async def post_answers(
 # On submission
 # Check if time is valid, not expired
 # If expired, raise can not be submitted due to time out
-# Or penalize heavily with the greater the time submitted
+# If has been submitted before, raise error
 # Calculate results, save to db
 # Is active true column in results db: it means was played within last 30 minutes
 # Once paired or refunded create duo session with appropriate status

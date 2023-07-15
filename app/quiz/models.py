@@ -43,30 +43,36 @@ class Results(Base):
 
     user_id = mapped_column(String, ForeignKey("user.id", ondelete="CASCADE"))
     session_id = mapped_column(String, ForeignKey("sessions.id", ondelete="CASCADE"))
-    percentage = mapped_column(
-        Float(
-            asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
-        ),
-        nullable=True,
-        server_default=text("0.0"),
-        default=0.0,
-        comment=("The total based on how they answered questions"),
-    )
+    # percentage = mapped_column(
+    #     Float(
+    #         asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
+    #     ),
+    #     nullable=True,
+    #     server_default=text("0.0"),
+    #     default=0.0,
+    #     comment=("The total based on how they answered questions"),
+    # )
     total_answered = mapped_column(
         Integer,
         nullable=True,
         default=0,
         comment=("Number of total answered questions"),
     )
-    speed = mapped_column(
-        Float(
-            asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
-        ),
+    total_correct = mapped_column(
+        Integer,
         nullable=True,
-        server_default=text("0.0"),
-        default=0.0,
-        comment=("The total of how fast the user is during the session"),
+        default=0,
+        comment=("Number of total correctly/right answered questions"),
     )
+    # speed = mapped_column(
+    #     Float(
+    #         asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
+    #     ),
+    #     nullable=True,
+    #     server_default=text("0.0"),
+    #     default=0.0,
+    #     comment=("The total of how fast the user is during the session"),
+    # )
     time_taken = mapped_column(
         Float(
             asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
