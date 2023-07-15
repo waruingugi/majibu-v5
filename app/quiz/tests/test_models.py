@@ -126,6 +126,7 @@ def test_create_results_instance(
     assert result.session_id == session.id
 
     assert result.total_answered == 0.0
+    assert result.total_correct == 0.0
     assert result.score == 0.0
 
     assert result.is_active is True

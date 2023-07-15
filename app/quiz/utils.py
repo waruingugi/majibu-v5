@@ -16,9 +16,11 @@ from app.quiz.daos.quiz import (
     result_dao,
     question_dao,
     choice_dao,
-    # user_answer_dao,
+    user_answer_dao,
+    answer_dao,
 )
 from app.quiz.filters import QuestionFilter, ChoiceFilter
+from app.quiz.serializers.quiz import UserAnswerCreateSerializer
 from app.quiz.models import Results
 from app.users.models import User
 
@@ -127,6 +129,8 @@ class CalculateScore:
         self.form_data = form_data
         self.result = result_dao.get_not_none(self.db, id=result_id)
 
+        self.total_correct, self.total_answered = 0, 0
+
         submitted_in_time = self.session_is_submitted_in_time()
         if submitted_in_time:
             pass
@@ -143,24 +147,48 @@ class CalculateScore:
 
         return True
 
-    def create_user_answers(self):
-        no_answered_questions = 0
-        for question, answer in self.form_data.items():
-            no_answered_questions += 1
+    def create_user_answers(self) -> None:
+        """Save user answers to UserAnswers model"""
+        for question_id, choice_id in self.form_data.items():
+            self.total_answered += 1
+            user_answer_in = UserAnswerCreateSerializer(
+                user_id=self.user.id,
+                question_id=question_id,
+                session_id=self.result.session_id,
+                choice_id=choice_id,
+            )
 
+            user_answer_dao.create(self.db, obj_in=user_answer_in)
 
-def table():
-    for a in range(5):  # No of questions answered
-        table = []
-        for c in range(5):  # No of questions correct
-            if c <= a:
-                print(f"{c} : {a}")
-                correct_score = (c / 5) * 0.8
-                answered_score = (a / 5) * 0.2
+    def get_total_correct_questions(self) -> None:
+        """Calculate total questions user got correct"""
+        for question_id, choice_id in self.form_data.items():
+            answer = answer_dao.get_not_none(self.db, question_id=question_id)
 
-                final_score = correct_score + answered_score
-                table.append(final_score)
-                print(table)
+            if choice_id == answer.choice_id:
+                self.total_correct += 1
+
+    def calculate_total_answered_score(self) -> float:
+        """Calculate total answered score"""
+        total_answered_score = settings.SESSION_TOTAL_ANSWERED_WEIGHT * (
+            self.total_answered / settings.QUESTIONS_IN_SESSION
+        )
+
+        return total_answered_score
+
+    def calculate_correct_answered_score(self) -> float:
+        """Calculate total correct score"""
+        total_correct_score = settings.SESSION_CORRECT_ANSWERED_WEIGHT * (
+            self.total_correct / settings.QUESTIONS_IN_SESSION
+        )
+
+        return total_correct_score
+
+    def calculate_final_score(
+        self, total_answered_score: float, total_correct_score: float
+    ) -> float:
+        """Calculate final score"""
+        return total_answered_score + total_correct_score
 
 
 # init - set up user

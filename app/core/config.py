@@ -94,6 +94,10 @@ class Settings(BaseSettings):
 
     QUESTIONS_IN_SESSION: int = 5
     CHOICES_IN_QUESTION: int = 3
+
+    SESSION_CORRECT_ANSWERED_WEIGHT = 0.8
+    SESSION_TOTAL_ANSWERED_WEIGHT = 0.2
+
     SESSION_RESULT_DECIMAL_PLACES: int = 7  # High accuracy to pevent draws
     SESSION_DURATION: int = 15  # How long the session lasts
     SESSION_BUFFER_FOR_DURATION = (
