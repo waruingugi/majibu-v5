@@ -39,7 +39,7 @@ class GetSessionQuestions:
         self.db = db
         self.user = user
 
-    def __call__(self, *, result_id: str, user: Optional[User] = None) -> dict | None:
+    def __call__(self, *, result_id: str, user: Optional[User] = None) -> list | None:
         """Compile resources to generate quiz questions and choices"""
         logger.info("Calling GetSessionQuestions class...")
 
@@ -129,14 +129,13 @@ class CalculateScore:
     def __call__(
         self, *, form_data: dict, result_id: str, user: Optional[User] = None
     ) -> dict | None:
-        self.form_data = form_data
         self.user = self.user if user is None else user
         self.result = result_dao.get_not_none(self.db, id=result_id)
 
         submitted_in_time = self.session_is_submitted_in_time()
         if submitted_in_time:
-            total_answered = self.create_user_answers()
-            total_correct = self.get_total_correct_questions()
+            total_answered = self.create_user_answers(form_data)
+            total_correct = self.get_total_correct_questions(form_data)
 
             total_answered_score = self.calculate_total_answered_score(total_answered)
             total_correct_answered_score = self.calculate_correct_answered_score(
@@ -156,20 +155,19 @@ class CalculateScore:
 
     def session_is_submitted_in_time(self) -> bool | None:
         """Assert the session answers were submitted in time"""
-        buffer_time = datetime.utcnow() + timedelta(
-            seconds=settings.SESSION_BUFFER_FOR_DURATION
+        buffer_time = self.result.expires_at + timedelta(
+            seconds=settings.SESSION_BUFFER_TIME
         )
-        expires_at = self.result.expires_at
 
-        if expires_at < buffer_time:
+        if datetime.now() > buffer_time:
             raise LateSessionSubmission
 
         return True
 
-    def create_user_answers(self) -> int:
+    def create_user_answers(self, form_data) -> int:
         """Save user answers to UserAnswers model"""
         total_answered = 0
-        for question_id, choice_id in self.form_data.items():
+        for question_id, choice_id in form_data.items():
             total_answered += 1
             user_answer_in = UserAnswerCreateSerializer(
                 user_id=self.user.id,
@@ -182,10 +180,10 @@ class CalculateScore:
 
         return total_answered
 
-    def get_total_correct_questions(self) -> int:
+    def get_total_correct_questions(self, form_data) -> int:
         """Calculate total questions user got correct"""
         total_correct = 0
-        for question_id, choice_id in self.form_data.items():
+        for question_id, choice_id in form_data.items():
             answer = answer_dao.get_not_none(self.db, question_id=question_id)
 
             if choice_id == answer.choice_id:
@@ -201,7 +199,7 @@ class CalculateScore:
 
         return total_answered_score
 
-    def calculate_correct_answered_score(self, total_correct) -> float:
+    def calculate_correct_answered_score(self, total_correct: int) -> float:
         """Calculate total correct score"""
         total_correct_score = settings.SESSION_CORRECT_ANSWERED_WEIGHT * (
             total_correct / settings.QUESTIONS_IN_SESSION

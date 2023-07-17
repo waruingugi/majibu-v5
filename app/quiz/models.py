@@ -56,7 +56,7 @@ class Results(Base):
         Integer,
         nullable=True,
         default=0,
-        comment=("Number of total answered questions"),
+        comment=("Number of total questions answered"),
     )
     total_correct = mapped_column(
         Integer,

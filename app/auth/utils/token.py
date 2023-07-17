@@ -19,7 +19,7 @@ def check_access_token_is_valid(db: Session, access_token: str) -> bool:
         token_eat = token_obj.access_token_eat if token_obj else None
         return (
             token_eat is not None
-            and token_eat >= datetime.utcnow()
+            and token_eat >= datetime.now()
             and bool(token_obj.is_active)
         )
 

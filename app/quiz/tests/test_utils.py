@@ -7,11 +7,11 @@ import pytest
 from app.core.config import settings
 from app.users.daos.user import user_dao
 from app.quiz.serializers.quiz import ResultCreateSerializer
-from app.quiz.daos.quiz import result_dao, choice_dao
-from app.quiz.utils import GetSessionQuestions
+from app.quiz.daos.quiz import result_dao, choice_dao, user_answer_dao
+from app.quiz.utils import GetSessionQuestions, CalculateScore
 from app.sessions.daos.session import session_dao
 from app.commons.constants import Categories
-from app.exceptions.custom import SessionExpired
+from app.exceptions.custom import SessionExpired, LateSessionSubmission
 
 
 def test_get_session_questions_if_past_expiry_time(
@@ -118,3 +118,53 @@ def test_compose_quiz_returns_correct_list(
             assert quiz_object["id"] == choice["question_id"]
             assert quiz_object["question_text"] is not None
             assert choice["choice_text"] is not None
+
+
+def test_session_submitted_in_time_raises_exception(
+    db: Session,
+    mocker: MockerFixture,
+    create_super_user_instance: Callable,
+    create_choice_model_instances: Callable,
+    delete_result_model_instances: Callable,
+) -> None:
+    """Assert the function raises an exception if the session is submitted 1 second
+    past the buffer time"""
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    session = session_dao.get_not_none(db, category=Categories.BIBLE.value)
+
+    result_in = ResultCreateSerializer(user_id=user.id, session_id=session.id)
+    result_obj = result_dao.create(db, obj_in=result_in)
+
+    mock_datetime = mocker.patch("app.quiz.utils.datetime")
+    mock_datetime.now.return_value = result_obj.expires_at + timedelta(
+        seconds=settings.SESSION_BUFFER_TIME + 1
+    )
+
+    with pytest.raises(LateSessionSubmission):
+        calculate_score = CalculateScore(db, user)
+        _ = calculate_score(form_data={}, result_id=result_obj.id, user=user)
+
+
+def test_create_user_answers_creates_model_instances(
+    db: Session,
+    mocker: MockerFixture,
+    create_super_user_instance: Callable,
+    create_choice_model_instances: Callable,
+) -> None:
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    session = session_dao.get_not_none(db, category=Categories.BIBLE.value)
+
+    result_in = ResultCreateSerializer(user_id=user.id, session_id=session.id)
+    result_obj = result_dao.create(db, obj_in=result_in)
+
+    form_data = {}
+
+    for question_id in session.questions:
+        choice = choice_dao.get_not_none(db, question_id=question_id)
+        form_data[choice.question_id] = choice.id
+
+    calculate_score = CalculateScore(db, user)
+    _ = calculate_score(form_data=form_data, result_id=result_obj.id, user=user)
+
+    user_answers = user_answer_dao.get_all(db, session_id=session.id, user_id=user.id)
+    assert len(user_answers) == settings.QUESTIONS_IN_SESSION

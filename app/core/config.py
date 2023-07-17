@@ -100,9 +100,7 @@ class Settings(BaseSettings):
 
     SESSION_RESULT_DECIMAL_PLACES: int = 7  # High accuracy to pevent draws
     SESSION_DURATION: int = 15  # How long the session lasts
-    SESSION_BUFFER_FOR_DURATION = (
-        3  # Buffer time = SESSION DURATION + SESSION_BUFFER_FOR_DURATION
-    )
+    SESSION_BUFFER_TIME = 3  # Buffer time = SESSION DURATION + SESSION_BUFFER_TIME
 
     MAINTENANCE_MODE: int = 0
     BUSINESS_OPENS_AT: str

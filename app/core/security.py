@@ -67,8 +67,8 @@ def create_access_token(db: Session, subject: str, grant_type: str) -> dict:
     access_token_ein = settings.ACCESS_TOKEN_EXPIRY_IN_SECONDS
 
     to_encode = {
-        "iat": int(datetime.utcnow().timestamp()),
-        "exp": datetime.utcnow() + timedelta(seconds=access_token_ein),
+        "iat": int(datetime.now().timestamp()),
+        "exp": datetime.now() + timedelta(seconds=access_token_ein),
         "user_id": str(subject),
         "grant_type": grant_type,
     }
@@ -95,7 +95,7 @@ def get_access_token(db: Session, *, user_id: str) -> AuthToken:
         user_id=user_id,
         token_type=TokenGrantType.CLIENT_CREDENTIALS,
         access_token=token_data["access_token"],
-        access_token_eat=datetime.utcnow()
+        access_token_eat=datetime.now()
         + timedelta(seconds=token_data["access_token_ein"]),
         is_active=True,
     )

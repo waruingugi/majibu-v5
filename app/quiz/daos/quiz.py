@@ -84,7 +84,18 @@ choice_dao = ChoiceDao(Choices)
 class AnswerDao(CRUDDao[Answers, AnswerCreateSerializer, AnswerUpdateSerializer]):
     """Answer DAO"""
 
-    pass
+    def get_or_create(
+        self,
+        db: Session,
+        obj_in: Union[AnswerCreateSerializer, AnswerUpdateSerializer],
+    ) -> Answers:
+        """Get or create a user answer"""
+        db_obj = self.get(db, question_id=obj_in.question_id)
+        if not db_obj:
+            answer_data = AnswerCreateSerializer(**obj_in.dict())
+            db_obj = self.create(db, obj_in=answer_data)
+
+        return db_obj
 
 
 answer_dao = AnswerDao(Answers)
