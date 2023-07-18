@@ -213,6 +213,23 @@ class CalculateScore:
         """Calculate final score"""
         return total_answered_score + total_correct_score
 
+    def moderate_score(
+        self,
+        final_score: float,
+        lowest_score: float = 0.0,
+        highest_score: float = 100.0,
+    ) -> float:
+        """
+        Moderates the final score using range mapping.
+        """
+        normalized_score = (final_score - lowest_score) / (highest_score - lowest_score)
+        moderated_score = (
+            normalized_score
+            * (settings.MODERATED_HIGHEST_SCORE - settings.MODERATED_LOWEST_SCORE)
+        ) + settings.MODERATED_LOWEST_SCORE
+
+        return moderated_score
+
 
 # init - set up user
 # call - run checks

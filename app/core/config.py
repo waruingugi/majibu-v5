@@ -102,6 +102,9 @@ class Settings(BaseSettings):
     SESSION_DURATION: int = 15  # How long the session lasts
     SESSION_BUFFER_TIME = 3  # Buffer time = SESSION DURATION + SESSION_BUFFER_TIME
 
+    MODERATED_LOWEST_SCORE: float = 70.0
+    MODERATED_HIGHEST_SCORE: float = 85.0
+
     MAINTENANCE_MODE: int = 0
     BUSINESS_OPENS_AT: str
     BUSINESS_CLOSES_AT: str
