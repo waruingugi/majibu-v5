@@ -84,6 +84,18 @@ class Results(Base):
     #         "Time taken to play the session(that is, to answer questions) in milliseconds"
     #     ),
     # )
+    total = mapped_column(
+        Float(
+            asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
+        ),
+        nullable=True,
+        server_default=text("0.0"),
+        default=0.0,
+        comment=(
+            "A combination of total_correct and total_answered fields. "
+            "This is the total marks before moderation and is NOT shown to the user."
+        ),
+    )
     score = mapped_column(
         Float(
             asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
