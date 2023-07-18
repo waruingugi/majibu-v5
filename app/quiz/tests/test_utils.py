@@ -236,7 +236,14 @@ def test_calculate_final_score_returns_correct_value(
         settings.SESSION_TOTAL_ANSWERED_WEIGHT, settings.SESSION_CORRECT_ANSWERED_WEIGHT
     )
 
-    assert final_score == 1
+    assert (
+        final_score
+        == (
+            settings.SESSION_TOTAL_ANSWERED_WEIGHT
+            + settings.SESSION_CORRECT_ANSWERED_WEIGHT
+        )
+        * 100
+    )
 
 
 def test_moderate_score_returns_correct_value(
@@ -253,3 +260,39 @@ def test_moderate_score_returns_correct_value(
     assert zero_moderated_score == settings.MODERATED_LOWEST_SCORE
     assert fifty_moderated_score == 77.5
     assert hundred_moderated_score == settings.MODERATED_HIGHEST_SCORE
+
+
+def test_calculate_score_updates_result_model_instances(
+    db: Session,
+    delete_result_model_instances: Callable,
+    create_super_user_instance: Callable,
+    create_choice_model_instances: Callable,
+) -> None:
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    session = session_dao.get_not_none(db, category=Categories.BIBLE.value)
+
+    result_in = ResultCreateSerializer(user_id=user.id, session_id=session.id)
+    result_obj = result_dao.create(db, obj_in=result_in)
+
+    form_data = {}
+
+    for question_id in session.questions:
+        choice = choice_dao.get_not_none(db, question_id=question_id)
+        form_data[choice.question_id] = choice.id
+
+    calculate_score = CalculateScore(db, user)
+    _ = calculate_score(form_data=form_data, result_id=result_obj.id, user=user)
+
+    updated_result_obj = result_dao.get_not_none(db, user_id=user.id)
+    assert updated_result_obj.total_answered == settings.QUESTIONS_IN_SESSION
+    assert updated_result_obj.total_correct == settings.QUESTIONS_IN_SESSION
+
+    assert (
+        float(updated_result_obj.total)
+        == (
+            settings.SESSION_TOTAL_ANSWERED_WEIGHT
+            + settings.SESSION_CORRECT_ANSWERED_WEIGHT
+        )
+        * 100
+    )
+    assert float(updated_result_obj.score) == settings.MODERATED_HIGHEST_SCORE

@@ -128,7 +128,7 @@ class CalculateScore:
 
     def __call__(
         self, *, form_data: dict, result_id: str, user: Optional[User] = None
-    ) -> dict | None:
+    ) -> None:
         self.user = self.user if user is None else user
         self.result = result_dao.get_not_none(self.db, id=result_id)
 
@@ -145,11 +145,13 @@ class CalculateScore:
             final_score = self.calculate_final_score(
                 total_answered_score, total_correct_answered_score
             )
+            moderated_score = self.moderate_score(final_score)
 
             result_in = ResultUpdateSerializer(
                 total_correct=total_correct,
                 total_answered=total_answered,
-                score=final_score,
+                total=final_score,
+                score=moderated_score,
             )
             result_dao.update(self.db, db_obj=self.result, obj_in=result_in)
 
@@ -211,7 +213,7 @@ class CalculateScore:
         self, total_answered_score: float, total_correct_score: float
     ) -> float:
         """Calculate final score"""
-        return total_answered_score + total_correct_score
+        return (total_answered_score + total_correct_score) * 100
 
     def moderate_score(
         self,

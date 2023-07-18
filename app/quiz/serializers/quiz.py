@@ -79,6 +79,7 @@ class ResultCreateSerializer(ResultBaseSerializer):
 class ResultUpdateSerializer(BaseModel):
     total_correct: int = 0
     total_answered: int = 0
+    total: float = 0.0
     score: float = 0.0
 
 

@@ -150,11 +150,9 @@ async def post_answers(
     # get_session_questions=Depends(GetSessionQuestions),
     calculate_score=Depends(CalculateScore),
 ):
-    form_data = await request.form()
-    import pdb
+    # form_data = await request.form()
 
-    pdb.set_trace()
-    calculate_score(form_data._dict)
+    # calculate_score(form_data._dict)
     quiz = [
         {
             "id": "fdcddb3e-9c97-4c56-b38a-bce474dab82a",
