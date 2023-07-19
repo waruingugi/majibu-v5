@@ -234,3 +234,13 @@ body {
 input[type='radio'] {
   accent-color: #f0134d;
 }
+
+.form-check-input:checked, .form-check-input:focus {
+  background-color: #f0134d;
+  border-color: #f0134d;
+  box-shadow: none;
+}
+
+.form-check-label {
+  display: block;
+}

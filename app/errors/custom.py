@@ -10,6 +10,10 @@ class ErrorCodes(str, Enum):
     INVALID_OTP = "The code you entered is not correct. Please try again"
     INSUFFICIENT_BALANCE = "You have insufficient balance. Please top up and try again"
     INCORRECT_USERNAME_OR_PASSWORD = "Incorrect username or password"
+    LATE_SESSION_SUBMISSION = (
+        "You've submitted your results past the set time. "
+        "Before playing a session, please ensure you have a stable internet connection."
+    )
     MAINTENANCE_MODE = "The business is currently under going maintenance."
     NO_AVAILABLE_SESSION = (
         "There are no available sessions at the moment. Please try again later"

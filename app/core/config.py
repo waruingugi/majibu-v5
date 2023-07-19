@@ -94,8 +94,16 @@ class Settings(BaseSettings):
 
     QUESTIONS_IN_SESSION: int = 5
     CHOICES_IN_QUESTION: int = 3
+
+    SESSION_CORRECT_ANSWERED_WEIGHT = 0.8
+    SESSION_TOTAL_ANSWERED_WEIGHT = 0.2
+
     SESSION_RESULT_DECIMAL_PLACES: int = 7  # High accuracy to pevent draws
     SESSION_DURATION: int = 15  # How long the session lasts
+    SESSION_BUFFER_TIME = 3  # Buffer time = SESSION DURATION + SESSION_BUFFER_TIME
+
+    MODERATED_LOWEST_SCORE: float = 70.0
+    MODERATED_HIGHEST_SCORE: float = 85.0
 
     MAINTENANCE_MODE: int = 0
     BUSINESS_OPENS_AT: str

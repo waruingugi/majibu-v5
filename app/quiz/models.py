@@ -7,50 +7,84 @@ from sqlalchemy import String, Text, ForeignKey, Integer
 
 
 class Questions(Base):
+    """Questions Model"""
+
     category = mapped_column(String, nullable=False)
     question_text = mapped_column(Text, nullable=False)
 
 
 class Choices(Base):
+    """Choices Model"""
+
     question_id = mapped_column(String, ForeignKey("questions.id", ondelete="CASCADE"))
     choice_text = mapped_column(Text, nullable=False)
 
 
 class Answers(Base):
+    """Answers Model"""
+
     question_id = mapped_column(
         String, ForeignKey("questions.id", ondelete="CASCADE"), unique=True
     )
     choice_id = mapped_column(String, ForeignKey("choices.id", ondelete="CASCADE"))
 
 
+class UserAnswers(Base):
+    """UserAnswers Model: Save user answers"""
+
+    user_id = mapped_column(String, ForeignKey("user.id", ondelete="CASCADE"))
+    question_id = mapped_column(String, ForeignKey("questions.id", ondelete="CASCADE"))
+    choice_id = mapped_column(String, ForeignKey("choices.id", ondelete="CASCADE"))
+    session_id = mapped_column(String, ForeignKey("sessions.id", ondelete="CASCADE"))
+
+
 class Results(Base):
+    """Results Model"""
+
     user_id = mapped_column(String, ForeignKey("user.id", ondelete="CASCADE"))
     session_id = mapped_column(String, ForeignKey("sessions.id", ondelete="CASCADE"))
-    percentage = mapped_column(
-        Float(
-            asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
-        ),
-        nullable=True,
-        server_default=text("0.0"),
-        default=0.0,
-        comment=("The total based on how they answered questions"),
-    )
+    # percentage = mapped_column(
+    #     Float(
+    #         asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
+    #     ),
+    #     nullable=True,
+    #     server_default=text("0.0"),
+    #     default=0.0,
+    #     comment=("The total based on how they answered questions"),
+    # )
     total_answered = mapped_column(
         Integer,
         nullable=True,
         default=0,
-        comment=("Number of total answered questions"),
+        comment=("Number of total questions answered"),
     )
-    speed = mapped_column(
-        Float(
-            asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
-        ),
+    total_correct = mapped_column(
+        Integer,
         nullable=True,
-        server_default=text("0.0"),
-        default=0.0,
-        comment=("The total of how fast the user is during the session"),
+        default=0,
+        comment=("Number of total correctly/right answered questions"),
     )
-    time_taken = mapped_column(
+    # speed = mapped_column(
+    #     Float(
+    #         asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
+    #     ),
+    #     nullable=True,
+    #     server_default=text("0.0"),
+    #     default=0.0,
+    #     comment=("The total of how fast the user is during the session"),
+    # )
+    # time_taken = mapped_column(
+    #     Float(
+    #         asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
+    #     ),
+    #     nullable=True,
+    #     server_default=text("0.0"),
+    #     default=0.0,
+    #     comment=(
+    #         "Time taken to play the session(that is, to answer questions) in milliseconds"
+    #     ),
+    # )
+    total = mapped_column(
         Float(
             asdecimal=True, decimal_return_scale=settings.SESSION_RESULT_DECIMAL_PLACES
         ),
@@ -58,7 +92,8 @@ class Results(Base):
         server_default=text("0.0"),
         default=0.0,
         comment=(
-            "Time taken to play the session(that is, to answer questions) in milliseconds"
+            "A combination of total_correct and total_answered fields. "
+            "This is the total marks before moderation and is NOT shown to the user."
         ),
     )
     score = mapped_column(
