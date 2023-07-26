@@ -1,6 +1,6 @@
-from app.core.celery_app import celery_app
+from app.core.celery_app import celery
 
-celery_app.autodiscover_tasks(
+celery.autodiscover_tasks(
     packages=[
         "app",
         "app.sessions",
