@@ -111,6 +111,9 @@ class Settings(BaseSettings):
 
     WITHDRAWAL_BUFFER_PERIOD: int = 120  # Once every 2 minutes
 
+    CELERY_BROKER: str
+    CELERY_RESULT_BACKEND: str
+
     class Config:
         env_file = ".env"
         case_sensitive = True
