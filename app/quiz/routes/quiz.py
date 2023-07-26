@@ -268,8 +268,7 @@ async def post_answers(
 
 
 # Remove docs
-# Save useranswers
-# Calculate score
+# Redirect template on quiz
 
 # On submission
 # Check if time is valid, not expired
