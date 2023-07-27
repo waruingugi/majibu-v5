@@ -114,6 +114,8 @@ class Settings(BaseSettings):
     CELERY_BROKER: str
     CELERY_RESULT_BACKEND: str
 
+    CELERY_SCHEDULER_QUEUE: str = "scheduler-queue"
+
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -269,6 +269,7 @@ async def post_answers(
 
 # Remove docs
 # Redirect template on quiz
+# If withdraw balance bank is below, fail transactions
 
 # On submission
 # Check if time is valid, not expired
