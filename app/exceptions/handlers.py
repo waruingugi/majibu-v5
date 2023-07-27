@@ -53,7 +53,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(500)
     async def custom_500_handler(request, __):
         server_errors: List = [
-            "Something seems to be broken. Please contac admin for assistance"
+            "Something seems to be broken. Please contact admin for assistance"
         ]
 
         return templates.TemplateResponse(
