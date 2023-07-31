@@ -192,9 +192,7 @@ class CalculateScore:
 
     def get_total_correct_questions(self, form_data) -> int:
         """Calculate total questions user got correct"""
-        logger.info(
-            f"Calculate total correct questions for result_id: {self.result.id}"
-        )
+        logger.info("Calculating total correct questions...")
         total_correct = 0
         for question_id, choice_id in form_data.items():
             answer = answer_dao.get_not_none(self.db, question_id=question_id)
@@ -206,9 +204,7 @@ class CalculateScore:
 
     def calculate_total_answered_score(self, total_answered: int) -> float:
         """Calculate total answered score"""
-        logger.info(
-            f"Calculate total answered questions for result_id: {self.result.id}"
-        )
+        logger.info("Calculating total answered questions...")
         total_answered_score = settings.SESSION_TOTAL_ANSWERED_WEIGHT * (
             total_answered / settings.QUESTIONS_IN_SESSION
         )
@@ -217,7 +213,7 @@ class CalculateScore:
 
     def calculate_correct_answered_score(self, total_correct: int) -> float:
         """Calculate total correct score"""
-        logger.info(f"Calculate answered score for result_id: {self.result.id}")
+        logger.info("Calculating answered score...")
         total_correct_score = settings.SESSION_CORRECT_ANSWERED_WEIGHT * (
             total_correct / settings.QUESTIONS_IN_SESSION
         )
@@ -227,7 +223,7 @@ class CalculateScore:
     def calculate_final_score(
         self, total_answered_score: float, total_correct_score: float
     ) -> float:
-        logger.info(f"Calculate final score for result_id: {self.result.id}")
+        logger.info("Calculating final score...")
         """Calculate final score"""
         return (total_answered_score + total_correct_score) * 100
 
@@ -240,7 +236,7 @@ class CalculateScore:
         """
         Moderates the final score using range mapping.
         """
-        logger.info(f"Calculate moderated score for result_id: {self.result.id}")
+        logger.info("Calculating moderated score...")
         normalized_score = (final_score - lowest_score) / (highest_score - lowest_score)
         moderated_score = (
             normalized_score

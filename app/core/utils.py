@@ -6,6 +6,7 @@ from app.db.session import SessionLocal
 from app.quiz.daos.quiz import result_dao
 from app.quiz.serializers.quiz import ResultNodeSerializer
 from app.core.config import settings
+from app.core.logger import logger
 
 
 class Node:
@@ -25,7 +26,7 @@ class Node:
 
 class PairUsers:
     def __init__(self) -> None:
-        self.db = SessionLocal()
+        logger.info("Initializing PairUsers class...")
         self.ordered_scores_list = []
         self.results_queue = []
 
@@ -33,26 +34,30 @@ class PairUsers:
 
     def create_nodes(self) -> None:
         """Create Node instances for results that need to be paired"""
-        buffer_time = datetime.now() + timedelta(
-            seconds=settings.SESSION_DURATION * 4
-        )  # Factoruing SESSION_DURATION by 4 ensures that sessoin queried have already
-        # been played, and by extension, won't be updated.
-
-        available_results = result_dao.search(
-            self.db,
-            {
-                "order_by": ["-created_at"],
-                "is_active": True,
-                "created_at__gt": buffer_time,
-            },
+        logger.info("Creating nodes...")
+        x_seconds_ago = datetime.now() - timedelta(
+            seconds=settings.LOAD_SESSION_INTO_QUEUE_AFTER_SECONDS
         )
 
-        for result in available_results:
-            result_in = ResultNodeSerializer(**result.__dict__)
+        with SessionLocal() as db:
+            available_results = result_dao.search(
+                db,
+                {
+                    "order_by": ["-created_at"],
+                    "is_active": True,
+                    "created_at__lt": x_seconds_ago,
+                },
+            )
 
-            result_node = Node(**result_in.dict())
-            # Insert the node into the sorted list based on the score
-            index = bisect.bisect_left(self.ordered_scores_list, result_in.score)
+            for result in available_results:
+                logger.info(f"Create a node for result: {result.id}")
+                result_in = ResultNodeSerializer(**result.__dict__)
 
-            self.ordered_scores_list.insert(index, (result_in.score, result_node))
-            heapq.heappush(self.results_queue, result_node)
+                result_node = Node(**result_in.dict())
+                # Insert the node into the sorted list based on the score
+                index = bisect.bisect_right(
+                    self.ordered_scores_list, (result_in.score, None)
+                )
+
+                self.ordered_scores_list.insert(index, (result_in.score, result_node))
+                heapq.heappush(self.results_queue, result_node)

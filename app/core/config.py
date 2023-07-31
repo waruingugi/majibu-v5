@@ -101,6 +101,7 @@ class Settings(BaseSettings):
     SESSION_RESULT_DECIMAL_PLACES: int = 7  # High accuracy to pevent draws
     SESSION_DURATION: int = 15  # How long the session lasts
     SESSION_BUFFER_TIME = 3  # Buffer time = SESSION DURATION + SESSION_BUFFER_TIME
+    LOAD_SESSION_INTO_QUEUE_AFTER_SECONDS: int = 180  # 3 minutes
 
     MODERATED_LOWEST_SCORE: float = 70.0
     MODERATED_HIGHEST_SCORE: float = 85.0

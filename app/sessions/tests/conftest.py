@@ -1,30 +1,8 @@
 import pytest
-import random
-from typing import Callable
 from sqlalchemy.orm import Session
 from pytest_mock import MockerFixture
 
-from app.commons.utils import generate_uuid
-from app.commons.constants import Categories
-from app.core.config import settings
-from app.sessions.daos.session import session_dao, duo_session_dao
-from app.sessions.serializers.session import SessionCreateSerializer
-
-
-@pytest.fixture
-def create_sesion_model_instances(
-    db: Session, delete_session_model_instances: Callable
-) -> None:
-    """Create several session model instances"""
-    for i in range(10):
-        question_ids = [generate_uuid() for i in range(settings.QUESTIONS_IN_SESSION)]
-
-        session_dao.create(
-            db,
-            obj_in=SessionCreateSerializer(
-                category=random.choice(Categories.list_()), questions=question_ids
-            ),
-        )
+from app.sessions.daos.session import duo_session_dao
 
 
 @pytest.fixture

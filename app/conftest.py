@@ -18,9 +18,9 @@ from app.core.deps import get_current_active_user
 from app.accounts.daos.mpesa import mpesa_payment_dao, withdrawal_dao
 from app.accounts.daos.account import transaction_dao
 
-
 from sqlalchemy.orm import Session
-from typing import Generator
+from typing import Generator, Callable
+import random
 import pytest
 
 
@@ -95,6 +95,22 @@ def delete_previous_mpesa_payment_transactions(db: Session) -> None:
     previous_transactions = mpesa_payment_dao.get_all(db)
     for transaction in previous_transactions:
         mpesa_payment_dao.remove(db, id=transaction.id)
+
+
+@pytest.fixture
+def create_session_model_instances(
+    db: Session, delete_session_model_instances: Callable
+) -> None:
+    """Create several session model instances"""
+    for i in range(10):
+        question_ids = [generate_uuid() for i in range(settings.QUESTIONS_IN_SESSION)]
+
+        session_dao.create(
+            db,
+            obj_in=SessionCreateSerializer(
+                category=random.choice(Categories.list_()), questions=question_ids
+            ),
+        )
 
 
 @pytest.fixture(scope="session")
