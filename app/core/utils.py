@@ -61,3 +61,91 @@ class PairUsers:
 
                 self.ordered_scores_list.insert(index, (result_in.score, result_node))
                 heapq.heappush(self.results_queue, result_node)
+
+    def find_closest_nodes(self, target_score, ordered_scores):
+        """Find the closest nodes to a given score"""
+
+        def get_closest_node_to_the_right(index):
+            """Recursion to find closest node to the right"""
+            if (
+                index + 1 == len(ordered_scores)
+                or ordered_scores[index] != target_score
+            ):
+                return ordered_scores[index]
+            return get_closest_node_to_the_right(index + 1)
+
+        def get_closest_node_to_the_left(index):
+            """Recursion to find closest node to the left"""
+            if index - 1 == 0 or ordered_scores[index - 1] != target_score:
+                return ordered_scores[index - 1]
+            return get_closest_node_to_the_left(index - 1)
+
+        # Use bisect_left & bisect_right to find the optimal insertion points
+        left_index = bisect.bisect_left(ordered_scores, target_score)
+        right_index = bisect.bisect_right(ordered_scores, target_score)
+
+        if left_index == 0:
+            """If the score index is at the beginning of the list,
+            Then the closest node is always to the right."""
+            closest_right = get_closest_node_to_the_right(left_index)
+            return closest_right
+
+        elif right_index == len(ordered_scores):
+            """If the index of the score is at the end of the list,
+            Then the closest node is always to the left."""
+            closest_left = get_closest_node_to_the_left(left_index)
+            return closest_left
+
+        else:
+            """If the index of the score is somewhere in the middle,
+            then find closest nodes both to the left and right."""
+            closest_right = get_closest_node_to_the_right(left_index)
+            closest_left = get_closest_node_to_the_left(left_index)
+
+            return closest_left, closest_right
+
+
+# import bisect
+
+# def find_closest_score(target_score, ordered_scores):
+#     # Use bisect.bisect_left to find the left insertion point
+#     left_index = bisect.bisect_left(ordered_scores, target_score)
+
+#     # If the target score is at the beginning of the list, the closest score is the second element
+#     if left_index == 0:
+#         closest_right = ordered_scores[1]
+#         return closest_right if closest_right != target_score else ordered_scores[2]
+
+#     # If the target score is at the end of the list, the closest score is the second last element
+#     if left_index == len(ordered_scores):
+#         closest_left = ordered_scores[-2]
+#         return closest_left if closest_left != target_score else ordered_scores[-3]
+
+#     # The target score is somewhere in the middle of the list
+#     closest_left = ordered_scores[left_index - 1]
+#     closest_right = ordered_scores[left_index + 1]
+
+#     # Check if target_score is the same as closest_left or closest_right
+#     if closest_left == target_score:
+#         return ordered_scores[left_index + 2]
+#     if closest_right == target_score:
+#         return ordered_scores[left_index - 2]
+
+#     # Choose the closest score on either side of the target score
+#     return closest_left if target_score - closest_left <= closest_right - target_score else closest_right
+
+# # Example usage:
+# ordered_scores = [72, 75, 78, 80, 80, 83, 86]
+# target_score = 80
+
+# closest_score = find_closest_score(target_score, ordered_scores)
+# print("Closest score to", target_score, "is", closest_score)
+
+
+# score is always in the list
+# If score right and left are the same
+# Use win-score ration
+# Case where list is empty
+# Case where only the one in list
+# Case where only similar score or two  or more similar scores in list
+# Case where other scores in list along with the one shared
