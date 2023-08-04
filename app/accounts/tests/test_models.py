@@ -85,7 +85,9 @@ def test_transaction_dao_shows_correct_user_balance(
 
 
 def test_mpesa_payment_is_created_successfully(
-    db: Session, delete_previous_mpesa_payment_transactions: Callable
+    db: Session,
+    delete_transcation_model_instances: Callable,
+    delete_previous_mpesa_payment_transactions: Callable,
 ) -> None:
     data = mock_stk_push_response
 
@@ -108,7 +110,9 @@ def test_mpesa_payment_is_created_successfully(
 
 
 def test_mpesa_payment_is_updated_successfully(
-    db: Session, delete_previous_mpesa_payment_transactions: Callable
+    db: Session,
+    delete_transcation_model_instances: Callable,
+    delete_previous_mpesa_payment_transactions: Callable,
 ) -> None:
     data = mock_stk_push_response
 

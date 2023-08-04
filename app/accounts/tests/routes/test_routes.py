@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 from sqlalchemy.orm import Session
+from typing import Callable
 
 from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.accounts.constants import MPESA_WHITE_LISTED_IPS
@@ -79,7 +80,9 @@ def test_post_callback_accepts_white_listed_ips(
 
 
 def test_post_confirmation_accepts_white_listed_ips(
-    client: TestClient, mocker: MockerFixture
+    client: TestClient,
+    mocker: MockerFixture,
+    delete_transcation_model_instances: Callable,
 ) -> None:
     mock_client = mocker.patch("fastapi.Request.client")
     mock_client.host = MPESA_WHITE_LISTED_IPS[0]

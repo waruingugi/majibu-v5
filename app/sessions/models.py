@@ -4,11 +4,22 @@ from app.sessions.constants import DuoSessionStatuses
 
 from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import String, Text, ForeignKey, Float
+from sqlalchemy import String, Text, ForeignKey, Float, Integer
 from typing import List
 
 
+class UserSessionStats(Base):
+    """User Session Stats model"""
+
+    user_id = mapped_column(String, ForeignKey("user.id", ondelete="CASCADE"))
+    total_wins = mapped_column(Integer, default=0)
+    total_losses = mapped_column(Integer, default=0)
+    sessions_played = mapped_column(Integer, default=0)
+
+
 class Sessions(Base):
+    """Session model"""
+
     category = mapped_column(String, nullable=False)
     _questions = mapped_column("questions", Text())
 
@@ -18,6 +29,8 @@ class Sessions(Base):
 
 
 class DuoSession(Base):
+    """DuoSession model"""
+
     party_a = mapped_column(String, nullable=False)
     party_b = mapped_column(String, nullable=True)
     session_id = mapped_column(

@@ -5,7 +5,9 @@
 export PYTHONPATH=$PWD
 
 # Start redis server and run it in the background
+echo "Starting redis server in the background..."
 redis-server --daemonize yes
+redis-cli ping
 
 # Check if background redis-server started successfully
 # ps aux | grep redis-server

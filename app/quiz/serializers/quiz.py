@@ -1,6 +1,7 @@
 from app.commons.serializers.commons import CategoryBaseSerializer
 
 from pydantic import BaseModel
+from datetime import datetime
 from typing import List
 
 
@@ -81,6 +82,14 @@ class ResultUpdateSerializer(BaseModel):
     total_answered: int = 0
     total: float = 0.0
     score: float = 0.0
+
+
+class ResultNodeSerializer(ResultBaseSerializer):
+    user_id: str
+    session_id: str
+    score: float
+    expires_at: datetime
+    is_active: bool
 
 
 class QuizObjectSerializer(QuestionReadSerializer):

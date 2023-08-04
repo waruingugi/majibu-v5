@@ -129,8 +129,12 @@ class CalculateScore:
     def __call__(
         self, *, form_data: dict, result_id: str, user: Optional[User] = None
     ) -> None:
+        """Compile all functions that work together to provide the final user score"""
         self.user = self.user if user is None else user
         self.result = result_dao.get_not_none(self.db, id=result_id)
+        logger.info(
+            f"Calling CalculateScore class for result: {self.result.id} by user_id: {self.user.id}"
+        )
 
         submitted_in_time = self.session_is_submitted_in_time()
         if submitted_in_time:
@@ -147,6 +151,7 @@ class CalculateScore:
             )
             moderated_score = self.moderate_score(final_score)
 
+            logger.info(f"Updating result: {result_id} with score variables...")
             result_in = ResultUpdateSerializer(
                 total_correct=total_correct,
                 total_answered=total_answered,
@@ -157,17 +162,20 @@ class CalculateScore:
 
     def session_is_submitted_in_time(self) -> bool | None:
         """Assert the session answers were submitted in time"""
+        logger.info(f"Assert result_id: {self.result.id} was submitted in time")
         buffer_time = self.result.expires_at + timedelta(
             seconds=settings.SESSION_BUFFER_TIME
         )
 
         if datetime.now() > buffer_time:
+            logger.warning(f"Result_id: {self.result.id} was not submitted in time")
             raise LateSessionSubmission
 
         return True
 
     def create_user_answers(self, form_data) -> int:
         """Save user answers to UserAnswers model"""
+        logger.info(f"Saving answers for result_id: {self.result.id} to database")
         total_answered = 0
         for question_id, choice_id in form_data.items():
             total_answered += 1
@@ -184,6 +192,7 @@ class CalculateScore:
 
     def get_total_correct_questions(self, form_data) -> int:
         """Calculate total questions user got correct"""
+        logger.info("Calculating total correct questions...")
         total_correct = 0
         for question_id, choice_id in form_data.items():
             answer = answer_dao.get_not_none(self.db, question_id=question_id)
@@ -195,6 +204,7 @@ class CalculateScore:
 
     def calculate_total_answered_score(self, total_answered: int) -> float:
         """Calculate total answered score"""
+        logger.info("Calculating total answered questions...")
         total_answered_score = settings.SESSION_TOTAL_ANSWERED_WEIGHT * (
             total_answered / settings.QUESTIONS_IN_SESSION
         )
@@ -203,6 +213,7 @@ class CalculateScore:
 
     def calculate_correct_answered_score(self, total_correct: int) -> float:
         """Calculate total correct score"""
+        logger.info("Calculating answered score...")
         total_correct_score = settings.SESSION_CORRECT_ANSWERED_WEIGHT * (
             total_correct / settings.QUESTIONS_IN_SESSION
         )
@@ -212,6 +223,7 @@ class CalculateScore:
     def calculate_final_score(
         self, total_answered_score: float, total_correct_score: float
     ) -> float:
+        logger.info("Calculating final score...")
         """Calculate final score"""
         return (total_answered_score + total_correct_score) * 100
 
@@ -224,6 +236,7 @@ class CalculateScore:
         """
         Moderates the final score using range mapping.
         """
+        logger.info("Calculating moderated score...")
         normalized_score = (final_score - lowest_score) / (highest_score - lowest_score)
         moderated_score = (
             normalized_score

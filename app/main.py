@@ -6,14 +6,17 @@ from app.sessions import api as sessions_api
 from app.accounts import api as accounts_api
 from app.quiz import api as quiz_api
 
-from asgi_correlation_id import CorrelationIdMiddleware
+# Withouth this code, celery throws a few errors
+from app.core.celery_app import celery  # noqa
 
+from app.core.ratelimiter import limiter
+from app.exceptions.handlers import register_exception_handlers
+
+from asgi_correlation_id import CorrelationIdMiddleware
 
 # Rate limiter
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from app.core.ratelimiter import limiter
-from app.exceptions.handlers import register_exception_handlers
 
 
 app = FastAPI()

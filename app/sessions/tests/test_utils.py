@@ -69,7 +69,7 @@ def test_query_sessions_played_returns_correct_list(
     db: Session,
     create_super_user_instance: Callable,
     create_user_model_instances: Callable,
-    create_sesion_model_instances: Callable,
+    create_session_model_instances: Callable,
     mock_user_has_sufficient_balance: Callable,
 ) -> None:
     """Test that the class function query_sessions_played returns correct list of session ids"""
@@ -102,7 +102,7 @@ def test_query_available_pending_duo_sessions_returns_correct_list(
     db: Session,
     create_super_user_instance: Callable,
     create_user_model_instances: Callable,
-    create_sesion_model_instances: Callable,
+    create_session_model_instances: Callable,
     mock_user_has_sufficient_balance: Callable,
     delete_duo_session_model_instances: Callable,
     delete_result_model_instances: Callable,
@@ -153,7 +153,7 @@ def test_query_available_pending_duo_sessions_returns_correct_list(
 def test_query_available_sessions_returns_correct_list(
     db: Session,
     create_super_user_instance: Callable,
-    create_sesion_model_instances: Callable,
+    create_session_model_instances: Callable,
     mock_user_has_sufficient_balance: Callable,
     delete_result_model_instances: Callable,
 ):
@@ -191,7 +191,7 @@ def test_query_available_sessions_returns_correct_list(
 def test_create_session_deducts_from_user_wallet_balance(
     db: Session,
     create_super_user_instance: Callable,
-    create_sesion_model_instances: Callable,
+    create_session_model_instances: Callable,
     mock_user_has_sufficient_balance: Callable,
     delete_result_model_instances: Callable,
     delete_transcation_model_instances: Callable,
@@ -218,7 +218,7 @@ def test_create_session_deducts_from_user_wallet_balance(
 def test_create_session_fails_for_insufficient_wallet_balance(
     db: Session,
     create_super_user_instance: Callable,
-    create_sesion_model_instances: Callable,
+    create_session_model_instances: Callable,
     delete_result_model_instances: Callable,
     delete_transcation_model_instances: Callable,
 ):
