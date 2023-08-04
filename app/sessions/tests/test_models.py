@@ -3,15 +3,60 @@ from typing import Callable
 import pytest
 
 from app.commons.constants import Categories
-from app.sessions.daos.session import session_dao, duo_session_dao
+from app.sessions.daos.session import (
+    session_dao,
+    duo_session_dao,
+    user_session_stats_dao,
+)
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
 from app.sessions.serializers.session import (
     SessionCreateSerializer,
     DuoSessionCreateSerializer,
     DuoSessionUpdateSerializer,
+    UserSessionStatsCreateSerializer,
+    UserSessionStatsUpdateSerializer,
 )
 from app.core.config import settings
+
+
+def test_create_user_session_stats_instance(
+    db: Session,
+    create_super_user_instance: Callable,
+) -> None:
+    """Test UserSessionStats instance can be created in model"""
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    user_session_stats_in = UserSessionStatsCreateSerializer(user_id=user.id)
+
+    user_session_stats = user_session_stats_dao.get_or_create(
+        db, obj_in=user_session_stats_in
+    )
+
+    assert user_session_stats.total_wins == 0
+    assert user_session_stats.total_losses == 0
+    assert user_session_stats.sessions_played == 0
+
+
+def test_update_user_session_stats_instance(
+    db: Session,
+    create_super_user_instance: Callable,
+) -> None:
+    """Test UserSessionStats instance can be created in model"""
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    user_session_stats_obj = user_session_stats_dao.get_or_create(
+        db, obj_in=UserSessionStatsCreateSerializer(user_id=user.id)
+    )
+    user_session_stats_in = UserSessionStatsUpdateSerializer(
+        user_id=user.id, sessions_played=1, total_wins=1
+    )
+
+    user_session_stats_obj = user_session_stats_dao.update(
+        db, db_obj=user_session_stats_obj, obj_in=user_session_stats_in
+    )
+
+    assert user_session_stats_obj.total_wins == 1
+    assert user_session_stats_obj.total_losses == 0
+    assert user_session_stats_obj.sessions_played == 1
 
 
 def test_create_session_instance(db: Session) -> None:

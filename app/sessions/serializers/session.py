@@ -43,3 +43,17 @@ class DuoSessionUpdateSerializer(DuoSessionBaseSerializer):
     party_b: str | None
     status: bool | None
     winner_id: str | None
+
+
+class UserSessionStatsBaseSerializer(BaseModel):
+    user_id: str
+
+
+class UserSessionStatsCreateSerializer(UserSessionStatsBaseSerializer):
+    pass
+
+
+class UserSessionStatsUpdateSerializer(UserSessionStatsBaseSerializer):
+    sessions_played: int
+    total_wins: int | None = 0
+    total_losess: int | None = 0

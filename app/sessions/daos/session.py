@@ -1,17 +1,58 @@
+from typing import Any, Union
 from sqlalchemy.orm import Session
 
 from app.exceptions.custom import DuoSessionFailedOnUpdate
-from app.db.dao import CRUDDao
+from app.db.dao import CRUDDao, DaoInterface
 from app.core.helpers import convert_list_to_string
 from app.core.config import settings
 from app.exceptions.custom import QuestionExistsInASession, FewQuestionsInSession
-from app.sessions.models import Sessions, DuoSession
+from app.sessions.models import Sessions, DuoSession, UserSessionStats
 from app.sessions.serializers.session import (
     SessionCreateSerializer,
     SessionUpdateSerializer,
     DuoSessionCreateSerializer,
     DuoSessionUpdateSerializer,
+    UserSessionStatsBaseSerializer,
+    UserSessionStatsCreateSerializer,
+    UserSessionStatsUpdateSerializer,
 )
+
+
+class UserSessionStatsDao(
+    CRUDDao[
+        UserSessionStats,
+        UserSessionStatsCreateSerializer,
+        UserSessionStatsUpdateSerializer,
+    ]
+):
+    def update(
+        self: Any | DaoInterface,
+        db: Session,
+        *,
+        db_obj: UserSessionStats,
+        obj_in: UserSessionStatsUpdateSerializer,
+    ) -> UserSessionStats:
+        obj_in.total_wins += db_obj.total_wins
+        obj_in.total_losess += db_obj.total_losses
+        obj_in.sessions_played += db_obj.sessions_played
+
+        return super().update(db, db_obj=db_obj, obj_in=obj_in)
+
+    def get_or_create(
+        self,
+        db: Session,
+        obj_in: Union[UserSessionStatsBaseSerializer, UserSessionStatsCreateSerializer],
+    ) -> UserSessionStats:
+        """Get or create a UserSessionStats"""
+        user_session_stats_in = self.get(db, user_id=obj_in.user_id)
+        if not user_session_stats_in:
+            user_session_stats_data = UserSessionStatsCreateSerializer(**obj_in.dict())
+            user_session_stats_in = self.create(db, obj_in=user_session_stats_data)
+
+        return user_session_stats_in
+
+
+user_session_stats_dao = UserSessionStatsDao(UserSessionStats)
 
 
 class DuoSessionDao(
