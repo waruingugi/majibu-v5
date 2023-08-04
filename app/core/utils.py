@@ -114,3 +114,15 @@ class PairUsers:
                 right_node=self.ordered_scores_list[closest_right_index],
                 left_node=self.ordered_scores_list[closest_left_index],
             )
+
+
+# Right, left
+# if right == left (distance): use winloss ratio
+# if right <= left or left >= right pair and EWMA
+# if right only and not equal self and EWMA pair
+# If left only and not equal to self and EWMA pair
+# if right only and not EWMA refund
+# if left only and not EWMA refund
+
+# Create table, user_id, no_of_wins, no_of_losses, total_games
+# Create table, total_users, EWMA
