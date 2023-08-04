@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
 
-class ClosestIndexToScoreSerializer(BaseModel):
-    right_index: int | None = None
-    left_index: int | None = None
+class ClosestNodeSerializer(BaseModel):
+    right_node: tuple | None = None
+    left_node: tuple | None = None
