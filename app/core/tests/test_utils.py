@@ -121,3 +121,36 @@ def test_find_closest_node_returns_correct_node_siblings(mocker: MockerFixture) 
 
         if closest_nodes.left_node is not None:
             assert closest_nodes.left_node[1].score <= target_score
+
+
+def test_calculate_mean_pairwise_difference_returns_correct_values(
+    mocker: MockerFixture,
+) -> None:
+    """Assert that the function returns correct mean pair-wise diff. based on the length of the list"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+
+    pair_users = PairUsers()
+    node_args = {
+        "user_id": None,
+        "session_id": None,
+        "score": None,
+        "is_active": True,
+        "expires_at": datetime.now(),
+    }
+    one_node = [(70, Node(**node_args))]
+    two_nodes = [(70, Node(**node_args)), (72, Node(**node_args))]
+    four_nodes = [
+        (70, Node(**node_args)),
+        (72, Node(**node_args)),
+        (78, Node(**node_args)),
+        (84, Node(**node_args)),
+    ]
+
+    pair_users.ordered_scores_list = one_node
+    assert pair_users.calculate_mean_pairwise_difference() is None
+
+    pair_users.ordered_scores_list = two_nodes
+    assert pair_users.calculate_mean_pairwise_difference() == 2
+
+    pair_users.ordered_scores_list = four_nodes
+    assert pair_users.calculate_mean_pairwise_difference() == 4.666666666666667

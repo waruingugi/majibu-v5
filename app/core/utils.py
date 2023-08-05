@@ -115,6 +115,20 @@ class PairUsers:
                 left_node=self.ordered_scores_list[closest_left_index],
             )
 
+    def calculate_mean_pairwise_difference(self):
+        """Calculate the mean difference between consecutive scores"""
+        if len(self.ordered_scores_list) > 1:
+            differences = [
+                abs(self.ordered_scores_list[i][0] - self.ordered_scores_list[i + 1][0])
+                for i in range(len(self.ordered_scores_list) - 1)
+            ]
+
+            # Calculate the mean of the pair-wise differences
+            mean_pair_wise_difference = sum(differences) / len(differences)
+            return mean_pair_wise_difference
+
+        return None
+
 
 # Right, left
 # if right == left (distance): use winloss ratio
@@ -125,4 +139,6 @@ class PairUsers:
 # if left only and not EWMA refund
 
 # Create table, user_id, no_of_wins, no_of_losses, total_games
-# Create table, total_users, EWMA
+# Create table, total_users, EWMA, avg_pair_wise_diff, threshold
+# Mean pairwise difference if less than 2
+# Mean pairwise difference if 1 or 0

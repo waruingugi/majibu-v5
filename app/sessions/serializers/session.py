@@ -54,6 +54,6 @@ class UserSessionStatsCreateSerializer(UserSessionStatsBaseSerializer):
 
 
 class UserSessionStatsUpdateSerializer(UserSessionStatsBaseSerializer):
-    sessions_played: int
+    sessions_played: int | None = 0
     total_wins: int | None = 0
     total_losess: int | None = 0

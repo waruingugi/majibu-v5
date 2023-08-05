@@ -24,10 +24,18 @@ from app.accounts.constants import (
 from app.accounts.serializers.account import TransactionCreateSerializer
 
 from app.quiz.daos.quiz import result_dao
+from app.sessions.serializers.session import (
+    UserSessionStatsCreateSerializer,
+    UserSessionStatsUpdateSerializer,
+)
 from app.quiz.serializers.quiz import ResultCreateSerializer
 from app.sessions.filters import DuoSessionFilter, SessionFilter
 from app.sessions.constants import DuoSessionStatuses
-from app.sessions.daos.session import duo_session_dao, session_dao
+from app.sessions.daos.session import (
+    duo_session_dao,
+    session_dao,
+    user_session_stats_dao,
+)
 
 from app.quiz.models import Results
 from app.exceptions.custom import (
@@ -160,6 +168,16 @@ def create_session(db: Session, *, user: User, session_id: str) -> str | None:
                 fee=0.0,  # No fee for session withdrawals
                 tax=0.0,  # No tax for session withdrawals
             ),
+        )
+
+        # Update the number of sessions has played by one
+        user_session_stats_obj = user_session_stats_dao.get_or_create(
+            db, UserSessionStatsCreateSerializer(user_id=user.id)
+        )
+        user_session_stats_dao.update(
+            db,
+            db_obj=user_session_stats_obj,
+            obj_in=UserSessionStatsUpdateSerializer(user_id=user.id, sessions_played=1),
         )
 
         # Create the result instance
