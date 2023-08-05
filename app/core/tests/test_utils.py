@@ -154,3 +154,31 @@ def test_calculate_mean_pairwise_difference_returns_correct_values(
 
     pair_users.ordered_scores_list = four_nodes
     assert pair_users.calculate_mean_pairwise_difference() == 4.666666666666667
+
+
+def test_calculate_average_score_returns_correct_value(
+    mocker: MockerFixture,
+) -> None:
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+    pair_users = PairUsers()
+    node_args = {
+        "user_id": None,
+        "session_id": None,
+        "score": None,
+        "is_active": True,
+        "expires_at": datetime.now(),
+    }
+
+    no_nodes = []
+    four_nodes = [
+        (70, Node(**node_args)),
+        (72, Node(**node_args)),
+        (78, Node(**node_args)),
+        (84, Node(**node_args)),
+    ]
+
+    pair_users.ordered_scores_list = no_nodes
+    assert pair_users.calculate_average_score() is None
+
+    pair_users.ordered_scores_list = four_nodes
+    assert pair_users.calculate_average_score() == 76

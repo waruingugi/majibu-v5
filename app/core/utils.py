@@ -129,6 +129,14 @@ class PairUsers:
 
         return None
 
+    def calculate_average_score(self):
+        if not self.ordered_scores_list:
+            return None  # Return None for an empty list
+
+        total_score = sum(score for score, _ in self.ordered_scores_list)
+        average_score = total_score / len(self.ordered_scores_list)
+        return average_score
+
 
 # Right, left
 # if right == left (distance): use winloss ratio
@@ -139,6 +147,6 @@ class PairUsers:
 # if left only and not EWMA refund
 
 # Create table, user_id, no_of_wins, no_of_losses, total_games
-# Create table, total_users, EWMA, avg_pair_wise_diff, threshold
+# Create table, total_users, EWMA, pair_wise_diff, threshold, AVG
 # Mean pairwise difference if less than 2
 # Mean pairwise difference if 1 or 0
