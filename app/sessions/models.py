@@ -17,6 +17,26 @@ class UserSessionStats(Base):
     sessions_played = mapped_column(Integer, default=0)
 
 
+class PoolSessionStats(Base):
+    """Pool Session Statistics model"""
+
+    total_users = mapped_column(Integer, nullable=True, default=0)
+    mean_pairwise_difference = mapped_column(
+        Float, nullable=True, comment="Mean pairwise difference of the pool"
+    )
+    threshold = mapped_column(
+        Float,
+        nullable=True,
+        comment="The max. percentage of people who will be paired from the pool",
+    )
+    average_score = mapped_column(
+        Float, nullable=True, comment="The average of scores in the pool"
+    )
+    exp_weighted_moving_average = mapped_column(
+        Float, nullable=True, comment="The exponential moving average of the pool"
+    )
+
+
 class Sessions(Base):
     """Session model"""
 
