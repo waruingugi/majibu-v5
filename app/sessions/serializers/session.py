@@ -57,3 +57,19 @@ class UserSessionStatsUpdateSerializer(UserSessionStatsBaseSerializer):
     sessions_played: int | None = 0
     total_wins: int | None = 0
     total_losess: int | None = 0
+
+
+class PoolSessionStatsBaseSerializer(BaseModel):
+    total_users: int | None = 0
+    average_score: float | None = None
+    threshold: float = settings.PAIRING_THRESHOLD
+    mean_pairwise_difference: float | None = None
+    exp_weighted_moving_average: float | None = None
+
+
+class PoolSessionStatsCreateSerializer(PoolSessionStatsBaseSerializer):
+    pass
+
+
+class PoolSessionStatsUpdateSerializer(PoolSessionStatsBaseSerializer):
+    pass

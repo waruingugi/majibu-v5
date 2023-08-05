@@ -6,7 +6,12 @@ from app.db.dao import CRUDDao, DaoInterface
 from app.core.helpers import convert_list_to_string
 from app.core.config import settings
 from app.exceptions.custom import QuestionExistsInASession, FewQuestionsInSession
-from app.sessions.models import Sessions, DuoSession, UserSessionStats
+from app.sessions.models import (
+    Sessions,
+    DuoSession,
+    UserSessionStats,
+    PoolSessionStats,
+)
 from app.sessions.serializers.session import (
     SessionCreateSerializer,
     SessionUpdateSerializer,
@@ -15,7 +20,22 @@ from app.sessions.serializers.session import (
     UserSessionStatsBaseSerializer,
     UserSessionStatsCreateSerializer,
     UserSessionStatsUpdateSerializer,
+    PoolSessionStatsCreateSerializer,
+    PoolSessionStatsUpdateSerializer,
 )
+
+
+class PoolSessionStatsDao(
+    CRUDDao[
+        PoolSessionStats,
+        PoolSessionStatsCreateSerializer,
+        PoolSessionStatsUpdateSerializer,
+    ]
+):
+    pass
+
+
+pool_session_stats_dao = PoolSessionStatsDao(PoolSessionStats)
 
 
 class UserSessionStatsDao(
