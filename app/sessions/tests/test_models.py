@@ -7,6 +7,7 @@ from app.sessions.daos.session import (
     session_dao,
     duo_session_dao,
     user_session_stats_dao,
+    pool_session_stats_dao,
 )
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
@@ -16,8 +17,26 @@ from app.sessions.serializers.session import (
     DuoSessionUpdateSerializer,
     UserSessionStatsCreateSerializer,
     UserSessionStatsUpdateSerializer,
+    PoolSessionStatsCreateSerializer,
 )
 from app.core.config import settings
+
+
+def test_create_pool_session_stats_instance(db: Session) -> None:
+    """Assert PoolSessionStats instance can be created in the model"""
+    pool_session_stats = pool_session_stats_dao.create(
+        db,
+        obj_in=PoolSessionStatsCreateSerializer(
+            total_players=2,
+            average_score=72,
+            mean_pairwise_difference=2,
+            exp_weighted_moving_average=2,
+        ),
+    )
+
+    assert pool_session_stats.total_players == 2
+    assert pool_session_stats.average_score == 72
+    assert pool_session_stats.threshold == settings.PAIRING_THRESHOLD
 
 
 def test_create_user_session_stats_instance(

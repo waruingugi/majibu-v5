@@ -5,10 +5,19 @@ import random
 from typing import Callable
 from pytest_mock import MockerFixture
 from datetime import datetime, timedelta
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.utils import PairUsers, Node
 from app.core.logger import logger
+from app.core.tests.test_data import (
+    no_nodes,
+    one_node,
+    two_nodes,
+    four_nodes,
+)
+from app.sessions.daos.session import pool_session_stats_dao
+from app.sessions.serializers.session import PoolSessionStatsCreateSerializer
 
 
 def test_create_nodes_returns_correct_ordered_score_list(
@@ -128,23 +137,7 @@ def test_calculate_mean_pairwise_difference_returns_correct_values(
 ) -> None:
     """Assert that the function returns correct mean pair-wise diff. based on the length of the list"""
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
-
     pair_users = PairUsers()
-    node_args = {
-        "user_id": None,
-        "session_id": None,
-        "score": None,
-        "is_active": True,
-        "expires_at": datetime.now(),
-    }
-    one_node = [(70, Node(**node_args))]
-    two_nodes = [(70, Node(**node_args)), (72, Node(**node_args))]
-    four_nodes = [
-        (70, Node(**node_args)),
-        (72, Node(**node_args)),
-        (78, Node(**node_args)),
-        (84, Node(**node_args)),
-    ]
 
     pair_users.ordered_scores_list = one_node
     assert pair_users.calculate_mean_pairwise_difference() is None
@@ -159,26 +152,52 @@ def test_calculate_mean_pairwise_difference_returns_correct_values(
 def test_calculate_average_score_returns_correct_value(
     mocker: MockerFixture,
 ) -> None:
+    """Assert that the func returns correct values"""
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
     pair_users = PairUsers()
-    node_args = {
-        "user_id": None,
-        "session_id": None,
-        "score": None,
-        "is_active": True,
-        "expires_at": datetime.now(),
-    }
-
-    no_nodes = []
-    four_nodes = [
-        (70, Node(**node_args)),
-        (72, Node(**node_args)),
-        (78, Node(**node_args)),
-        (84, Node(**node_args)),
-    ]
 
     pair_users.ordered_scores_list = no_nodes
     assert pair_users.calculate_average_score() is None
 
     pair_users.ordered_scores_list = four_nodes
     assert pair_users.calculate_average_score() == 76
+
+
+def test_calculate_exp_weighted_moving_average_returns_average(
+    db: Session,
+    mocker: MockerFixture,
+) -> None:
+    """Assert the function returns avrage score if there's no previous EWMA"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+    pair_users = PairUsers()
+
+    pair_users.ordered_scores_list = four_nodes
+    assert pair_users.calculate_exp_weighted_moving_average() == 76
+
+    pair_users.ordered_scores_list = no_nodes
+    assert pair_users.calculate_exp_weighted_moving_average() == 0
+
+
+def test_calculate_exp_weighted_moving_average_returns_correct_ewma(
+    db: Session,
+    mocker: MockerFixture,
+) -> None:
+    """Assert the function returns correct exponentially moving weighted average"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+    pool_session_stats_dao.create(
+        db,
+        obj_in=PoolSessionStatsCreateSerializer(
+            total_players=2,
+            average_score=72,
+            mean_pairwise_difference=2,
+            exp_weighted_moving_average=72,
+        ),
+    )
+    pair_users = PairUsers()
+
+    pair_users.ordered_scores_list = four_nodes
+    new_ewma = (settings.EWMA_MIXING_PARAMETER * 76) + (
+        1 - settings.EWMA_MIXING_PARAMETER
+    ) * 72
+
+    assert pair_users.calculate_exp_weighted_moving_average() == new_ewma

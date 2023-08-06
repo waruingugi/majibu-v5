@@ -20,7 +20,7 @@ class UserSessionStats(Base):
 class PoolSessionStats(Base):
     """Pool Session Statistics model"""
 
-    total_users = mapped_column(Integer, nullable=True, default=0)
+    total_players = mapped_column(Integer, nullable=True, default=0)
     mean_pairwise_difference = mapped_column(
         Float, nullable=True, comment="Mean pairwise difference of the pool"
     )

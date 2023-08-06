@@ -60,9 +60,9 @@ class UserSessionStatsUpdateSerializer(UserSessionStatsBaseSerializer):
 
 
 class PoolSessionStatsBaseSerializer(BaseModel):
-    total_users: int | None = 0
+    total_players: int | None = 0
     average_score: float | None = None
-    threshold: float = settings.PAIRING_THRESHOLD
+    threshold: float | None = settings.PAIRING_THRESHOLD
     mean_pairwise_difference: float | None = None
     exp_weighted_moving_average: float | None = None
 
