@@ -67,26 +67,51 @@ class PairUsers:
                 self.ordered_scores_list.insert(index, (result_in.score, result_node))
                 heapq.heappush(self.results_queue, result_node)
 
-    def find_closest_node(self, score) -> ClosestNodeSerializer:
+    def find_closest_node(self, node: Node) -> ClosestNodeSerializer:
         """Find the closest nodes to a given score.
         Note: The elf.ordered_scores_list is never an empty list because the score being
         searched for, needs to exist inside the list too
         """
+
+        def closest_node(index):
+            """Return Node or None if there is no node"""
+            return self.ordered_scores_list[index] if index else None
+
         # Put two recursive functions inside so that we don't have to pass score as an argument again
         def get_closest_index_to_the_right(index):
             """Recursion to find closest node to the right"""
             if (
-                index + 1 == len(self.ordered_scores_list)
-                or self.ordered_scores_list[index][0] != score
-            ):
+                (self.ordered_scores_list[index][0] != score)  # If greater than score
+                or (
+                    index + 1 == len(self.ordered_scores_list)
+                )  # Or node is the last elem in list
+            ) and (  # And the session_id is the same...
+                self.ordered_scores_list[index][1].session_id == session_id
+            ):  # The a valid pair partner exists
                 return index
+
+            if index + 1 == len(self.ordered_scores_list):
+                return None
+
             return get_closest_index_to_the_right(index + 1)
 
         def get_closest_index_to_the_left(index):
             """Recursion to find closest node to the left"""
-            if index - 1 == 0 or self.ordered_scores_list[index - 1][0] != score:
+            if (
+                (self.ordered_scores_list[index - 1][0] != score)  # If less than score
+                or (index - 1 == 0)  # Or node is the first element in list
+            ) and (  # And the session_id is the same...
+                self.ordered_scores_list[index - 1][1].session_id == session_id
+            ):  # The a valid pair partner exists
                 return index - 1
+
+            if index - 1 == 0:
+                return None
+
             return get_closest_index_to_the_left(index - 1)
+
+        score = node.score
+        session_id = node.session_id
 
         # Use bisect_left & bisect_right to find the optimal insertion points
         left_index = bisect.bisect_left(self.ordered_scores_list, (score,))
@@ -96,27 +121,29 @@ class PairUsers:
             """If the score index is at the beginning of the list,
             Then the closest node is always to the right."""
             closest_right_index = get_closest_index_to_the_right(left_index)
-            return ClosestNodeSerializer(
-                right_node=self.ordered_scores_list[closest_right_index]
-            )
+            closest_right_node = closest_node(closest_right_index)
+            return ClosestNodeSerializer(right_node=closest_right_node)
 
         elif right_index == len(self.ordered_scores_list):
             """If the index of the score is at the end of the list,
             Then the closest node is always to the left."""
             closest_left_index = get_closest_index_to_the_left(left_index)
-            return ClosestNodeSerializer(
-                left_node=self.ordered_scores_list[closest_left_index]
-            )
+            closest_left_node = closest_node(closest_left_index)
+
+            return ClosestNodeSerializer(left_node=closest_left_node)
 
         else:
             """If the index of the score is somewhere in the middle,
             then find closest nodes both to the left and right."""
             closest_right_index = get_closest_index_to_the_right(right_index)
+            closest_right_node = closest_node(closest_right_index)
+
             closest_left_index = get_closest_index_to_the_left(left_index)
+            closest_left_node = closest_node(closest_left_index)
 
             return ClosestNodeSerializer(
-                right_node=self.ordered_scores_list[closest_right_index],
-                left_node=self.ordered_scores_list[closest_left_index],
+                right_node=closest_right_node,
+                left_node=closest_left_node,
             )
 
     def calculate_mean_pairwise_difference(self):
@@ -160,6 +187,15 @@ class PairUsers:
 
         return avg_score
 
+    def create_duo_session(self):
+        first_node = self.results_queue[0]
+
+        time_to_expiry = datetime.now() - first_node.expires_at
+
+        if time_to_expiry.seconds <= settings.RESULT_EXPIRES_AT_BUFFER_TIME:
+            for node in self.results_queue:
+                pass
+
 
 # Right, left
 # if right == left (distance): use winloss ratio
@@ -169,5 +205,27 @@ class PairUsers:
 # if right only and not EWMA refund
 # if left only and not EWMA refund
 
-# Get previous EWMA, if not set as average score
-# If true, calculate ewma
+# calculate ewma
+# if queue > 1, save ewma to model
+# Start pairing
+
+# Only node:
+# Two nodes: one not similar session id
+# Two nodes: one is similar session id
+# Three nodes: two have similar session id
+# [75:x]
+# [75:x, 75:x] -y
+# [75:x, 75:y] - y
+# [75:x, 75:x, 75:y] - y
+# [75:x, 75:x, 75:x] - y
+# [75:x, 75:y, 75:y] - y
+# [75:x, 75:y, 75:y] - y
+# [75:x, 75:x, 76:x] - ys
+# [75:x, 75:y, 76:x] - ys
+# [75:x, 75:y, 75:y] - y
+# [75:x, 76:y, 76:y] - y
+# [75:x, 76:x, 76:x] - ys
+# if last_index return index and session_id == session_id
+# if index score != score and session_id == session_id
+# if last_index and index score != score and session_id == session_id: return index
+# if last_index: return none

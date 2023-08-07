@@ -7,6 +7,7 @@ from pytest_mock import MockerFixture
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
+from app.commons.utils import generate_uuid
 from app.core.config import settings
 from app.core.utils import PairUsers, Node
 from app.core.logger import logger
@@ -70,11 +71,22 @@ def test_create_nodes_returns_empty_list_and_queue(
 
 def test_find_closest_node_returns_correct_node_siblings(mocker: MockerFixture) -> None:
     """Assert that the nodes closest to a given score, are indeed the closest/correct nodes."""
-    logger.info("Starting computationally expensive test. This may take a minute...")
+    logger.warning("Starting computationally expensive test. This may take a minute...")
 
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
     target_score = random.randint(
         int(settings.MODERATED_LOWEST_SCORE), int(settings.MODERATED_HIGHEST_SCORE)
+    )
+    session_ids = [
+        generate_uuid() for _ in range(5)
+    ]  # 5 is just a random low int to ensure
+    # some results nodes at least have the same session
+    target_node = Node(
+        user_id=None,
+        session_id=random.choice(session_ids),
+        score=target_score,
+        expires_at=datetime.now(),
+        is_active=True,
     )
 
     def generate_combinations():
@@ -103,7 +115,7 @@ def test_find_closest_node_returns_correct_node_siblings(mocker: MockerFixture) 
                         num,
                         Node(
                             user_id=None,
-                            session_id=None,
+                            session_id=random.choice(session_ids),
                             score=num,
                             expires_at=datetime.now(),
                             is_active=True,
@@ -117,19 +129,21 @@ def test_find_closest_node_returns_correct_node_siblings(mocker: MockerFixture) 
                 yield result_list
 
     all_combinations = list(generate_combinations())
-    logger.info(f"Testing {len(all_combinations)} combinations")
+    logger.warning(f"Testing {len(all_combinations)} combinations")
 
     for combination in all_combinations:
         pair_users = PairUsers()
         pair_users.ordered_scores_list = combination
 
-        closest_nodes = pair_users.find_closest_node(target_score)
+        closest_nodes = pair_users.find_closest_node(target_node)
 
         if closest_nodes.right_node is not None:
             assert closest_nodes.right_node[1].score >= target_score
+            assert closest_nodes.right_node[1].session_id == target_node.session_id
 
         if closest_nodes.left_node is not None:
             assert closest_nodes.left_node[1].score <= target_score
+            assert closest_nodes.left_node[1].session_id == target_node.session_id
 
 
 def test_calculate_mean_pairwise_difference_returns_correct_values(

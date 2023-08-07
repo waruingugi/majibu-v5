@@ -70,6 +70,7 @@ def test_query_sessions_played_returns_correct_list(
     create_super_user_instance: Callable,
     create_user_model_instances: Callable,
     create_session_model_instances: Callable,
+    delete_result_model_instances: Callable,
     mock_user_has_sufficient_balance: Callable,
 ) -> None:
     """Test that the class function query_sessions_played returns correct list of session ids"""
