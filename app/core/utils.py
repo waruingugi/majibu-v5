@@ -6,7 +6,7 @@ from app.db.session import SessionLocal
 from app.quiz.daos.quiz import result_dao
 from app.sessions.daos.session import pool_session_stats_dao
 from app.quiz.serializers.quiz import ResultNodeSerializer
-from app.core.serializers.core import ClosestNodeSerializer
+from app.core.serializers.core import ClosestNodeSerializer, PairPartnersSerializer
 from app.core.config import settings
 from app.core.logger import logger
 
@@ -67,7 +67,7 @@ class PairUsers:
                 self.ordered_scores_list.insert(index, (result_in.score, result_node))
                 heapq.heappush(self.results_queue, result_node)
 
-    def find_closest_node(self, node: Node) -> ClosestNodeSerializer:
+    def get_closest_nodes(self, node: Node) -> ClosestNodeSerializer:
         """Find the closest nodes to a given score.
         Note: The elf.ordered_scores_list is never an empty list because the score being
         searched for, needs to exist inside the list too
@@ -169,7 +169,7 @@ class PairUsers:
         average_score = total_score / len(self.ordered_scores_list)
         return average_score
 
-    def calculate_exp_weighted_moving_average(self):
+    def calculate_exp_weighted_moving_average(self) -> float:
         """Calculate the exponentially moving average"""
         avg_score = self.calculate_average_score() or 0
 
@@ -187,6 +187,11 @@ class PairUsers:
 
         return avg_score
 
+    def score_is_in_pairing_range(self, target_score, partner_score):
+        if self.pairing_range <= abs(target_score - partner_score):
+            return True
+        return False
+
     def create_duo_session(self):
         first_node = self.results_queue[0]
 
@@ -194,7 +199,47 @@ class PairUsers:
 
         if time_to_expiry.seconds <= settings.RESULT_EXPIRES_AT_BUFFER_TIME:
             for node in self.results_queue:
-                pass
+                closest_nodes = self.get_closest_nodes(node)
+                pair_partners = PairPartnersSerializer(party_a=node)
+
+                right_node = closest_nodes.right_node
+                right_node_dist = (
+                    abs(node.score - right_node[1].score)
+                    if right_node
+                    else float("inf")
+                )
+
+                left_node = closest_nodes.left_node
+                left_node_dist = (
+                    abs(node.score - left_node[1].score) if left_node else float("inf")
+                )
+
+                # ------
+                if (
+                    left_node_dist == right_node_dist
+                    and left_node_dist != float("inf")
+                    and right_node_dist != float("inf")
+                ):
+                    # Use win-loss ratio here
+                    pass
+
+                elif left_node_dist < right_node_dist:
+                    pair_partners.party_b = left_node
+
+                elif right_node_dist < left_node_dist:
+                    pair_partners.party_b = right_node
+
+                else:
+                    # set no partner, which means refund
+                    pass
+
+                #     # use win-loss ration and not inf for both
+                # if left_node_distance < right_node_distance:
+                #     # attempt pair(with ewma) for both nodes, preferred partner
+                # if right_node_distance > left_node_distance:
+                #     # attempt pair with right node and within ewma
+                # else:
+                #     # refund
 
 
 # Right, left
@@ -209,23 +254,7 @@ class PairUsers:
 # if queue > 1, save ewma to model
 # Start pairing
 
-# Only node:
-# Two nodes: one not similar session id
-# Two nodes: one is similar session id
-# Three nodes: two have similar session id
-# [75:x]
-# [75:x, 75:x] -y
-# [75:x, 75:y] - y
-# [75:x, 75:x, 75:y] - y
-# [75:x, 75:x, 75:x] - y
-# [75:x, 75:y, 75:y] - y
-# [75:x, 75:y, 75:y] - y
-# [75:x, 75:x, 76:x] - ys
-# [75:x, 75:y, 76:x] - ys
-# [75:x, 75:y, 75:y] - y
-# [75:x, 76:y, 76:y] - y
-# [75:x, 76:x, 76:x] - ys
-# if last_index return index and session_id == session_id
-# if index score != score and session_id == session_id
-# if last_index and index score != score and session_id == session_id: return index
-# if last_index: return none
+# rx and lx
+# ry and lx
+# ry and ly
+# rx and ly

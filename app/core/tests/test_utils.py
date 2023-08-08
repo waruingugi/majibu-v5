@@ -69,7 +69,7 @@ def test_create_nodes_returns_empty_list_and_queue(
     assert len(ordered_score_list) == 0
 
 
-def test_find_closest_node_returns_correct_node_siblings(mocker: MockerFixture) -> None:
+def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) -> None:
     """Assert that the nodes closest to a given score, are indeed the closest/correct nodes."""
     logger.warning("Starting computationally expensive test. This may take a minute...")
 
@@ -135,7 +135,7 @@ def test_find_closest_node_returns_correct_node_siblings(mocker: MockerFixture) 
         pair_users = PairUsers()
         pair_users.ordered_scores_list = combination
 
-        closest_nodes = pair_users.find_closest_node(target_node)
+        closest_nodes = pair_users.get_closest_nodes(target_node)
 
         if closest_nodes.right_node is not None:
             assert closest_nodes.right_node[1].score >= target_score
