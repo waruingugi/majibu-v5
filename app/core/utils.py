@@ -4,7 +4,8 @@ import heapq
 
 from app.db.session import SessionLocal
 from app.quiz.daos.quiz import result_dao
-from app.sessions.daos.session import pool_session_stats_dao
+from app.sessions.daos.session import pool_session_stats_dao, user_session_stats_dao
+from app.sessions.serializers.session import UserSessionStatsCreateSerializer
 from app.quiz.serializers.quiz import ResultNodeSerializer
 from app.core.serializers.core import ClosestNodeSerializer, PairPartnersSerializer
 from app.core.config import settings
@@ -12,13 +13,16 @@ from app.core.logger import logger
 
 
 class Node:
-    def __init__(self, *, user_id, session_id, score, expires_at, is_active) -> None:
+    def __init__(
+        self, *, user_id, session_id, score, expires_at, is_active, win_ratio
+    ) -> None:
         """Represent each result model instance as a node"""
         self.user_id = user_id
         self.session_id = session_id
         self.score = score
         self.expires_at = expires_at
         self.is_active = is_active
+        self.win_ratio = win_ratio
 
     def __lt__(self, other_node) -> bool:
         """Heapq module uses this method to order nodes based on their expiry time.
@@ -31,9 +35,6 @@ class PairUsers:
         logger.info("Initializing PairUsers class...")
         self.ordered_scores_list = []
         self.results_queue = []
-
-        with SessionLocal() as db:
-            self.db = db
 
         self.create_nodes()
 
@@ -58,7 +59,14 @@ class PairUsers:
                 logger.info(f"Create a node for result: {result.id}")
                 result_in = ResultNodeSerializer(**result.__dict__)
 
-                result_node = Node(**result_in.dict())
+                user_session_stats_obj = user_session_stats_dao.get_or_create(
+                    db,
+                    obj_in=UserSessionStatsCreateSerializer(user_id=result_in.user_id),
+                )
+                result_node = Node(
+                    **result_in.dict(), win_ratio=user_session_stats_obj.win_ratio
+                )
+
                 # Insert the node into the sorted list based on the score
                 index = bisect.bisect_right(
                     self.ordered_scores_list, (result_in.score,)
@@ -187,11 +195,6 @@ class PairUsers:
 
         return avg_score
 
-    def score_is_in_pairing_range(self, target_score, partner_score):
-        if self.pairing_range <= abs(target_score - partner_score):
-            return True
-        return False
-
     def create_duo_session(self):
         first_node = self.results_queue[0]
 
@@ -250,11 +253,8 @@ class PairUsers:
 # if right only and not EWMA refund
 # if left only and not EWMA refund
 
+# Set win-loss ratio in Nodes
+# If win-loss ration is same, choose random
 # calculate ewma
 # if queue > 1, save ewma to model
 # Start pairing
-
-# rx and lx
-# ry and lx
-# ry and ly
-# rx and ly

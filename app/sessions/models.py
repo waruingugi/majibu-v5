@@ -16,6 +16,12 @@ class UserSessionStats(Base):
     total_losses = mapped_column(Integer, default=0)
     sessions_played = mapped_column(Integer, default=0)
 
+    @hybrid_property
+    def win_ratio(self) -> Float:
+        if self.sessions_played == 0:  # Avoids Zero DivisionError
+            return self.sessions_played
+        return self.total_wins / self.sessions_played
+
 
 class PoolSessionStats(Base):
     """Pool Session Statistics model"""
@@ -31,6 +37,14 @@ class PoolSessionStats(Base):
     )
     average_score = mapped_column(
         Float, nullable=True, comment="The average of scores in the pool"
+    )
+    pairing_range = mapped_column(
+        Float,
+        nullable=True,
+        comment=(
+            "A percentage of the EWMA. "
+            "Two results(or Result Nodes) are paired if their score distances is within 0 - pairing_range."
+        ),
     )
     exp_weighted_moving_average = mapped_column(
         Float, nullable=True, comment="The exponential moving average of the pool"

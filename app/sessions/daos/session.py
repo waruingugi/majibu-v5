@@ -1,8 +1,8 @@
-from typing import Any, Union
+from typing import Union
 from sqlalchemy.orm import Session
 
 from app.exceptions.custom import DuoSessionFailedOnUpdate
-from app.db.dao import CRUDDao, DaoInterface
+from app.db.dao import CRUDDao
 from app.core.helpers import convert_list_to_string
 from app.core.config import settings
 from app.exceptions.custom import QuestionExistsInASession, FewQuestionsInSession
@@ -32,7 +32,13 @@ class PoolSessionStatsDao(
         PoolSessionStatsUpdateSerializer,
     ]
 ):
-    pass
+    def on_pre_create(
+        self, db: Session, id: str, values: dict, orig_values: dict
+    ) -> None:
+        """Automatically compute the pairing_range field and set it to the model"""
+        values["pairing_range"] = (
+            values["exp_weighted_moving_average"] * settings.PAIRING_THRESHOLD
+        )
 
 
 pool_session_stats_dao = PoolSessionStatsDao(PoolSessionStats)
@@ -45,19 +51,6 @@ class UserSessionStatsDao(
         UserSessionStatsUpdateSerializer,
     ]
 ):
-    def update(
-        self: Any | DaoInterface,
-        db: Session,
-        *,
-        db_obj: UserSessionStats,
-        obj_in: UserSessionStatsUpdateSerializer,
-    ) -> UserSessionStats:
-        obj_in.total_wins += db_obj.total_wins
-        obj_in.total_losess += db_obj.total_losses
-        obj_in.sessions_played += db_obj.sessions_played
-
-        return super().update(db, db_obj=db_obj, obj_in=obj_in)
-
     def get_or_create(
         self,
         db: Session,

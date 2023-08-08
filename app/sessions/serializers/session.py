@@ -46,17 +46,17 @@ class DuoSessionUpdateSerializer(DuoSessionBaseSerializer):
 
 
 class UserSessionStatsBaseSerializer(BaseModel):
-    user_id: str
+    sessions_played: int | None = None
+    total_wins: int | None = None
+    total_losess: int | None = None
 
 
 class UserSessionStatsCreateSerializer(UserSessionStatsBaseSerializer):
-    pass
+    user_id: str
 
 
 class UserSessionStatsUpdateSerializer(UserSessionStatsBaseSerializer):
-    sessions_played: int | None = 0
-    total_wins: int | None = 0
-    total_losess: int | None = 0
+    pass
 
 
 class PoolSessionStatsBaseSerializer(BaseModel):

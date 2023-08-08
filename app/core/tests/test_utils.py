@@ -87,6 +87,7 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
         score=target_score,
         expires_at=datetime.now(),
         is_active=True,
+        win_ratio=0,
     )
 
     def generate_combinations():
@@ -119,6 +120,7 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
                             score=num,
                             expires_at=datetime.now(),
                             is_active=True,
+                            win_ratio=0,
                         ),
                     )
                     for num in combination

@@ -30,13 +30,14 @@ def test_create_pool_session_stats_instance(db: Session) -> None:
             total_players=2,
             average_score=72,
             mean_pairwise_difference=2,
-            exp_weighted_moving_average=2,
+            exp_weighted_moving_average=71,
         ),
     )
 
     assert pool_session_stats.total_players == 2
     assert pool_session_stats.average_score == 72
     assert pool_session_stats.threshold == settings.PAIRING_THRESHOLD
+    assert pool_session_stats.pairing_range == (settings.PAIRING_THRESHOLD * 71)
 
 
 def test_create_user_session_stats_instance(
@@ -66,7 +67,7 @@ def test_update_user_session_stats_instance(
         db, obj_in=UserSessionStatsCreateSerializer(user_id=user.id)
     )
     user_session_stats_in = UserSessionStatsUpdateSerializer(
-        user_id=user.id, sessions_played=1, total_wins=1
+        sessions_played=1, total_wins=1
     )
 
     user_session_stats_obj = user_session_stats_dao.update(
@@ -76,6 +77,7 @@ def test_update_user_session_stats_instance(
     assert user_session_stats_obj.total_wins == 1
     assert user_session_stats_obj.total_losses == 0
     assert user_session_stats_obj.sessions_played == 1
+    assert user_session_stats_obj.win_ratio == 1.0
 
 
 def test_create_session_instance(db: Session) -> None:

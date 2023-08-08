@@ -8,6 +8,7 @@ node_args = {
     "score": None,
     "is_active": True,
     "expires_at": datetime.now(),
+    "win_ratio": 0,
 }
 
 no_nodes = []
