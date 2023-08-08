@@ -4,30 +4,16 @@ import heapq
 
 from app.db.session import SessionLocal
 from app.quiz.daos.quiz import result_dao
+from app.quiz.serializers.quiz import ResultNodeSerializer
+from app.core.serializers.core import (
+    ResultNode,
+    ClosestNodeSerializer,
+    PairPartnersSerializer,
+)
 from app.sessions.daos.session import pool_session_stats_dao, user_session_stats_dao
 from app.sessions.serializers.session import UserSessionStatsCreateSerializer
-from app.quiz.serializers.quiz import ResultNodeSerializer
-from app.core.serializers.core import ClosestNodeSerializer, PairPartnersSerializer
 from app.core.config import settings
 from app.core.logger import logger
-
-
-class Node:
-    def __init__(
-        self, *, user_id, session_id, score, expires_at, is_active, win_ratio
-    ) -> None:
-        """Represent each result model instance as a node"""
-        self.user_id = user_id
-        self.session_id = session_id
-        self.score = score
-        self.expires_at = expires_at
-        self.is_active = is_active
-        self.win_ratio = win_ratio
-
-    def __lt__(self, other_node) -> bool:
-        """Heapq module uses this method to order nodes based on their expiry time.
-        In simple terms, it uses this method when building a FIFO queue"""
-        return self.expires_at < other_node.expires_at
 
 
 class PairUsers:
@@ -63,7 +49,7 @@ class PairUsers:
                     db,
                     obj_in=UserSessionStatsCreateSerializer(user_id=result_in.user_id),
                 )
-                result_node = Node(
+                result_node = ResultNode(
                     **result_in.dict(), win_ratio=user_session_stats_obj.win_ratio
                 )
 
@@ -75,15 +61,15 @@ class PairUsers:
                 self.ordered_scores_list.insert(index, (result_in.score, result_node))
                 heapq.heappush(self.results_queue, result_node)
 
-    def get_closest_nodes(self, node: Node) -> ClosestNodeSerializer:
+    def get_closest_nodes(self, node: ResultNode) -> ClosestNodeSerializer:
         """Find the closest nodes to a given score.
         Note: The elf.ordered_scores_list is never an empty list because the score being
         searched for, needs to exist inside the list too
         """
 
-        def closest_node(index):
+        def closest_node(index) -> ResultNode | None:
             """Return Node or None if there is no node"""
-            return self.ordered_scores_list[index] if index else None
+            return self.ordered_scores_list[index][1] if index else None
 
         # Put two recursive functions inside so that we don't have to pass score as an argument again
         def get_closest_index_to_the_right(index):
@@ -223,7 +209,7 @@ class PairUsers:
                     and left_node_dist != float("inf")
                     and right_node_dist != float("inf")
                 ):
-                    # Use win-loss ratio here
+                    # win-ratio
                     pass
 
                 elif left_node_dist < right_node_dist:

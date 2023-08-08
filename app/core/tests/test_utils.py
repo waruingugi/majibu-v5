@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.commons.utils import generate_uuid
 from app.core.config import settings
-from app.core.utils import PairUsers, Node
+from app.core.utils import PairUsers
+from app.core.serializers.core import ResultNode
 from app.core.logger import logger
 from app.core.tests.test_data import (
     no_nodes,
@@ -81,7 +82,7 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
         generate_uuid() for _ in range(5)
     ]  # 5 is just a random low int to ensure
     # some results nodes at least have the same session
-    target_node = Node(
+    target_node = ResultNode(
         user_id=None,
         session_id=random.choice(session_ids),
         score=target_score,
@@ -114,7 +115,7 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
                 result_list = [
                     (
                         num,
-                        Node(
+                        ResultNode(
                             user_id=None,
                             session_id=random.choice(session_ids),
                             score=num,
@@ -140,12 +141,12 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
         closest_nodes = pair_users.get_closest_nodes(target_node)
 
         if closest_nodes.right_node is not None:
-            assert closest_nodes.right_node[1].score >= target_score
-            assert closest_nodes.right_node[1].session_id == target_node.session_id
+            assert closest_nodes.right_node.score >= target_score
+            assert closest_nodes.right_node.session_id == target_node.session_id
 
         if closest_nodes.left_node is not None:
-            assert closest_nodes.left_node[1].score <= target_score
-            assert closest_nodes.left_node[1].session_id == target_node.session_id
+            assert closest_nodes.left_node.score <= target_score
+            assert closest_nodes.left_node.session_id == target_node.session_id
 
 
 def test_calculate_mean_pairwise_difference_returns_correct_values(

@@ -1,5 +1,5 @@
 from datetime import datetime
-from app.core.utils import Node
+from app.core.serializers.core import ResultNode
 
 
 node_args = {
@@ -12,11 +12,11 @@ node_args = {
 }
 
 no_nodes = []
-one_node = [(70, Node(**node_args))]
-two_nodes = [(70, Node(**node_args)), (72, Node(**node_args))]
+one_node = [(70, ResultNode(**node_args))]
+two_nodes = [(70, ResultNode(**node_args)), (72, ResultNode(**node_args))]
 four_nodes = [
-    (70, Node(**node_args)),
-    (72, Node(**node_args)),
-    (78, Node(**node_args)),
-    (84, Node(**node_args)),
+    (70, ResultNode(**node_args)),
+    (72, ResultNode(**node_args)),
+    (78, ResultNode(**node_args)),
+    (84, ResultNode(**node_args)),
 ]

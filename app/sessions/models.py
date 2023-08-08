@@ -17,7 +17,7 @@ class UserSessionStats(Base):
     sessions_played = mapped_column(Integer, default=0)
 
     @hybrid_property
-    def win_ratio(self) -> Float:
+    def win_ratio(self) -> float:
         if self.sessions_played == 0:  # Avoids Zero DivisionError
             return self.sessions_played
         return self.total_wins / self.sessions_played
