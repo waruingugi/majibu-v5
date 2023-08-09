@@ -47,7 +47,9 @@ class PoolSessionStats(Base):
         ),
     )
     exp_weighted_moving_average = mapped_column(
-        Float, nullable=True, comment="The exponential moving average of the pool"
+        Float,
+        nullable=True,
+        comment="The exponential moving average of pairwise diff. of the pool",
     )
 
 

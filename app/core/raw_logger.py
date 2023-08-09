@@ -2,8 +2,10 @@ import logging
 import sys
 from functools import lru_cache
 from typing import cast
+import progressbar
 
 
+progressbar.streams.wrap_stderr()
 logging.basicConfig(
     level=logging.INFO,
     handlers=[logging.StreamHandler(sys.stdout)],

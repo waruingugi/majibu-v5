@@ -11,6 +11,7 @@ from app.core.serializers.core import (
     PairPartnersSerializer,
 )
 from app.sessions.daos.session import pool_session_stats_dao
+from app.sessions.serializers.session import PoolSessionStatsCreateSerializer
 from app.core.config import settings
 from app.core.logger import logger
 
@@ -158,23 +159,58 @@ class PairUsers:
 
     def calculate_exp_weighted_moving_average(self) -> float:
         """Calculate the exponentially moving average"""
-        avg_score = self.calculate_average_score() or 0
+        mean_pairwise_diff = self.calculate_mean_pairwise_difference() or 0
 
         with SessionLocal() as db:
             pool_session_stats = pool_session_stats_dao.search(
                 db, {"order_by": ["-created_at"]}
             )
+
             if pool_session_stats:
                 previous_session_stat = pool_session_stats[0]
-
-                ewma = (settings.EWMA_MIXING_PARAMETER * avg_score) + (
+                ewma = (settings.EWMA_MIXING_PARAMETER * mean_pairwise_diff) + (
                     1 - settings.EWMA_MIXING_PARAMETER
                 ) * previous_session_stat.exp_weighted_moving_average
+
                 return ewma
 
-        return avg_score
+        return mean_pairwise_diff
 
-    def create_duo_session(self):
+        # avg_score = self.calculate_average_score() or 0
+
+        # with SessionLocal() as db:
+        #     pool_session_stats = pool_session_stats_dao.search(
+        #         db, {"order_by": ["-created_at"]}
+        #     )
+        #     if pool_session_stats:
+        #         previous_session_stat = pool_session_stats[0]
+
+        #         ewma = (settings.EWMA_MIXING_PARAMETER * avg_score) + (
+        #             1 - settings.EWMA_MIXING_PARAMETER
+        #         ) * previous_session_stat.exp_weighted_moving_average
+        #         return ewma
+
+        # return avg_score
+
+    def set_pool_session_statistics(self) -> None:
+        """Set statistics to the PoolSession model"""
+        with SessionLocal() as db:
+            average_score = self.calculate_average_score()
+            mean_pair_wise_diff = self.calculate_mean_pairwise_difference()
+
+            pool_session_stats_dao.create(
+                db,
+                obj_in=PoolSessionStatsCreateSerializer(
+                    total_players=len(self.results_queue),
+                    average_score=average_score,
+                    threshold=settings.PAIRING_THRESHOLD,
+                    mean_pairwise_difference=mean_pair_wise_diff,
+                ),
+            )
+
+    def create_duo_sessions(self):
+        # for node in self.results_queue:
+
         first_node = self.results_queue[0]
 
         time_to_expiry = datetime.now() - first_node.expires_at
@@ -263,6 +299,10 @@ class PairUsers:
 # remove win ratio from node, add to func
 # Create pairpartner func
 # --------------------------------------
+# Get mean pairwise diff or none, save to model automatically
+# Search recent ewma based on time,
+# If none, use current mean_pairwise diff
+# if results > 1
 # set ewma
 # for node in results
 # if time almost expiry and is active
