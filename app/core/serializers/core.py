@@ -10,8 +10,7 @@ class ResultNode:
         session_id: str,
         score: float,
         expires_at: datetime,
-        is_active: bool,
-        win_ratio: float
+        is_active: bool
     ) -> None:
         """Represent each result model instance as a node"""
         self.user_id = user_id
@@ -19,7 +18,6 @@ class ResultNode:
         self.score = score
         self.expires_at = expires_at
         self.is_active = is_active
-        self.win_ratio = win_ratio
 
     def __lt__(self, other_node) -> bool:
         """Heapq module uses this method to order nodes based on their expiry time.
@@ -36,7 +34,7 @@ class ClosestNodeSerializer(BaseModel):
 
 
 class PairPartnersSerializer(BaseModel):
-    party_a: ResultNode | None = None
+    party_a: ResultNode  # party_a can never be None or empty
     party_b: ResultNode | None = None
 
     class Config:

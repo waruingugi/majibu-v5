@@ -83,12 +83,11 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
     ]  # 5 is just a random low int to ensure
     # some results nodes at least have the same session
     target_node = ResultNode(
-        user_id=None,
+        user_id=generate_uuid(),
         session_id=random.choice(session_ids),
         score=target_score,
         expires_at=datetime.now(),
         is_active=True,
-        win_ratio=0,
     )
 
     def generate_combinations():
@@ -116,12 +115,11 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
                     (
                         num,
                         ResultNode(
-                            user_id=None,
+                            user_id=generate_uuid(),
                             session_id=random.choice(session_ids),
                             score=num,
                             expires_at=datetime.now(),
                             is_active=True,
-                            win_ratio=0,
                         ),
                     )
                     for num in combination
@@ -143,10 +141,12 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
         if closest_nodes.right_node is not None:
             assert closest_nodes.right_node.score >= target_score
             assert closest_nodes.right_node.session_id == target_node.session_id
+            assert closest_nodes.right_node.user_id != target_node.user_id
 
         if closest_nodes.left_node is not None:
             assert closest_nodes.left_node.score <= target_score
             assert closest_nodes.left_node.session_id == target_node.session_id
+            assert closest_nodes.left_node.user_id != target_node.user_id
 
 
 def test_calculate_mean_pairwise_difference_returns_correct_values(

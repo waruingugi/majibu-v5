@@ -10,8 +10,7 @@ from app.core.serializers.core import (
     ClosestNodeSerializer,
     PairPartnersSerializer,
 )
-from app.sessions.daos.session import pool_session_stats_dao, user_session_stats_dao
-from app.sessions.serializers.session import UserSessionStatsCreateSerializer
+from app.sessions.daos.session import pool_session_stats_dao
 from app.core.config import settings
 from app.core.logger import logger
 
@@ -43,15 +42,9 @@ class PairUsers:
 
             for result in available_results:
                 logger.info(f"Create a node for result: {result.id}")
-                result_in = ResultNodeSerializer(**result.__dict__)
 
-                user_session_stats_obj = user_session_stats_dao.get_or_create(
-                    db,
-                    obj_in=UserSessionStatsCreateSerializer(user_id=result_in.user_id),
-                )
-                result_node = ResultNode(
-                    **result_in.dict(), win_ratio=user_session_stats_obj.win_ratio
-                )
+                result_in = ResultNodeSerializer(**result.__dict__)
+                result_node = ResultNode(**result_in.dict())
 
                 # Insert the node into the sorted list based on the score
                 index = bisect.bisect_right(
@@ -193,23 +186,20 @@ class PairUsers:
 
                 right_node = closest_nodes.right_node
                 right_node_dist = (
-                    abs(node.score - right_node[1].score)
-                    if right_node
-                    else float("inf")
+                    abs(node.score - right_node.score) if right_node else float("inf")
                 )
 
                 left_node = closest_nodes.left_node
                 left_node_dist = (
-                    abs(node.score - left_node[1].score) if left_node else float("inf")
+                    abs(node.score - left_node.score) if left_node else float("inf")
                 )
 
                 # ------
                 if (
                     left_node_dist == right_node_dist
-                    and left_node_dist != float("inf")
-                    and right_node_dist != float("inf")
+                    and left_node is not None
+                    and right_node is not None
                 ):
-                    # win-ratio
                     pass
 
                 elif left_node_dist < right_node_dist:
@@ -244,3 +234,43 @@ class PairUsers:
 # calculate ewma
 # if queue > 1, save ewma to model
 # Start pairing
+# Refund if user did not attempt questions
+
+# if distance same, choose any random
+# else choose closests
+# else if none refund
+
+# On pairing
+# if party_a has highest score and both parties not none,
+# create duo session with values
+# create transaction instance
+# send message to boths users background func
+
+# if partb has highest score and both parties not none
+# do the same
+# if part_a results none(answered no questsion) pure refund(move to top)
+# transaction func different
+# if part_a only and no partner full refund
+# flood with logs
+# else full refund
+# At each if stage add to pop list
+# if party_a only and no result pure refund
+# elif if party-a only, full refund
+# if pary_a and party_b - get winner at the top
+# if get winner none refund party_a
+# if get winner funct to run transactions, message , create instance
+# pop both func using list
+# remove win ratio from node, add to func
+# Create pairpartner func
+# --------------------------------------
+# set ewma
+# for node in results
+# if time almost expiry and is active
+# if result is none, partially refund user update stats
+# Get closest node
+# create pair partner functions, returns party_a or both parties
+# get winners func, run ewma, results none: if both parties
+# if response not none, add part_b to pop list
+# remove nodes from queues, set false
+# if winner, reward_winner, update stats
+# else fully_refund user, update stats
