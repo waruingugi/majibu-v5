@@ -1,8 +1,6 @@
 import heapq
 import itertools
 import random
-import logging
-import progressbar
 
 from typing import Callable
 from pytest_mock import MockerFixture
@@ -72,9 +70,7 @@ def test_create_nodes_returns_empty_list_and_queue(
     assert len(ordered_score_list) == 0
 
 
-def test_get_closest_nodes_returns_correct_node_siblings(
-    mocker: MockerFixture, caplog: Callable
-) -> None:
+def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) -> None:
     """Assert that the nodes closest to a given score, are indeed the closest/correct nodes."""
     logger.warning("Starting computationally expensive test. This may take a minute...")
 
@@ -135,19 +131,11 @@ def test_get_closest_nodes_returns_correct_node_siblings(
 
     all_combinations = list(generate_combinations())
 
-    # The widget used to show the progress bar
-    widgets = [
-        print(f"Testing {len(all_combinations)} combinations. Progress"),
-        ": ",
-        progressbar.Percentage(),
-        progressbar.Bar(left="[", right="]"),
-    ]
     # Set all logs from this point forward to WARNING so that they are visible in the terminal
     pair_users = PairUsers()
-    caplog.set_level(logging.WARNING)
-    for combination in progressbar.progressbar(
-        all_combinations, widgets=widgets, term_width=90, force_terminal=True
-    ):
+
+    logger.warning(f"Testing {len(all_combinations)} combinations")
+    for combination in all_combinations:
         pair_users.ordered_scores_list = combination
 
         closest_nodes = pair_users.get_closest_nodes(target_node)

@@ -5,11 +5,7 @@ import heapq
 from app.db.session import SessionLocal
 from app.quiz.daos.quiz import result_dao
 from app.quiz.serializers.quiz import ResultNodeSerializer
-from app.core.serializers.core import (
-    ResultNode,
-    ClosestNodeSerializer,
-    PairPartnersSerializer,
-)
+from app.core.serializers.core import ResultNode, ClosestNodeSerializer
 from app.sessions.daos.session import pool_session_stats_dao
 from app.sessions.serializers.session import PoolSessionStatsCreateSerializer
 from app.core.config import settings
@@ -208,53 +204,66 @@ class PairUsers:
                 ),
             )
 
+    def partially_refund_user(self) -> None:
+        pass
+
     def create_duo_sessions(self):
-        # for node in self.results_queue:
+        for node in self.results_queue:
+            time_to_expiry = datetime.now() - node.expires_at
+            if (
+                node.is_active
+                and time_to_expiry.seconds <= settings.RESULT_EXPIRES_AT_BUFFER_TIME
+            ):
+                if float(node.score) == 0.0:
+                    pass  # Refund user, not possible to score 0.0
+            else:
+                # Skip node, might be paired with other
+                pass
 
-        first_node = self.results_queue[0]
+        # first_node = self.results_queue[0]
 
-        time_to_expiry = datetime.now() - first_node.expires_at
+        # time_to_expiry = datetime.now() - first_node.expires_at
 
-        if time_to_expiry.seconds <= settings.RESULT_EXPIRES_AT_BUFFER_TIME:
-            for node in self.results_queue:
-                closest_nodes = self.get_closest_nodes(node)
-                pair_partners = PairPartnersSerializer(party_a=node)
+        # if time_to_expiry.seconds <= settings.RESULT_EXPIRES_AT_BUFFER_TIME:
+        #     for node in self.results_queue:
+        #         closest_nodes = self.get_closest_nodes(node)
+        #         pair_partners = PairPartnersSerializer(party_a=node)
 
-                right_node = closest_nodes.right_node
-                right_node_dist = (
-                    abs(node.score - right_node.score) if right_node else float("inf")
-                )
+        #         right_node = closest_nodes.right_node
+        #         right_node_dist = (
+        #             abs(node.score - right_node.score) if right_node else float("inf")
+        #         )
 
-                left_node = closest_nodes.left_node
-                left_node_dist = (
-                    abs(node.score - left_node.score) if left_node else float("inf")
-                )
+        #         left_node = closest_nodes.left_node
+        #         left_node_dist = (
+        #             abs(node.score - left_node.score) if left_node else float("inf")
+        #         )
 
-                # ------
-                if (
-                    left_node_dist == right_node_dist
-                    and left_node is not None
-                    and right_node is not None
-                ):
-                    pass
+        #         # ------
+        #         if (
+        #             left_node_dist == right_node_dist
+        #             and left_node is not None
+        #             and right_node is not None
+        #         ):
+        #             pass
 
-                elif left_node_dist < right_node_dist:
-                    pair_partners.party_b = left_node
+        #         elif left_node_dist < right_node_dist:
+        #             pair_partners.party_b = left_node
 
-                elif right_node_dist < left_node_dist:
-                    pair_partners.party_b = right_node
+        #         elif right_node_dist < left_node_dist:
+        #             pair_partners.party_b = right_node
 
-                else:
-                    # set no partner, which means refund
-                    pass
+        #         else:
+        #             # set no partner, which means refund
+        #             pass
 
-                #     # use win-loss ration and not inf for both
-                # if left_node_distance < right_node_distance:
-                #     # attempt pair(with ewma) for both nodes, preferred partner
-                # if right_node_distance > left_node_distance:
-                #     # attempt pair with right node and within ewma
-                # else:
-                #     # refund
+        #     # use win-loss ration and not inf for both
+        # if left_node_distance < right_node_distance:
+        #     # attempt pair(with ewma) for both nodes, preferred partner
+        # if right_node_distance > left_node_distance:
+        #     # attempt pair with right node and within ewma
+        # else:
+        #     # refund
 
 
 # Right, left

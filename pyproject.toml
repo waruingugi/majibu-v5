@@ -34,7 +34,6 @@ asgi-correlation-id = "^4.2.0"
 pytest-cov = "^4.0.0"
 ggshield = "^1.15.0"
 celery = "^5.3.1"
-progressbar2 = "^4.2.0"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from fastapi import BackgroundTasks
 
 from app.db.dao import CRUDDao
 from app.accounts.models import Transactions
@@ -50,7 +51,12 @@ class TransactionDao(
         values["initial_balance"] = initial_final_balance  # Original balance
         values["charge"] = charge
 
-    def on_post_create(self, db: Session, db_obj: Transactions) -> None:
+    def on_post_create(
+        self,
+        db: Session,
+        db_obj: Transactions,
+        background_tasks: BackgroundTasks = BackgroundTasks(),
+    ) -> None:
         """Send notifications on new transactions to their wallet"""
         channel = NotificationChannels.SMS.value
         phone = db_obj.account
@@ -83,7 +89,8 @@ class TransactionDao(
             )
             type = NotificationTypes.SESSION.value
 
-        notifications_dao.send_notification(
+        background_tasks.add_task(
+            notifications_dao.send_notification,
             db,
             obj_in=CreateNotificationSerializer(
                 channel=channel,
