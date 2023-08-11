@@ -1,6 +1,5 @@
 from app.db.base_class import Base
 from app.core.config import settings
-from app.sessions.constants import DuoSessionStatuses
 
 from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -77,7 +76,7 @@ class DuoSession(Base):
         nullable=True,
         comment="This is the Amount that was transacted.",
     )
-    status = mapped_column(String, default=DuoSessionStatuses.PENDING.value)
+    status = mapped_column(String, nullable=True)
     winner_id = mapped_column(String, nullable=True)
 
     session = relationship("Sessions", backref="duo_session")

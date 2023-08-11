@@ -3,9 +3,9 @@ from typing import List
 
 
 class DuoSessionStatuses(str, Enum):  # Also acts as role names
-    PENDING = "PENDING"
     PAIRED = "PAIRED"
     REFUNDED = "REFUNDED"
+    PARTIALLY_REFUNDED = "PARTIALLY_REFUNDED"
 
     @classmethod
     def list_(cls) -> List:

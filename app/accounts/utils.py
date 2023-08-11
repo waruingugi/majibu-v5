@@ -230,8 +230,6 @@ def process_mpesa_paybill_payment(
         service=TransactionServices.MPESA.value,
         description=description,
         amount=float(mpesa_response_in.TransAmount),
-        fee=0.0,
-        tax=0.0,
         external_response=json.dumps(mpesa_response_in.dict()),
     )
 

@@ -51,8 +51,6 @@ sample_positive_transaction_instance_info = {
     "service": "MPESA",
     "description": "",
     "amount": 1.0,
-    "fee": 0.0,
-    "tax": 0.0,
     "external_response": json.dumps({}),
 }
 
@@ -65,8 +63,6 @@ sample_transaction_instance_deposit_1000 = {
     "service": "MPESA",
     "description": "",
     "amount": 1000.0,
-    "fee": 0.0,
-    "tax": 0.0,
     "external_response": json.dumps({}),
 }
 
@@ -81,7 +77,6 @@ sample_negative_transaction_instance_info = {
     "description": "",
     "amount": 20.0,
     "fee": settings.MPESA_B2C_CHARGE,
-    "tax": 0.0,
     "external_response": json.dumps({}),
 }
 

@@ -4,16 +4,16 @@ from app.sessions.models import DuoSession, Sessions
 
 
 class SessionBaseFilter(Filter):
-    id: str | None
-    category: str | None
+    id: str | None = None
+    category: str | None = None
 
     class Constants(Filter.Constants):
         model = Sessions
 
 
 class SessionFilter(SessionBaseFilter):
-    id__not_in: List[str] | None
-    id__in: List[str] | None
+    id__not_in: List[str] | None = None
+    id__in: List[str] | None = None
 
 
 class DuoSessionBaseFilter(Filter):

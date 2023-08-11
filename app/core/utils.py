@@ -313,6 +313,9 @@ class PairUsers:
 # If none, use current mean_pairwise diff
 # if results > 1
 # set ewma
+# ----
+# Duo sessions should use get or create
+# Search results instead of pending duo sessions
 # for node in results
 # if time almost expiry and is active
 # if result is none, partially refund user update stats
