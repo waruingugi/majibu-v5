@@ -1,7 +1,6 @@
-from typing import Union
 from sqlalchemy.orm import Session
 
-from app.exceptions.custom import DuoSessionFailedOnUpdate
+from app.exceptions.custom import DuoSessionAlreadyExists
 from app.db.dao import CRUDDao
 from app.core.helpers import convert_list_to_string
 from app.core.config import settings
@@ -17,12 +16,12 @@ from app.sessions.serializers.session import (
     SessionUpdateSerializer,
     DuoSessionCreateSerializer,
     DuoSessionUpdateSerializer,
-    UserSessionStatsBaseSerializer,
     UserSessionStatsCreateSerializer,
     UserSessionStatsUpdateSerializer,
     PoolSessionStatsCreateSerializer,
     PoolSessionStatsUpdateSerializer,
 )
+from app.sessions.filters import DuoSessionFilter
 
 
 class PoolSessionStatsDao(
@@ -54,7 +53,7 @@ class UserSessionStatsDao(
     def get_or_create(
         self,
         db: Session,
-        obj_in: Union[UserSessionStatsBaseSerializer, UserSessionStatsCreateSerializer],
+        obj_in: UserSessionStatsCreateSerializer,
     ) -> UserSessionStats:
         """Get or create a UserSessionStats"""
         user_session_stats_in = self.get(db, user_id=obj_in.user_id)
@@ -71,14 +70,46 @@ user_session_stats_dao = UserSessionStatsDao(UserSessionStats)
 class DuoSessionDao(
     CRUDDao[DuoSession, DuoSessionCreateSerializer, DuoSessionUpdateSerializer]
 ):
-    def on_pre_update(
-        self, db: Session, db_obj: DuoSession, values: dict, orig_values: dict
+    # Updates on DuoSession are no longer supported
+    # def on_pre_update(
+    #     self, db: Session, db_obj: DuoSession, values: dict, orig_values: dict
+    # ) -> None:
+    #     """Run validation checks before updating DuoSession instance"""
+    #     if db_obj.party_a == values["party_b"]:
+    #         raise DuoSessionFailedOnUpdate(
+    #             f"Can not pair user id{db_obj.party_a} to themselves"
+    #         )
+    def on_pre_create(
+        self, db: Session, id: str, values: dict, orig_values: dict
     ) -> None:
-        """Run validation checks before updating DuoSession instance"""
-        if db_obj.party_a == values["party_b"]:
-            raise DuoSessionFailedOnUpdate(
-                f"Can not pair user id{db_obj.party_a} to themselves"
+        """Assert not on the parties have played a DuoSession with the same session_id before."""
+        sessions_played = []
+
+        # Search if party_a has played this DuoSession before
+        if "party_a" in orig_values:
+            party_a_sessions = self.search(
+                db,
+                search_filter=DuoSessionFilter(
+                    search=orig_values["party_a"],  # type: ignore
+                    session_id=orig_values["session_id"],
+                ),
             )
+            sessions_played.extend(party_a_sessions)
+
+        # Search if party_b has played this DuoSession before
+        if "party_b" in orig_values:
+            party_b_sessions = self.search(
+                db,
+                search_filter=DuoSessionFilter(
+                    search=orig_values["party_b"],  # type: ignore
+                    session_id=orig_values["session_id"],
+                ),
+            )
+            sessions_played.extend(party_b_sessions)
+
+        """If any of the parties have played the session before, raise an exception"""
+        if sessions_played:
+            raise DuoSessionAlreadyExists(values["party_a"], orig_values["session_id"])
 
 
 duo_session_dao = DuoSessionDao(DuoSession)

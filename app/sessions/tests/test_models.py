@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from typing import Callable
 import pytest
 
+from app.exceptions.custom import DuoSessionAlreadyExists
 from app.commons.constants import Categories
 from app.sessions.daos.session import (
     session_dao,
@@ -9,12 +10,12 @@ from app.sessions.daos.session import (
     user_session_stats_dao,
     pool_session_stats_dao,
 )
+from app.sessions.constants import DuoSessionStatuses
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
 from app.sessions.serializers.session import (
     SessionCreateSerializer,
     DuoSessionCreateSerializer,
-    DuoSessionUpdateSerializer,
     UserSessionStatsCreateSerializer,
     UserSessionStatsUpdateSerializer,
     PoolSessionStatsCreateSerializer,
@@ -147,7 +148,10 @@ def test_create_duo_session_instance(
     session = session_dao.get_not_none(db)
     user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
     data_in = DuoSessionCreateSerializer(
-        party_a=user.id, session_id=session.id, amount=settings.SESSION_AMOUNT
+        party_a=user.id,
+        status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
+        session_id=session.id,
+        amount=settings.SESSION_AMOUNT,
     )
     duo_session = duo_session_dao.create(db, obj_in=data_in)
 
@@ -158,13 +162,13 @@ def test_create_duo_session_instance(
     assert duo_session.amount == settings.SESSION_AMOUNT
 
 
-def test_update_duo_session_instance(
+def test_create_duo_session_instance_fails_if_already_exists(
     db: Session,
     create_session_instance: Callable,
     create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
 ):
-    """Test DuoSession can be updated in model"""
+    """Test duplicate DuoSessions can not be created in model"""
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
 
@@ -174,47 +178,57 @@ def test_update_duo_session_instance(
 
     # Create DuoSession
     data_in = DuoSessionCreateSerializer(
-        party_a=party_a.id, session_id=session.id, amount=settings.SESSION_AMOUNT
+        party_a=party_a.id,
+        party_b=party_b.id,
+        status=DuoSessionStatuses.REFUNDED.value,
+        session_id=session.id,
+        amount=settings.SESSION_AMOUNT,
     )
-    duo_session = duo_session_dao.create(db, obj_in=data_in)
+    duo_session_dao.create(db, obj_in=data_in)
 
-    # Update the DuoSession
-    updated_duo_session = duo_session_dao.update(
-        db,
-        db_obj=duo_session,
-        obj_in=DuoSessionUpdateSerializer(
-            party_b=party_b.id, status=False, winner_id=party_b.id
-        ),
-    )
-
-    assert updated_duo_session.party_a == party_a.id
-    assert updated_duo_session.party_b == party_b.id
-
-    assert updated_duo_session.winner_id == party_b.id
-
-
-def test_updated_duo_session_fails_if_user_is_the_same(
-    db: Session,
-    create_session_instance: Callable,
-    create_super_user_instance: Callable,
-    delete_duo_session_model_instances: Callable,
-):
-    """Test DuoSession fails to pair the same user to themselves"""
-    session = session_dao.get_not_none(db)
-    party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
-
-    # Create DuoSession
-    data_in = DuoSessionCreateSerializer(
-        party_a=party_a.id, session_id=session.id, amount=settings.SESSION_AMOUNT
-    )
-    duo_session = duo_session_dao.create(db, obj_in=data_in)
-
-    with pytest.raises(Exception):
-        # Update the DuoSession
-        duo_session_dao.update(
-            db,
-            db_obj=duo_session,
-            obj_in=DuoSessionUpdateSerializer(
-                party_b=party_a.id, status=False, winner_id=party_a.id
-            ),
+    # Create a similar duo session
+    with pytest.raises(DuoSessionAlreadyExists):
+        data_in = DuoSessionCreateSerializer(
+            party_a=party_a.id,
+            status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
+            session_id=session.id,
+            amount=settings.SESSION_AMOUNT,
         )
+        duo_session_dao.create(db, obj_in=data_in)
+
+    with pytest.raises(DuoSessionAlreadyExists):
+        data_in = DuoSessionCreateSerializer(
+            party_a=party_b.id,
+            status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
+            session_id=session.id,
+            amount=settings.SESSION_AMOUNT,
+        )
+        duo_session_dao.create(db, obj_in=data_in)
+
+
+# Updates are no longer supported on DuoSession instances
+# def test_updated_duo_session_fails_if_user_is_the_same(
+#     db: Session,
+#     create_session_instance: Callable,
+#     create_super_user_instance: Callable,
+#     delete_duo_session_model_instances: Callable,
+# ):
+#     """Test DuoSession fails to pair the same user to themselves"""
+#     session = session_dao.get_not_none(db)
+#     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+
+#     # Create DuoSession
+#     data_in = DuoSessionCreateSerializer(
+#         party_a=party_a.id, session_id=session.id, amount=settings.SESSION_AMOUNT
+#     )
+#     duo_session = duo_session_dao.create(db, obj_in=data_in)
+
+#     with pytest.raises(Exception):
+#         # Update the DuoSession
+#         duo_session_dao.update(
+#             db,
+#             db_obj=duo_session,
+#             obj_in=DuoSessionUpdateSerializer(
+#                 party_b=party_a.id, status=False, winner_id=party_a.id
+#             ),
+#         )

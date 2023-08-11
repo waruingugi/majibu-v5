@@ -3,13 +3,16 @@ import bisect
 import heapq
 
 from app.db.session import SessionLocal
-from app.quiz.daos.quiz import result_dao
-from app.quiz.serializers.quiz import ResultNodeSerializer
-from app.core.serializers.core import ResultNode, ClosestNodeSerializer
-from app.sessions.daos.session import pool_session_stats_dao
-from app.sessions.serializers.session import PoolSessionStatsCreateSerializer
+
 from app.core.config import settings
 from app.core.logger import logger
+from app.core.serializers.core import ResultNode, ClosestNodeSerializer
+
+from app.quiz.daos.quiz import result_dao
+from app.quiz.serializers.quiz import ResultNodeSerializer
+
+from app.sessions.daos.session import pool_session_stats_dao
+from app.sessions.serializers.session import PoolSessionStatsCreateSerializer
 
 
 class PairUsers:
@@ -53,7 +56,7 @@ class PairUsers:
 
     def get_closest_nodes(self, node: ResultNode) -> ClosestNodeSerializer:
         """Find the closest nodes to a given score.
-        Note: The elf.ordered_scores_list is never an empty list because the score being
+        Note: The self.ordered_scores_list is never an empty list because the score being
         searched for, needs to exist inside the list too
         """
 
@@ -172,22 +175,6 @@ class PairUsers:
 
         return mean_pairwise_diff
 
-        # avg_score = self.calculate_average_score() or 0
-
-        # with SessionLocal() as db:
-        #     pool_session_stats = pool_session_stats_dao.search(
-        #         db, {"order_by": ["-created_at"]}
-        #     )
-        #     if pool_session_stats:
-        #         previous_session_stat = pool_session_stats[0]
-
-        #         ewma = (settings.EWMA_MIXING_PARAMETER * avg_score) + (
-        #             1 - settings.EWMA_MIXING_PARAMETER
-        #         ) * previous_session_stat.exp_weighted_moving_average
-        #         return ewma
-
-        # return avg_score
-
     def set_pool_session_statistics(self) -> None:
         """Set statistics to the PoolSession model"""
         with SessionLocal() as db:
@@ -204,21 +191,34 @@ class PairUsers:
                 ),
             )
 
-    def partially_refund_user(self) -> None:
+    def create_pair_partners(self, closest_nodes_in: ClosestNodeSerializer):
         pass
+        # right_node_score = closest_nodes_in.right_node
+        # left_node = closest_nodes_in.left_node
 
     def create_duo_sessions(self):
         for node in self.results_queue:
             time_to_expiry = datetime.now() - node.expires_at
+
             if (
                 node.is_active
                 and time_to_expiry.seconds <= settings.RESULT_EXPIRES_AT_BUFFER_TIME
             ):
-                if float(node.score) == 0.0:
-                    pass  # Refund user, not possible to score 0.0
-            else:
-                # Skip node, might be paired with other
-                pass
+                # duo_session_status = None
+
+                if node.score == 0.0:
+                    """The user played a session, but did not answer at least one question.
+                    So we do a partial refund. To receive a full refund, attempt to answer atleast
+                    one question"""
+                    # duo_session_status = DuoSessionStatuses.PARTIALLY_REFUNDED.value
+                    pass
+
+                else:
+                    """
+                    The user attempted atleast one question, so try to find a partner to pair with the user.
+                    """
+                    # closest_nodes = self.get_closest_nodes(node)
+                    pass
 
         # first_node = self.results_queue[0]
 
@@ -315,9 +315,9 @@ class PairUsers:
 # set ewma
 # ----
 # Duo sessions should use get or create
-# Search results instead of pending duo sessions
-# for node in results
-# if time almost expiry and is active
+# Search results instead of pending duo sessions - done
+# for node in results - done
+# if time almost expiry and is active - done
 # if result is none, partially refund user update stats
 # Get closest node
 # create pair partner functions, returns party_a or both parties
@@ -326,3 +326,10 @@ class PairUsers:
 # remove nodes from queues, set false
 # if winner, reward_winner, update stats
 # else fully_refund user, update stats
+
+# --------------------------------------
+# [x, y]
+# [x, x]
+# [x]
+# [y]
+# []

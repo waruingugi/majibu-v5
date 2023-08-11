@@ -30,19 +30,19 @@ class SessionUpdateSerializer(SesssionBaseSerializer):
 
 
 class DuoSessionBaseSerializer(BaseModel):
-    pass
+    party_a: str
+    session_id: str
+    status: str
 
 
 class DuoSessionCreateSerializer(DuoSessionBaseSerializer):
-    session_id: str
-    party_a: str
     amount: float = settings.SESSION_AMOUNT
+    party_b: str | None = None
+    winner_id: str | None = None
 
 
 class DuoSessionUpdateSerializer(DuoSessionBaseSerializer):
-    party_b: str | None
-    status: bool | None
-    winner_id: str | None
+    pass
 
 
 class UserSessionStatsBaseSerializer(BaseModel):
