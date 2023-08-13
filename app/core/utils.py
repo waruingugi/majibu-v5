@@ -1,18 +1,27 @@
-from datetime import datetime, timedelta
 import bisect
 import heapq
+import random
+from datetime import datetime, timedelta
 
 from app.db.session import SessionLocal
 
 from app.core.config import settings
 from app.core.logger import logger
-from app.core.serializers.core import ResultNode, ClosestNodeSerializer
+from app.core.serializers.core import (
+    ResultNode,
+    ClosestNodeSerializer,
+    PairPartnersSerializer,
+)
 
 from app.quiz.daos.quiz import result_dao
 from app.quiz.serializers.quiz import ResultNodeSerializer
 
-from app.sessions.daos.session import pool_session_stats_dao
-from app.sessions.serializers.session import PoolSessionStatsCreateSerializer
+from app.sessions.constants import DuoSessionStatuses
+from app.sessions.daos.session import pool_session_stats_dao, duo_session_dao
+from app.sessions.serializers.session import (
+    PoolSessionStatsCreateSerializer,
+    DuoSessionCreateSerializer,
+)
 
 
 class PairUsers:
@@ -191,79 +200,107 @@ class PairUsers:
                 ),
             )
 
-    def create_pair_partners(self, closest_nodes_in: ClosestNodeSerializer):
-        pass
-        # right_node_score = closest_nodes_in.right_node
-        # left_node = closest_nodes_in.left_node
+    def get_pair_partner(
+        self, target_node: ResultNode, closest_nodes_in: ClosestNodeSerializer
+    ) -> ResultNode | None:
+        right_node = closest_nodes_in.right_node
+        left_node = closest_nodes_in.left_node
 
-    def create_duo_sessions(self):
+        closest_node = None
+        sibling_nodes = [right_node, left_node]
+        closest_score_diff = float("inf")
+        same_score_nodes = []
+
+        # Cater for None
+        for node in sibling_nodes:
+            node_score = float("inf") if node is None else node.score
+            score_diff = abs(target_node.score - node_score)
+
+            if score_diff < closest_score_diff:
+                closest_node = node
+                closest_score_diff = score_diff
+                same_score_nodes = [node]
+            elif score_diff == closest_score_diff:
+                same_score_nodes.append(node)
+
+        if same_score_nodes:
+            closest_node = random.choice(same_score_nodes)
+
+        return closest_node
+
+    def get_winner(self, pair_partners: PairPartnersSerializer) -> ResultNode | None:
+        party_a = pair_partners.party_a
+        party_b = pair_partners.party_b
+        winner = None
+
+        score_diff = abs(party_a.score - party_b.score)
+
+        if score_diff <= self.pairing_range:
+            winner = party_a if party_a.score > party_b.score else party_b
+
+        return winner
+
+    def create_duo_session(
+        self,
+        *,
+        party_a: ResultNode,
+        party_b: ResultNode | None,
+        winner: ResultNode | None,
+        duo_session_status: DuoSessionStatuses,
+    ) -> None:
+        duo_session_in = DuoSessionCreateSerializer(
+            party_a=party_a.user_id,
+            party_b=party_b.user_id if party_b else None,
+            winner_id=winner.user_id if winner else None,
+            session_id=party_a.session_id,
+            status=duo_session_status.value,
+        )
+        with SessionLocal() as db:
+            duo_session_dao.create(db, obj_in=duo_session_in)
+
+    def match_players(self):
+        self.ewma = self.calculate_exp_weighted_moving_average()
+        self.pairing_range = self.ewma * settings.PAIRING_THRESHOLD
+
         for node in self.results_queue:
             time_to_expiry = datetime.now() - node.expires_at
+            winner, party_b = None, None
+            duo_session_status = DuoSessionStatuses.REFUNDED
+            party_a = node
 
             if (
                 node.is_active
                 and time_to_expiry.seconds <= settings.RESULT_EXPIRES_AT_BUFFER_TIME
             ):
-                # duo_session_status = None
-
                 if node.score == 0.0:
                     """The user played a session, but did not answer at least one question.
                     So we do a partial refund. To receive a full refund, attempt to answer atleast
                     one question"""
-                    # duo_session_status = DuoSessionStatuses.PARTIALLY_REFUNDED.value
-                    pass
+                    duo_session_status = DuoSessionStatuses.PARTIALLY_REFUNDED
 
                 else:
                     """
                     The user attempted atleast one question, so try to find a partner to pair with the user.
                     """
-                    # closest_nodes = self.get_closest_nodes(node)
-                    pass
+                    closest_nodes = self.get_closest_nodes(node)
+                    party_b = self.get_pair_partner(node, closest_nodes)
 
-        # first_node = self.results_queue[0]
+                    if party_b is not None:
+                        winner = self.get_winner(
+                            PairPartnersSerializer(party_a=node, party_b=party_b)
+                        )
+                        duo_session_status = (
+                            DuoSessionStatuses.PAIRED
+                            if winner is not None
+                            else DuoSessionStatuses.REFUNDED
+                        )
 
-        # time_to_expiry = datetime.now() - first_node.expires_at
-
-        # if time_to_expiry.seconds <= settings.RESULT_EXPIRES_AT_BUFFER_TIME:
-        #     for node in self.results_queue:
-        #         closest_nodes = self.get_closest_nodes(node)
-        #         pair_partners = PairPartnersSerializer(party_a=node)
-
-        #         right_node = closest_nodes.right_node
-        #         right_node_dist = (
-        #             abs(node.score - right_node.score) if right_node else float("inf")
-        #         )
-
-        #         left_node = closest_nodes.left_node
-        #         left_node_dist = (
-        #             abs(node.score - left_node.score) if left_node else float("inf")
-        #         )
-
-        #         # ------
-        #         if (
-        #             left_node_dist == right_node_dist
-        #             and left_node is not None
-        #             and right_node is not None
-        #         ):
-        #             pass
-
-        #         elif left_node_dist < right_node_dist:
-        #             pair_partners.party_b = left_node
-
-        #         elif right_node_dist < left_node_dist:
-        #             pair_partners.party_b = right_node
-
-        #         else:
-        #             # set no partner, which means refund
-        #             pass
-
-        #     # use win-loss ration and not inf for both
-        # if left_node_distance < right_node_distance:
-        #     # attempt pair(with ewma) for both nodes, preferred partner
-        # if right_node_distance > left_node_distance:
-        #     # attempt pair with right node and within ewma
-        # else:
-        #     # refund
+                self.create_duo_session(
+                    party_a=party_a,
+                    party_b=party_b,
+                    winner=winner,
+                    duo_session_status=duo_session_status,
+                )
 
 
 # Right, left
@@ -320,16 +357,17 @@ class PairUsers:
 # if time almost expiry and is active - done
 # if result is none, partially refund user update stats
 # Get closest node
-# create pair partner functions, returns party_a or both parties
+# create pair partner functions, returns party_b or none
 # get winners func, run ewma, results none: if both parties
 # if response not none, add part_b to pop list
 # remove nodes from queues, set false
 # if winner, reward_winner, update stats
 # else fully_refund user, update stats
+# Do transactions
 
 # --------------------------------------
 # [x, y]
 # [x, x]
-# [x]
-# [y]
-# []
+# [x, None]
+# [None, y]
+# [None, None]

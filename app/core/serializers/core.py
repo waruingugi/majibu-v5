@@ -34,8 +34,8 @@ class ClosestNodeSerializer(BaseModel):
 
 
 class PairPartnersSerializer(BaseModel):
-    party_a: ResultNode  # party_a can never be None or empty
-    party_b: ResultNode | None = None
+    party_a: ResultNode
+    party_b: ResultNode
 
     class Config:
         arbitrary_types_allowed = True
