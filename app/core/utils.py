@@ -236,7 +236,7 @@ class PairUsers:
         return closest_node
 
     def get_winner(self, pair_partners: PairPartnersSerializer) -> ResultNode | None:
-        """Returns the winner between two nodes, else, it returns None"""
+        """Returns the winner between two nodes or None"""
         party_a = pair_partners.party_a
         party_b = pair_partners.party_b
         winner = None
@@ -255,15 +255,16 @@ class PairUsers:
         party_a: ResultNode,
         party_b: ResultNode | None,
         winner: ResultNode | None,
-        duo_session_status: DuoSessionStatuses,
+        duo_session_status: str,
     ) -> None:
-        """Finally create a DuoSession so that the parties receive their funds"""
+        """Create a DuoSession instance.
+        This is the final step before refund of transactions."""
         duo_session_in = DuoSessionCreateSerializer(
             party_a=party_a.user_id,
             party_b=party_b.user_id if party_b else None,
             winner_id=winner.user_id if winner else None,
             session_id=party_a.session_id,
-            status=duo_session_status.value,
+            status=duo_session_status,
         )
         with SessionLocal() as db:
             duo_session_dao.create(db, obj_in=duo_session_in)
@@ -345,7 +346,7 @@ class PairUsers:
                     party_a=party_a,
                     party_b=party_b,
                     winner=winner,
-                    duo_session_status=duo_session_status,
+                    duo_session_status=duo_session_status.value,
                 )
 
 

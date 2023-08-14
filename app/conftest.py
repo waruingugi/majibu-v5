@@ -6,19 +6,24 @@ from app.main import app
 
 from app.commons.constants import Categories
 from app.commons.utils import generate_uuid, random_phone
-from app.quiz.serializers.quiz import ResultCreateSerializer, ResultUpdateSerializer
+
 from app.quiz.daos.quiz import result_dao
 from app.quiz.utils import CalculateScore
+from app.quiz.serializers.quiz import ResultCreateSerializer, ResultUpdateSerializer
 
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
-from app.sessions.daos.session import session_dao, pool_session_stats_dao
 from app.sessions.serializers.session import SessionCreateSerializer
+from app.sessions.daos.session import (
+    session_dao,
+    pool_session_stats_dao,
+    duo_session_dao,
+)
 
 from app.core.config import settings, redis
 from app.core.deps import get_current_active_user
-from app.accounts.daos.mpesa import mpesa_payment_dao, withdrawal_dao
 from app.accounts.daos.account import transaction_dao
+from app.accounts.daos.mpesa import mpesa_payment_dao, withdrawal_dao
 
 from sqlalchemy.orm import Session
 from typing import Generator, Callable
@@ -57,6 +62,14 @@ def create_session_instance(db: Session) -> None:
             category=Categories.BIBLE.value, questions=question_ids
         ),
     )
+
+
+@pytest.fixture
+def delete_duo_session_model_instances(db: Session) -> None:
+    """Delete previously existing rows in DuoSession model"""
+    existing_duo_sessions = duo_session_dao.get_all(db)
+    for duo_session in existing_duo_sessions:
+        duo_session_dao.remove(db, id=duo_session.id)
 
 
 @pytest.fixture

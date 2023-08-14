@@ -3,9 +3,9 @@ import itertools
 import random
 
 from typing import Callable
+from sqlalchemy.orm import Session
 from pytest_mock import MockerFixture
 from datetime import datetime, timedelta
-from sqlalchemy.orm import Session
 
 from app.commons.utils import generate_uuid
 from app.core.config import settings
@@ -22,7 +22,13 @@ from app.core.tests.test_data import (
     two_nodes,
     four_nodes,
 )
-from app.sessions.daos.session import pool_session_stats_dao
+
+from app.sessions.constants import DuoSessionStatuses
+from app.sessions.daos.session import (
+    pool_session_stats_dao,
+    duo_session_dao,
+    session_dao,
+)
 from app.sessions.serializers.session import PoolSessionStatsCreateSerializer
 
 
@@ -559,3 +565,51 @@ def test_get_winner_returns_no_winner(
     winner = pair_users.get_winner(pair_partner_in)
 
     assert winner is None
+
+
+def test_create_duo_session_saves_model_instance(
+    db: Session,
+    mocker: MockerFixture,
+    create_session_model_instances: Callable,
+    delete_duo_session_model_instances: Callable,
+) -> None:
+    """Assert ´create_duo_session´ creates model instances"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+
+    sessions = session_dao.get_all(db)
+    session_ids = list(map(lambda x: x.id, sessions))
+    duo_session_statuses = DuoSessionStatuses.list_()
+
+    pair_users = PairUsers()
+    """Each user can play a session only once, that's why we loop through
+    the session ids rather than picking a random choice"""
+    session_index = 0
+
+    for status in duo_session_statuses:
+        party_a = ResultNode(
+            id=generate_uuid(),
+            user_id=generate_uuid(),
+            session_id=session_ids[session_index],
+            score=72,
+            expires_at=datetime.now(),
+            is_active=True,
+        )
+        party_b = two_nodes[1][1]
+        winner = None
+
+        if status == DuoSessionStatuses.PAIRED:
+            winner = party_a
+        else:
+            winner = None
+
+        pair_users.create_duo_session(
+            party_a=party_a, party_b=party_b, winner=winner, duo_session_status=status
+        )
+        session_index += 1
+
+    duo_session_objs = duo_session_dao.get_all(db)
+
+    # Assert that the number of model instances are equal to the number of
+    # DuoSessionStatuses
+    assert len(duo_session_objs) > 1
+    assert len(duo_session_objs) == len(duo_session_statuses)
