@@ -14,7 +14,7 @@ class ResultNode:
         is_active: bool
     ) -> None:
         """Represent each result model instance as a node"""
-        self.id = (id,)
+        self.id = id
         self.user_id = user_id
         self.session_id = session_id
         self.score = score

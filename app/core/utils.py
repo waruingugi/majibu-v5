@@ -1,6 +1,7 @@
 import bisect
 import heapq
 import random
+from typing import List
 from datetime import datetime, timedelta
 
 from app.db.session import SessionLocal
@@ -269,19 +270,7 @@ class PairUsers:
         with SessionLocal() as db:
             duo_session_dao.create(db, obj_in=duo_session_in)
 
-    def remove_nodes_from_pool(self, nodes_to_remove: list) -> None:
-        """Remove the node from both the queue and ordered list"""
-        for score, node in self.ordered_scores_list:
-            if node in nodes_to_remove:
-                self.ordered_scores_list.remove((score, node))
-
-        for node in self.results_queue:
-            if node in nodes_to_remove:
-                self.results_queue.remove(node)
-
-        heapq.heapify(self.results_queue)
-
-    def deactivate_results(self, result_nodes: list) -> None:
+    def deactivate_results(self, result_nodes: List[ResultNode]) -> None:
         """Deactives both the node and the Result model instance"""
         with SessionLocal() as db:
             for node in result_nodes:
@@ -304,7 +293,7 @@ class PairUsers:
             )
 
             party_a = node
-            nodes_to_remove = []
+            nodes_to_deactivate = []
             winner, party_b = None, None
             duo_session_status = DuoSessionStatuses.REFUNDED
 
@@ -314,7 +303,7 @@ class PairUsers:
                     So we do a partial refund. To receive a full refund, attempt to answer atleast
                     one question"""
                     duo_session_status = DuoSessionStatuses.PARTIALLY_REFUNDED
-                    nodes_to_remove = [party_a]
+                    nodes_to_deactivate = [party_a]
 
                 else:
                     """
@@ -333,14 +322,12 @@ class PairUsers:
                         and party_b is returned to the pool."""
                         if winner is not None:  # A winner was found
                             duo_session_status = DuoSessionStatuses.PAIRED
-                            nodes_to_remove = [party_a, party_b]
+                            nodes_to_deactivate = [party_a, party_b]
                         else:
                             duo_session_status = DuoSessionStatuses.REFUNDED
-                            nodes_to_remove = [party_a]
+                            nodes_to_deactivate = [party_a]
 
-                self.deactivate_results(nodes_to_remove)
-
-                self.remove_nodes_from_pool(nodes_to_remove)
+                self.deactivate_results(nodes_to_deactivate)
 
                 self.create_duo_session(
                     party_a=party_a,
