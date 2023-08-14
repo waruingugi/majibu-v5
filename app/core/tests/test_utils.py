@@ -10,7 +10,11 @@ from sqlalchemy.orm import Session
 from app.commons.utils import generate_uuid
 from app.core.config import settings
 from app.core.utils import PairUsers
-from app.core.serializers.core import ResultNode, ClosestNodeSerializer
+from app.core.serializers.core import (
+    ResultNode,
+    ClosestNodeSerializer,
+    PairPartnersSerializer,
+)
 from app.core.raw_logger import logger
 from app.core.tests.test_data import (
     no_nodes,
@@ -453,3 +457,105 @@ def test_get_pair_partner_returns_none_when_no_node_exists(
     partner = pair_users.get_pair_partner(target_node, closeest_nodes_in)
 
     assert partner is None
+
+
+def test_get_winner_returns_party_a_as_winner(
+    mocker: MockerFixture,
+) -> None:
+    """Assert that the function returns party_a as the winner"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+
+    party_a = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=74,  # Score is closer to the left node
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    party_b = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=72,
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    pair_users = PairUsers()
+    """Pairing range should be less than the difference between party_a score and party_b score
+    to enable pairing"""
+    pair_users.pairing_range = 3
+    pair_partner_in = PairPartnersSerializer(party_a=party_a, party_b=party_b)
+    winner = pair_users.get_winner(pair_partner_in)
+
+    assert winner == party_a
+
+
+def test_get_winner_returns_party_b_as_winner(
+    mocker: MockerFixture,
+) -> None:
+    """Assert that the function returns party_b as the winner"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+
+    party_a = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=72,  # Score is closer to the left node
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    party_b = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=74,
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    pair_users = PairUsers()
+    """Pairing range should be less than the difference between party_a score and party_b score
+    to enable pairing"""
+    pair_users.pairing_range = 3
+    pair_partner_in = PairPartnersSerializer(party_a=party_a, party_b=party_b)
+    winner = pair_users.get_winner(pair_partner_in)
+
+    assert winner == party_b
+
+
+def test_get_winner_returns_no_winner(
+    mocker: MockerFixture,
+) -> None:
+    """Assert that the function returns no winner when both partners are not within pairing range"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+
+    party_a = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=74,  # Score is closer to the left node
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    party_b = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=72,
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    pair_users = PairUsers()
+    """Pairing range should be less than the difference between party_a score and party_b score
+    to enable pairing"""
+    pair_users.pairing_range = 1
+    pair_partner_in = PairPartnersSerializer(party_a=party_a, party_b=party_b)
+    winner = pair_users.get_winner(pair_partner_in)
+
+    assert winner is None

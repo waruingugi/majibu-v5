@@ -236,12 +236,14 @@ class PairUsers:
         return closest_node
 
     def get_winner(self, pair_partners: PairPartnersSerializer) -> ResultNode | None:
+        """Returns the winner between two nodes, else, it returns None"""
         party_a = pair_partners.party_a
         party_b = pair_partners.party_b
         winner = None
 
         score_diff = abs(party_a.score - party_b.score)
 
+        # Check if both nodes are within pairing range
         if score_diff <= self.pairing_range:
             winner = party_a if party_a.score > party_b.score else party_b
 
