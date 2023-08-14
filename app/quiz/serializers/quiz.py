@@ -85,6 +85,7 @@ class ResultUpdateSerializer(BaseModel):
 
 
 class ResultNodeSerializer(ResultBaseSerializer):
+    id: str
     score: float
     expires_at: datetime
     is_active: bool

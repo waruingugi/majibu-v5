@@ -6,6 +6,7 @@ class ResultNode:
     def __init__(
         self,
         *,
+        id: str,
         user_id: str,
         session_id: str,
         score: float,
@@ -13,6 +14,7 @@ class ResultNode:
         is_active: bool
     ) -> None:
         """Represent each result model instance as a node"""
+        self.id = (id,)
         self.user_id = user_id
         self.session_id = session_id
         self.score = score

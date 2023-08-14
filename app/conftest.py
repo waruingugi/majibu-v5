@@ -12,7 +12,7 @@ from app.quiz.utils import CalculateScore
 
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
-from app.sessions.daos.session import session_dao
+from app.sessions.daos.session import session_dao, pool_session_stats_dao
 from app.sessions.serializers.session import SessionCreateSerializer
 
 from app.core.config import settings, redis
@@ -73,6 +73,14 @@ def delete_result_model_instances(db: Session) -> None:
     results = result_dao.get_all(db)
     for result in results:
         result_dao.remove(db, id=result.id)
+
+
+@pytest.fixture
+def delete_pool_session_stats_model_instances(db: Session) -> None:
+    """Delete all existing rows in PoolSessionStats model"""
+    pool_session_stats = pool_session_stats_dao.get_all(db)
+    for stat in pool_session_stats:
+        pool_session_stats_dao.remove(db, id=stat.id)
 
 
 @pytest.fixture

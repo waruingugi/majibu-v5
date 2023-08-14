@@ -94,7 +94,7 @@ def test_query_sessions_played_returns_correct_list(
     sessions = get_available_session.query_sessions_played()
 
     # Assert that result of the function is a correct list of sessions played by super user
-    assert sessions == played_sessions
+    assert sorted(sessions) == sorted(played_sessions)
 
 
 def test_query_is_active_result_sessions_returns_correct_list(

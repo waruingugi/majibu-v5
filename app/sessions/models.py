@@ -32,6 +32,7 @@ class PoolSessionStats(Base):
     threshold = mapped_column(
         Float,
         nullable=True,
+        default=settings.PAIRING_THRESHOLD,
         comment="The max. percentage of people who will be paired from the pool",
     )
     average_score = mapped_column(

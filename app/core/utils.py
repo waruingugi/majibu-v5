@@ -30,6 +30,9 @@ class PairUsers:
         self.ordered_scores_list = []
         self.results_queue = []
 
+        self.ewma = float("inf")
+        self.pairing_range = float("inf")
+
         self.create_nodes()
 
     def create_nodes(self) -> None:
@@ -189,14 +192,15 @@ class PairUsers:
         with SessionLocal() as db:
             average_score = self.calculate_average_score()
             mean_pair_wise_diff = self.calculate_mean_pairwise_difference()
+            ewma = self.calculate_exp_weighted_moving_average()
 
             pool_session_stats_dao.create(
                 db,
                 obj_in=PoolSessionStatsCreateSerializer(
                     total_players=len(self.results_queue),
                     average_score=average_score,
-                    threshold=settings.PAIRING_THRESHOLD,
                     mean_pairwise_difference=mean_pair_wise_diff,
+                    exp_weighted_moving_average=ewma,
                 ),
             )
 
@@ -248,6 +252,7 @@ class PairUsers:
         winner: ResultNode | None,
         duo_session_status: DuoSessionStatuses,
     ) -> None:
+        """Finally create a DuoSession so that the parties receive their funds"""
         duo_session_in = DuoSessionCreateSerializer(
             party_a=party_a.user_id,
             party_b=party_b.user_id if party_b else None,
@@ -258,25 +263,52 @@ class PairUsers:
         with SessionLocal() as db:
             duo_session_dao.create(db, obj_in=duo_session_in)
 
+    def remove_nodes_from_pool(self, nodes_to_remove: list) -> None:
+        """Remove the node from both the queue and ordered list"""
+        for score, node in self.ordered_scores_list:
+            if node in nodes_to_remove:
+                self.ordered_scores_list.remove((score, node))
+
+        for node in self.results_queue:
+            if node in nodes_to_remove:
+                self.results_queue.remove(node)
+
+        heapq.heapify(self.results_queue)
+
+    def deactivate_results(self, result_nodes: list) -> None:
+        """Deactives both the node and the Result model instance"""
+        with SessionLocal() as db:
+            for node in result_nodes:
+                node.is_active = False
+                result_obj = result_dao.get_not_none(db, id=node.id)
+                result_dao.update(db, db_obj=result_obj, obj_in={"is_active": False})
+
     def match_players(self):
+        """Loops through PoolSession to get players, find partners, or refund them"""
         self.ewma = self.calculate_exp_weighted_moving_average()
         self.pairing_range = self.ewma * settings.PAIRING_THRESHOLD
 
+        # Save the current PoolSesssion stats to model
+        self.set_pool_session_statistics()
+
         for node in self.results_queue:
-            time_to_expiry = datetime.now() - node.expires_at
+            """If node is x seconds close to expiry, then it's eligible to be paired"""
+            time_to_expiry = node.expires_at - timedelta(
+                seconds=settings.RESULT_EXPIRES_AT_BUFFER_TIME
+            )
+
+            party_a = node
+            nodes_to_remove = []
             winner, party_b = None, None
             duo_session_status = DuoSessionStatuses.REFUNDED
-            party_a = node
 
-            if (
-                node.is_active
-                and time_to_expiry.seconds <= settings.RESULT_EXPIRES_AT_BUFFER_TIME
-            ):
+            if node.is_active and datetime.now() > time_to_expiry:
                 if node.score == 0.0:
                     """The user played a session, but did not answer at least one question.
                     So we do a partial refund. To receive a full refund, attempt to answer atleast
                     one question"""
                     duo_session_status = DuoSessionStatuses.PARTIALLY_REFUNDED
+                    nodes_to_remove = [party_a]
 
                 else:
                     """
@@ -286,14 +318,23 @@ class PairUsers:
                     party_b = self.get_pair_partner(node, closest_nodes)
 
                     if party_b is not None:
+                        """If a pairing partner was found, get the winner between party_a and party_b"""
                         winner = self.get_winner(
                             PairPartnersSerializer(party_a=node, party_b=party_b)
                         )
-                        duo_session_status = (
-                            DuoSessionStatuses.PAIRED
-                            if winner is not None
-                            else DuoSessionStatuses.REFUNDED
-                        )
+
+                        """If there's no winner, then set the status us REFUNDED so that party_a is refunded
+                        and party_b is returned to the pool."""
+                        if winner is not None:  # A winner was found
+                            duo_session_status = DuoSessionStatuses.PAIRED
+                            nodes_to_remove = [party_a, party_b]
+                        else:
+                            duo_session_status = DuoSessionStatuses.REFUNDED
+                            nodes_to_remove = [party_a]
+
+                self.deactivate_results(nodes_to_remove)
+
+                self.remove_nodes_from_pool(nodes_to_remove)
 
                 self.create_duo_session(
                     party_a=party_a,
@@ -302,25 +343,6 @@ class PairUsers:
                     duo_session_status=duo_session_status,
                 )
 
-
-# Right, left
-# if right == left (distance): use winloss ratio
-# if right <= left or left >= right pair and EWMA
-# if right only and not equal self and EWMA pair
-# If left only and not equal to self and EWMA pair
-# if right only and not EWMA refund
-# if left only and not EWMA refund
-
-# Set win-loss ratio in Nodes
-# If win-loss ration is same, choose random
-# calculate ewma
-# if queue > 1, save ewma to model
-# Start pairing
-# Refund if user did not attempt questions
-
-# if distance same, choose any random
-# else choose closests
-# else if none refund
 
 # On pairing
 # if party_a has highest score and both parties not none,
@@ -364,10 +386,5 @@ class PairUsers:
 # if winner, reward_winner, update stats
 # else fully_refund user, update stats
 # Do transactions
-
-# --------------------------------------
-# [x, y]
-# [x, x]
-# [x, None]
-# [None, y]
-# [None, None]
+# On create set, result as false
+# Send message

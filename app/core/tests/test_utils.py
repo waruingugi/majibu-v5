@@ -83,6 +83,7 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
     ]  # 5 is just a random low int to ensure
     # some results nodes at least have the same session
     target_node = ResultNode(
+        id=generate_uuid(),
         user_id=generate_uuid(),
         session_id=random.choice(session_ids),
         score=target_score,
@@ -115,6 +116,7 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
                     (
                         num,
                         ResultNode(
+                            id=generate_uuid(),
                             user_id=generate_uuid(),
                             session_id=random.choice(session_ids),
                             score=num,
@@ -216,3 +218,22 @@ def test_calculate_exp_weighted_moving_average_returns_correct_ewma(
     pair_users.ordered_scores_list = four_nodes
 
     assert pair_users.calculate_exp_weighted_moving_average() == 3.8666666666666667
+
+
+def test_set_pool_session_statistics_saves_instance_to_model(
+    db: Session,
+    mocker: MockerFixture,
+    delete_pool_session_stats_model_instances,
+    create_result_instances_to_be_paired: Callable,
+) -> None:
+    mock_datetime = mocker.patch("app.core.utils.datetime")
+    mock_datetime.now.return_value = datetime.now() + timedelta(
+        minutes=settings.SESSION_DURATION
+    )
+
+    pair_users = PairUsers()
+    pair_users.set_pool_session_statistics()
+
+    pool_session_obj = pool_session_stats_dao.get(db)
+
+    assert pool_session_obj is not None
