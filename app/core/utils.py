@@ -207,16 +207,17 @@ class PairUsers:
     def get_pair_partner(
         self, target_node: ResultNode, closest_nodes_in: ClosestNodeSerializer
     ) -> ResultNode | None:
+        """Receives No nodes, one or two nodes then returns the node closest to the target score"""
         right_node = closest_nodes_in.right_node
         left_node = closest_nodes_in.left_node
 
-        closest_node = None
+        closest_node = None  # If no node is found, return None
         sibling_nodes = [right_node, left_node]
         closest_score_diff = float("inf")
         same_score_nodes = []
 
-        # Cater for None
         for node in sibling_nodes:
+            # If node is None, assign score to infinity
             node_score = float("inf") if node is None else node.score
             score_diff = abs(target_node.score - node_score)
 
@@ -224,10 +225,12 @@ class PairUsers:
                 closest_node = node
                 closest_score_diff = score_diff
                 same_score_nodes = [node]
+
             elif score_diff == closest_score_diff:
                 same_score_nodes.append(node)
 
         if same_score_nodes:
+            """If both nodes have same score, choose a random node and return it"""
             closest_node = random.choice(same_score_nodes)
 
         return closest_node

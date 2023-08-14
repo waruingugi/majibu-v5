@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.commons.utils import generate_uuid
 from app.core.config import settings
 from app.core.utils import PairUsers
-from app.core.serializers.core import ResultNode
+from app.core.serializers.core import ResultNode, ClosestNodeSerializer
 from app.core.raw_logger import logger
 from app.core.tests.test_data import (
     no_nodes,
@@ -223,9 +223,10 @@ def test_calculate_exp_weighted_moving_average_returns_correct_ewma(
 def test_set_pool_session_statistics_saves_instance_to_model(
     db: Session,
     mocker: MockerFixture,
-    delete_pool_session_stats_model_instances,
+    delete_pool_session_stats_model_instances: Callable,
     create_result_instances_to_be_paired: Callable,
 ) -> None:
+    """Assert the function creates a PoolSessionStats instance"""
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
         minutes=settings.SESSION_DURATION
@@ -237,3 +238,218 @@ def test_set_pool_session_statistics_saves_instance_to_model(
     pool_session_obj = pool_session_stats_dao.get(db)
 
     assert pool_session_obj is not None
+
+
+def test_get_pair_partner_returns_correct_node_when_both_have_same_score(
+    mocker: MockerFixture,
+) -> None:
+    """Assert function returns any partner node when:
+    - Both right node and left node are not None
+    - Right node and left node both have the same score"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+    same_score = 74
+    same_score_list = [same_score, same_score]
+    target_node = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=same_score + 2,
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    result_nodes_list = [
+        ResultNode(
+            id=generate_uuid(),
+            user_id=generate_uuid(),
+            session_id=generate_uuid(),
+            score=num,
+            expires_at=datetime.now(),
+            is_active=True,
+        )
+        for num in same_score_list
+    ]
+    closeest_nodes_in = ClosestNodeSerializer(
+        left_node=result_nodes_list[0], right_node=result_nodes_list[1]
+    )
+
+    pair_users = PairUsers()
+    partner = pair_users.get_pair_partner(target_node, closeest_nodes_in)
+
+    assert partner in result_nodes_list
+
+
+def test_get_pair_partner_returns_correct_node_when_right_node_is_closer_to_target_node(
+    mocker: MockerFixture,
+) -> None:
+    """Assert function returns correct partner node when:
+    - Both right node and left node are not None
+    - But the right node is closer to the target node"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+
+    score_list = [72, 78]
+    target_node = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=76,  # Score is closer to the right node
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    result_nodes_list = [
+        ResultNode(
+            id=generate_uuid(),
+            user_id=generate_uuid(),
+            session_id=generate_uuid(),
+            score=num,
+            expires_at=datetime.now(),
+            is_active=True,
+        )
+        for num in score_list
+    ]
+
+    left_node = result_nodes_list[0]
+    right_node = result_nodes_list[1]
+
+    closeest_nodes_in = ClosestNodeSerializer(
+        left_node=left_node, right_node=right_node
+    )
+
+    pair_users = PairUsers()
+    partner = pair_users.get_pair_partner(target_node, closeest_nodes_in)
+
+    assert partner == right_node
+
+
+def test_get_pair_partner_returns_correct_node_when_left_node_is_closer_to_target_node(
+    mocker: MockerFixture,
+) -> None:
+    """Assert function returns correct partner node when:
+    - Both right node and left node are not None
+    - But the left node is closer to the target node"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+
+    score_list = [74, 76]
+    target_node = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=72,  # Score is closer to the left node
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    result_nodes_list = [
+        ResultNode(
+            id=generate_uuid(),
+            user_id=generate_uuid(),
+            session_id=generate_uuid(),
+            score=num,
+            expires_at=datetime.now(),
+            is_active=True,
+        )
+        for num in score_list
+    ]
+
+    left_node = result_nodes_list[0]
+    right_node = result_nodes_list[1]
+
+    closeest_nodes_in = ClosestNodeSerializer(
+        left_node=left_node, right_node=right_node
+    )
+
+    pair_users = PairUsers()
+    partner = pair_users.get_pair_partner(target_node, closeest_nodes_in)
+
+    assert partner == left_node
+
+
+def test_get_pair_partner_returns_correct_node_when_left_node_only_exists(
+    mocker: MockerFixture,
+) -> None:
+    """Assert function returns correct partner node when:
+    - Only the left node exists"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+
+    target_node = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=74,  # Score is closer to the left node
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    left_node = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=72,
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    closeest_nodes_in = ClosestNodeSerializer(left_node=left_node, right_node=None)
+
+    pair_users = PairUsers()
+    partner = pair_users.get_pair_partner(target_node, closeest_nodes_in)
+
+    assert partner == left_node
+
+
+def test_get_pair_partner_returns_correct_node_when_right_node_only_exists(
+    mocker: MockerFixture,
+) -> None:
+    """Assert function returns correct partner node when:
+    - Only the right node exists"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+
+    target_node = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=72,  # Score is closer to the left node
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    right_node = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=74,
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    closeest_nodes_in = ClosestNodeSerializer(left_node=None, right_node=right_node)
+
+    pair_users = PairUsers()
+    partner = pair_users.get_pair_partner(target_node, closeest_nodes_in)
+
+    assert partner == right_node
+
+
+def test_get_pair_partner_returns_none_when_no_node_exists(
+    mocker: MockerFixture,
+) -> None:
+    """Assert function returns None when:
+    - No partner node exists"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+
+    target_node = ResultNode(
+        id=generate_uuid(),
+        user_id=generate_uuid(),
+        session_id=generate_uuid(),
+        score=72,  # Score is closer to the left node
+        expires_at=datetime.now(),
+        is_active=True,
+    )
+
+    closeest_nodes_in = ClosestNodeSerializer(left_node=None, right_node=None)
+
+    pair_users = PairUsers()
+    partner = pair_users.get_pair_partner(target_node, closeest_nodes_in)
+
+    assert partner is None
