@@ -80,32 +80,44 @@ class PairUsers:
         # Put two recursive functions inside so that we don't have to pass score as an argument again
         def get_closest_index_to_the_right(index):
             """Recursion to find closest node to the right"""
-            if (
-                (self.ordered_scores_list[index][0] != score)  # If greater than score
-                or (
-                    index + 1 == len(self.ordered_scores_list)
-                )  # Or node is the last elem in list
-            ) and (  # And the session_id is the same...
+            is_not_equal_to_score = (
+                self.ordered_scores_list[index][0] != score
+            )  # If elem score is not equal to node score
+            is_last_elem_in_list = index + 1 == len(
+                self.ordered_scores_list
+            )  # If last elem in list
+
+            is_same_session_id = (  # If it's the same session id
                 self.ordered_scores_list[index][1].session_id == session_id
-            ):  # The a valid pair partner exists
+            )
+            is_active_node = self.ordered_scores_list[index][1].is_active is True
+
+            """If an element matches the above criteria, return it's index"""
+            if is_not_equal_to_score and is_same_session_id and is_active_node:
                 return index
 
-            if index + 1 == len(self.ordered_scores_list):
+            """Return None, if it's the last element (... and no element matches the above)"""
+            if is_last_elem_in_list:
                 return None
 
             return get_closest_index_to_the_right(index + 1)
 
         def get_closest_index_to_the_left(index):
             """Recursion to find closest node to the left"""
-            if (
-                (self.ordered_scores_list[index - 1][0] != score)  # If less than score
-                or (index - 1 == 0)  # Or node is the first element in list
-            ) and (  # And the session_id is the same...
+            is_not_equal_to_score = self.ordered_scores_list[index - 1][0] != score
+            is_first_elem_in_list = index - 1 == 0  # Node is the first element in list
+
+            is_same_session_id = (
                 self.ordered_scores_list[index - 1][1].session_id == session_id
-            ):  # Then a valid pair partner exists
+            )
+            is_active_node = self.ordered_scores_list[index - 1][1].is_active is True
+
+            """If an element matches the above criteria, return it's index"""
+            if is_not_equal_to_score and is_same_session_id and is_active_node:
                 return index - 1
 
-            if index - 1 == 0:
+            """Return None, if it's the last element (... and no element matches the above)"""
+            if is_first_elem_in_list:
                 return None
 
             return get_closest_index_to_the_left(index - 1)

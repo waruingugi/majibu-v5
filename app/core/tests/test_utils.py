@@ -133,7 +133,9 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
                             session_id=random.choice(session_ids),
                             score=num,
                             expires_at=datetime.now(),
-                            is_active=True,
+                            is_active=random.choice(
+                                [True, False]
+                            ),  # A node can be active or not
                         ),
                     )
                     for num in combination
@@ -157,11 +159,15 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
         if closest_nodes.right_node is not None:
             assert closest_nodes.right_node.score >= target_score
             assert closest_nodes.right_node.session_id == target_node.session_id
+
+            assert closest_nodes.right_node.is_active is True
             assert closest_nodes.right_node.user_id != target_node.user_id
 
         if closest_nodes.left_node is not None:
             assert closest_nodes.left_node.score <= target_score
             assert closest_nodes.left_node.session_id == target_node.session_id
+
+            assert closest_nodes.left_node.is_active is True
             assert closest_nodes.left_node.user_id != target_node.user_id
 
 
