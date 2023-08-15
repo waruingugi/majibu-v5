@@ -102,7 +102,7 @@ class PairUsers:
                 or (index - 1 == 0)  # Or node is the first element in list
             ) and (  # And the session_id is the same...
                 self.ordered_scores_list[index - 1][1].session_id == session_id
-            ):  # The a valid pair partner exists
+            ):  # Then a valid pair partner exists
                 return index - 1
 
             if index - 1 == 0:
@@ -292,12 +292,15 @@ class PairUsers:
                 seconds=settings.RESULT_EXPIRES_AT_BUFFER_TIME
             )
 
-            party_a = node
-            nodes_to_deactivate = []
-            winner, party_b = None, None
-            duo_session_status = DuoSessionStatuses.REFUNDED
+            if node.is_active is True and datetime.now() > time_to_expiry:
+                party_a = node
 
-            if node.is_active and datetime.now() > time_to_expiry:
+                """party_a is removed from the results_queue by default because it's
+                node is active and it is past the expiry time"""
+                nodes_to_deactivate = [party_a]
+                winner, party_b = None, None
+                duo_session_status = DuoSessionStatuses.PARTIALLY_REFUNDED
+
                 if node.score == 0.0:
                     """The user played a session, but did not answer at least one question.
                     So we do a partial refund. To receive a full refund, attempt to answer atleast
@@ -326,6 +329,9 @@ class PairUsers:
                         else:
                             duo_session_status = DuoSessionStatuses.REFUNDED
                             nodes_to_deactivate = [party_a]
+
+                            """Set party_b back to None so that the value is not saved to DuoSession model"""
+                            party_b = None
 
                 self.deactivate_results(nodes_to_deactivate)
 

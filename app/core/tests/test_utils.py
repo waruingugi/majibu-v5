@@ -65,7 +65,7 @@ def test_create_nodes_returns_correctly_ordered_queue(
     results_queue = pair_users.results_queue
     smallest_elem = heapq.heappop(results_queue)
 
-    for elem in results_queue:
+    for _ in results_queue:
         next_smallest_elem = heapq.heappop(results_queue)
         assert smallest_elem < next_smallest_elem
         smallest_elem = next_smallest_elem
@@ -643,3 +643,25 @@ def test_deactivate_results_runs_successfully(
 
     assert active_nodes == 1
     assert active_results == 1
+
+
+def test_match_players_creates_a_partially_refunded_session(
+    db: Session,
+    mocker: MockerFixture,
+    delete_duo_session_model_instances: Callable,
+    create_result_instances_to_be_paired: Callable,
+) -> None:
+    mock_datetime = mocker.patch("app.core.utils.datetime")
+    mock_datetime.now.return_value = datetime.now() + timedelta(
+        minutes=settings.SESSION_DURATION
+    )
+    pair_users = PairUsers()
+    result_node = pair_users.results_queue[0]
+
+    # Set result_node score to 0.0 so that it's partially refunded
+    result_node.score = 0.0
+
+    pair_users.match_players()
+    import pdb
+
+    pdb.set_trace()
