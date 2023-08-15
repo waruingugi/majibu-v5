@@ -8,6 +8,8 @@ from pytest_mock import MockerFixture
 from datetime import datetime, timedelta
 
 from app.commons.utils import generate_uuid
+from app.quiz.daos.quiz import result_dao
+
 from app.core.config import settings
 from app.core.utils import PairUsers
 from app.core.serializers.core import (
@@ -613,3 +615,31 @@ def test_create_duo_session_saves_model_instance(
     # DuoSessionStatuses
     assert len(duo_session_objs) > 1
     assert len(duo_session_objs) == len(duo_session_statuses)
+
+
+def test_deactivate_results_runs_successfully(
+    db: Session, mocker: MockerFixture, create_result_instances_to_be_paired: Callable
+) -> None:
+    """Assert that the function deactivates all selected nodes"""
+    mock_datetime = mocker.patch("app.core.utils.datetime")
+    mock_datetime.now.return_value = datetime.now() + timedelta(
+        minutes=settings.SESSION_DURATION
+    )
+
+    results_obj = result_dao.get_all(db)
+    no_of_results = len(results_obj)
+    pair_users = PairUsers()
+    results_queue = pair_users.results_queue
+
+    # Deactivate all elements except one
+    pair_users.deactivate_results(results_queue[: no_of_results - 1])
+
+    active_results = len(result_dao.get_all(db, is_active=True))
+
+    active_nodes = 0
+    for node in results_queue:
+        if node.is_active:
+            active_nodes += 1
+
+    assert active_nodes == 1
+    assert active_results == 1

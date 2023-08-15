@@ -315,10 +315,10 @@ class PairUsers:
                     if party_b is not None:
                         """If a pairing partner was found, get the winner between party_a and party_b"""
                         winner = self.get_winner(
-                            PairPartnersSerializer(party_a=node, party_b=party_b)
+                            PairPartnersSerializer(party_a=party_a, party_b=party_b)
                         )
 
-                        """If there's no winner, then set the status us REFUNDED so that party_a is refunded
+                        """If there's no winner, then set the status as REFUNDED so that party_a is refunded
                         and party_b is returned to the pool."""
                         if winner is not None:  # A winner was found
                             duo_session_status = DuoSessionStatuses.PAIRED
