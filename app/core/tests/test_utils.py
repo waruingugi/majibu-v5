@@ -662,6 +662,3 @@ def test_match_players_creates_a_partially_refunded_session(
     result_node.score = 0.0
 
     pair_users.match_players()
-    import pdb
-
-    pdb.set_trace()

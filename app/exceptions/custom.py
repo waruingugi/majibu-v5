@@ -18,16 +18,11 @@ class ObjectDoesNotExist(Exception):
         self.message = message
 
 
-# class DuoSessionFailedOnUpdate(Exception):
-#     """An exception happened when updating a DuoSession instance"""
+class DuoSessionFailedOnCreate(Exception):
+    """An exception happened when creating a DuoSession instance"""
 
-#     def __init__(self, message: str) -> None:
-#         self.message = message
-class DuoSessionAlreadyExists(Exception):
-    """Attempted to created a duplicate DuoSession instance"""
-
-    def __init__(self, user_id: str, session_id: str) -> None:
-        self.message = ErrorCodes.DUO_SESSION_ALREADY_EXISTS.format(user_id, session_id)
+    def __init__(self, message: str) -> None:
+        self.message = message
 
 
 class ChoicesDAOFailedOnCreate(Exception):

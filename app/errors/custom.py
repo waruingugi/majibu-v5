@@ -3,9 +3,6 @@ from enum import Enum
 
 class ErrorCodes(str, Enum):
     B2C_PAYMENT_FAILED = "An error ocurred while initiating a B2C payment."
-    DUO_SESSION_ALREADY_EXISTS = (
-        "The user_id:{} has this played the Duo Session with session_id:{} before."
-    )
     EXPIRED_AUTHORIZATION_TOKEN = "The authorization token expired"
     INACTIVE_ACCOUNT = "This account is currently inactive. Please contact support"
     INVALID_TOKEN = "Could not validate your token"

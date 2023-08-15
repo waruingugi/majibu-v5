@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from app.exceptions.custom import DuoSessionAlreadyExists
+from app.exceptions.custom import DuoSessionFailedOnCreate
 from app.db.dao import CRUDDao
 from app.core.helpers import convert_list_to_string
 from app.core.config import settings
@@ -82,7 +82,9 @@ class DuoSessionDao(
     def on_pre_create(
         self, db: Session, id: str, values: dict, orig_values: dict
     ) -> None:
-        """Assert not on the parties have played a DuoSession with the same session_id before."""
+        """Check these constraints before creating a DuoSession instance in the model."""
+        # Constraint 1: Parties can not play a session_id twice
+        """Assert that none of the parties have played a DuoSession with the same session_id before."""
         sessions_played = []
 
         # Search if party_a has played this DuoSession before
@@ -109,7 +111,21 @@ class DuoSessionDao(
 
         """If any of the parties have played the session before, raise an exception"""
         if sessions_played:
-            raise DuoSessionAlreadyExists(values["party_a"], orig_values["session_id"])
+            dup_session = sessions_played.pop()  # Duplicate session
+            user_id = (
+                dup_session.party_a if dup_session.party_a else dup_session.party_a
+            )
+            raise DuoSessionFailedOnCreate(
+                f"The user_id:{user_id} has this played the Duo Session id:{dup_session.id} before."
+            )
+
+        # Constraint 2: party_a and party_b can never be the same in a DuoSession instance
+        if "party_a" in orig_values and "party_b" in orig_values:
+            if orig_values["party_a"] == orig_values["party_b"]:
+                raise DuoSessionFailedOnCreate(
+                    f"Party A & Party B can not be the same for a DuoSession. "
+                    f"Please update {orig_values['party_b']}"
+                )
 
 
 duo_session_dao = DuoSessionDao(DuoSession)

@@ -2,17 +2,16 @@ from sqlalchemy.orm import Session
 from typing import Callable
 import pytest
 
-from app.exceptions.custom import DuoSessionAlreadyExists
+from app.core.config import settings
 from app.commons.constants import Categories
+from app.exceptions.custom import DuoSessionFailedOnCreate
+
 from app.sessions.daos.session import (
     session_dao,
     duo_session_dao,
     user_session_stats_dao,
     pool_session_stats_dao,
 )
-from app.sessions.constants import DuoSessionStatuses
-from app.users.daos.user import user_dao
-from app.users.serializers.user import UserCreateSerializer
 from app.sessions.serializers.session import (
     SessionCreateSerializer,
     DuoSessionCreateSerializer,
@@ -20,7 +19,10 @@ from app.sessions.serializers.session import (
     UserSessionStatsUpdateSerializer,
     PoolSessionStatsCreateSerializer,
 )
-from app.core.config import settings
+from app.sessions.constants import DuoSessionStatuses
+
+from app.users.daos.user import user_dao
+from app.users.serializers.user import UserCreateSerializer
 
 
 def test_create_pool_session_stats_instance(db: Session) -> None:
@@ -187,7 +189,7 @@ def test_create_duo_session_instance_fails_if_already_exists(
     duo_session_dao.create(db, obj_in=data_in)
 
     # Create a similar duo session
-    with pytest.raises(DuoSessionAlreadyExists):
+    with pytest.raises(DuoSessionFailedOnCreate):
         data_in = DuoSessionCreateSerializer(
             party_a=party_a.id,
             status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
@@ -196,9 +198,30 @@ def test_create_duo_session_instance_fails_if_already_exists(
         )
         duo_session_dao.create(db, obj_in=data_in)
 
-    with pytest.raises(DuoSessionAlreadyExists):
+    with pytest.raises(DuoSessionFailedOnCreate):
         data_in = DuoSessionCreateSerializer(
             party_a=party_b.id,
+            status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
+            session_id=session.id,
+            amount=settings.SESSION_AMOUNT,
+        )
+        duo_session_dao.create(db, obj_in=data_in)
+
+
+def test_create_duo_session_instance_fails_if_party_a_and_party_b_are_same(
+    db: Session,
+    create_session_instance: Callable,
+    create_super_user_instance: Callable,
+    delete_duo_session_model_instances: Callable,
+):
+    """Test DuoSessions can not be created in model with the same party_a and party_b"""
+    session = session_dao.get_not_none(db)
+    party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+
+    with pytest.raises(DuoSessionFailedOnCreate):
+        data_in = DuoSessionCreateSerializer(
+            party_a=party_a.id,  # party_a is same as party_b
+            party_b=party_a.id,  # party_b is same as party_a
             status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
             session_id=session.id,
             amount=settings.SESSION_AMOUNT,
