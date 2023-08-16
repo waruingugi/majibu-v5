@@ -74,8 +74,8 @@ class PoolSessionStatsUpdateSerializer(PoolSessionStatsBaseSerializer):
 
 class PoolCategoryStatistics(BaseModel):
     players: int | None = None
-    mean_paiwise_difference: float | None = None
     threshold: float | None = None
     average_score: float | None = None
     pairing_range: float | None = None
-    exp_weighted_average: float | None = None
+    mean_paiwise_difference: float | None = None
+    exp_weighted_moving_average: float | None = None

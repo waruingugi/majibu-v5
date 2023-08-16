@@ -1,6 +1,7 @@
+import json
 import heapq
-import itertools
 import random
+import itertools
 
 from typing import Callable
 from sqlalchemy.orm import Session
@@ -22,10 +23,11 @@ from app.core.serializers.core import (
 )
 from app.core.raw_logger import logger
 from app.core.tests.test_data import (
-    no_nodes,
-    one_node,
     two_nodes,
-    four_nodes,
+    no_result_nodes,
+    one_result_node,
+    two_result_nodes,
+    four_result_nodes,
 )
 
 from app.sessions.filters import SessionFilter
@@ -35,7 +37,10 @@ from app.sessions.daos.session import (
     duo_session_dao,
     session_dao,
 )
-from app.sessions.serializers.session import PoolSessionStatsCreateSerializer
+from app.sessions.serializers.session import (
+    PoolCategoryStatistics,
+    PoolSessionStatsCreateSerializer,
+)
 
 
 def test_create_nodes_returns_correct_ordered_score_list(
@@ -184,14 +189,23 @@ def test_calculate_mean_pairwise_difference_returns_correct_values(
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
     pair_users = PairUsers()
 
-    pair_users.ordered_scores_list = one_node
-    assert pair_users.calculate_mean_pairwise_difference() is None
+    pair_users.results_queue = one_result_node
+    assert (
+        pair_users.calculate_mean_pairwise_difference(category=Categories.BIBLE.value)
+        is None
+    )
 
-    pair_users.ordered_scores_list = two_nodes
-    assert pair_users.calculate_mean_pairwise_difference() == 2
+    pair_users.results_queue = two_result_nodes
+    assert (
+        pair_users.calculate_mean_pairwise_difference(category=Categories.BIBLE.value)
+        == 2
+    )
 
-    pair_users.ordered_scores_list = four_nodes
-    assert pair_users.calculate_mean_pairwise_difference() == 4.666666666666667
+    pair_users.results_queue = four_result_nodes
+    assert (
+        pair_users.calculate_mean_pairwise_difference(category=Categories.BIBLE.value)
+        == 4.666666666666667
+    )
 
 
 def test_calculate_average_score_returns_correct_value(
@@ -201,11 +215,11 @@ def test_calculate_average_score_returns_correct_value(
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
     pair_users = PairUsers()
 
-    pair_users.ordered_scores_list = no_nodes
-    assert pair_users.calculate_average_score() is None
+    pair_users.results_queue = no_result_nodes
+    assert pair_users.calculate_average_score(Categories.BIBLE.value) is None
 
-    pair_users.ordered_scores_list = four_nodes
-    assert pair_users.calculate_average_score() == 76
+    pair_users.results_queue = four_result_nodes
+    assert pair_users.calculate_average_score(Categories.BIBLE.value) == 76
 
 
 def test_calculate_exp_weighted_moving_average_returns_mean_pairwise_diff(
@@ -216,11 +230,14 @@ def test_calculate_exp_weighted_moving_average_returns_mean_pairwise_diff(
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
     pair_users = PairUsers()
 
-    pair_users.ordered_scores_list = four_nodes
-    assert pair_users.calculate_exp_weighted_moving_average() == 4.666666666666667
+    pair_users.results_queue = four_result_nodes
+    assert (
+        pair_users.calculate_exp_weighted_moving_average(Categories.BIBLE.value)
+        == 4.666666666666667
+    )
 
-    pair_users.ordered_scores_list = no_nodes
-    assert pair_users.calculate_exp_weighted_moving_average() == 0
+    pair_users.results_queue = no_result_nodes
+    assert pair_users.calculate_exp_weighted_moving_average(Categories.BIBLE.value) == 0
 
 
 def test_calculate_exp_weighted_moving_average_returns_correct_ewma(
@@ -229,19 +246,32 @@ def test_calculate_exp_weighted_moving_average_returns_correct_ewma(
 ) -> None:
     """Assert the function returns correct exponentially moving weighted average"""
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+
+    # Create a previous PoolSessionStat
+    category_stats = PoolCategoryStatistics(
+        players=3,
+        threshold=settings.PAIRING_THRESHOLD,
+        mean_paiwise_difference=2,
+        pairing_range=2,
+        exp_weighted_moving_average=2,
+    )
+    stats = {}
+    stats[Categories.BIBLE.value] = category_stats.dict()
+
     pool_session_stats_dao.create(
         db,
         obj_in=PoolSessionStatsCreateSerializer(
-            total_players=2,
-            average_score=72,
-            mean_pairwise_difference=3,
-            exp_weighted_moving_average=2,
+            total_players=3, statistics=json.dumps(stats)
         ),
     )
-    pair_users = PairUsers()
-    pair_users.ordered_scores_list = four_nodes
 
-    assert pair_users.calculate_exp_weighted_moving_average() == 3.8666666666666667
+    pair_users = PairUsers()
+    pair_users.results_queue = four_result_nodes
+
+    assert (
+        pair_users.calculate_exp_weighted_moving_average(Categories.BIBLE.value)
+        == 3.8666666666666667
+    )
 
 
 def test_set_pool_session_statistics_saves_instance_to_model(

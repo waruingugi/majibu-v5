@@ -1,3 +1,4 @@
+import json
 import bisect
 import heapq
 import random
@@ -5,6 +6,7 @@ from typing import List
 from datetime import datetime, timedelta
 
 from app.db.session import SessionLocal
+from app.commons.constants import Categories
 
 from app.core.config import settings
 from app.core.logger import logger
@@ -22,6 +24,7 @@ from app.sessions.daos.session import pool_session_stats_dao, duo_session_dao
 from app.sessions.serializers.session import (
     PoolSessionStatsCreateSerializer,
     DuoSessionCreateSerializer,
+    PoolCategoryStatistics,
 )
 
 
@@ -30,6 +33,7 @@ class PairUsers:
         logger.info("Initializing PairUsers class...")
         self.ordered_scores_list = []
         self.results_queue = []
+        self.statistics = {}
 
         self.ewma = float("inf")
         self.pairing_range = float("inf")
@@ -160,47 +164,79 @@ class PairUsers:
                 left_node=closest_left_node,
             )
 
-    def calculate_mean_pairwise_difference(self):
+    def calculate_mean_pairwise_difference(self, category: str):
         """Calculate the mean difference between consecutive scores"""
-        if len(self.ordered_scores_list) > 1:
+        scores = [
+            node.score for node in self.results_queue if node.category == category
+        ]
+
+        if len(scores) > 1:
             differences = [
-                abs(self.ordered_scores_list[i][0] - self.ordered_scores_list[i + 1][0])
-                for i in range(len(self.ordered_scores_list) - 1)
+                abs(scores[i] - scores[i + 1]) for i in range(len(scores) - 1)
             ]
 
-            # Calculate the mean of the pair-wise differences
             mean_pair_wise_difference = sum(differences) / len(differences)
             return mean_pair_wise_difference
 
         return None
+        # if len(self.ordered_scores_list) > 1:
+        #     differences = [
+        #         abs(self.ordered_scores_list[i][0] - self.ordered_scores_list[i + 1][0])
+        #         for i in range(len(self.ordered_scores_list) - 1)
+        #     ]
 
-    def calculate_average_score(self) -> float | None:
+        #     # Calculate the mean of the pair-wise differences
+        #     mean_pair_wise_difference = sum(differences) / len(differences)
+        #     return mean_pair_wise_difference
+
+        # return None
+
+    def calculate_average_score(self, category: str) -> float | None:
         """Calculate average score of the pool"""
-        if not self.ordered_scores_list:
+        if not self.results_queue:
             return None  # Return None for an empty list
 
-        total_score = sum(score for score, _ in self.ordered_scores_list)
-        average_score = total_score / len(self.ordered_scores_list)
+        total_score = sum(
+            node.score for node in self.results_queue if node.category == category
+        )
+        average_score = total_score / len(self.results_queue)
         return average_score
 
-    def calculate_exp_weighted_moving_average(self) -> float:
+    def calculate_exp_weighted_moving_average(self, category: str) -> float:
         """Calculate the exponentially moving average"""
-        mean_pairwise_diff = self.calculate_mean_pairwise_difference() or 0
+        mean_pairwise_diff = self.calculate_mean_pairwise_difference(category) or 0
 
         with SessionLocal() as db:
+            """Search for the previous PoolSession Statistics"""
             pool_session_stats = pool_session_stats_dao.search(
                 db, {"order_by": ["-created_at"]}
             )
 
             if pool_session_stats:
-                previous_session_stat = pool_session_stats[0]
-                ewma = (settings.EWMA_MIXING_PARAMETER * mean_pairwise_diff) + (
-                    1 - settings.EWMA_MIXING_PARAMETER
-                ) * previous_session_stat.exp_weighted_moving_average
+                prev_pool_session_stat = pool_session_stats[0]
+                prev_stats = prev_pool_session_stat.statistics
 
-                return ewma
+                category_stats = prev_stats.get(category, None)
+                exp_weighted_moving_avg = None
 
-        return mean_pairwise_diff
+                # Assert the specificied category statistics exist
+                if category_stats is not None:
+                    exp_weighted_moving_avg = category_stats.get(
+                        "exp_weighted_moving_average", None
+                    )
+
+                if (
+                    exp_weighted_moving_avg is not None
+                ):  # Calculate EWMA if previous EWMA exists
+                    ewma = (settings.EWMA_MIXING_PARAMETER * mean_pairwise_diff) + (
+                        1 - settings.EWMA_MIXING_PARAMETER
+                    ) * exp_weighted_moving_avg
+
+                    return ewma
+
+        # The mean pairwise difference is the default EWMA
+        ewma = mean_pairwise_diff
+        return ewma
 
     def calculate_total_players(self, category: str | None = None):
         """Calculate total players or total players in a category"""
@@ -213,19 +249,52 @@ class PairUsers:
     def set_pool_session_statistics(self) -> None:
         """Set statistics to the PoolSession model"""
         with SessionLocal() as db:
-            average_score = self.calculate_average_score()
-            mean_pair_wise_diff = self.calculate_mean_pairwise_difference()
-            ewma = self.calculate_exp_weighted_moving_average()
+            total_players = 0
+
+            """Loop through each category and save the stats to the model"""
+            for category in Categories.list_():
+                cat_total_players = self.calculate_total_players(category)
+                cat_average_score = self.calculate_average_score(category)
+
+                cat_mean_pair_wise_diff = self.calculate_mean_pairwise_difference(
+                    category
+                )
+                cat_ewma = self.calculate_exp_weighted_moving_average(category)
+                cat_pairing_range = cat_ewma * settings.PAIRING_THRESHOLD
+
+                category_stats = PoolCategoryStatistics(
+                    players=cat_total_players,
+                    average_score=cat_average_score,
+                    pairing_range=cat_pairing_range,
+                    threshold=settings.PAIRING_THRESHOLD,
+                    exp_weighted_moving_average=cat_ewma,
+                    mean_paiwise_difference=cat_mean_pair_wise_diff,
+                )
+
+                # Update these two variables
+                total_players += cat_total_players
+                self.statistics[category] = category_stats.dict()
 
             pool_session_stats_dao.create(
                 db,
                 obj_in=PoolSessionStatsCreateSerializer(
-                    total_players=len(self.results_queue),
-                    average_score=average_score,
-                    mean_pairwise_difference=mean_pair_wise_diff,
-                    exp_weighted_moving_average=ewma,
+                    total_players=total_players, statistics=json.dumps(self.statistics)
                 ),
             )
+
+            # average_score = self.calculate_average_score()
+            # mean_pair_wise_diff = self.calculate_mean_pairwise_difference()
+            # ewma = self.calculate_exp_weighted_moving_average()
+
+            # pool_session_stats_dao.create(
+            #     db,
+            #     obj_in=PoolSessionStatsCreateSerializer(
+            #         total_players=len(self.results_queue),
+            #         average_score=average_score,
+            #         mean_pairwise_difference=mean_pair_wise_diff,
+            #         exp_weighted_moving_average=ewma,
+            #     ),
+            # )
 
     def get_pair_partner(
         self, target_node: ResultNode, closest_nodes_in: ClosestNodeSerializer
