@@ -1,10 +1,12 @@
+import json
+from typing import List
+
 from app.db.base_class import Base
 from app.core.config import settings
 
 from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import String, Text, ForeignKey, Float, Integer
-from typing import List
 
 
 class UserSessionStats(Base):
@@ -26,31 +28,58 @@ class PoolSessionStats(Base):
     """Pool Session Statistics model"""
 
     total_players = mapped_column(Integer, nullable=True, default=0)
-    mean_pairwise_difference = mapped_column(
-        Float, nullable=True, comment="Mean pairwise difference of the pool"
-    )
-    threshold = mapped_column(
-        Float,
-        nullable=True,
-        default=settings.PAIRING_THRESHOLD,
-        comment="The max. percentage of people who will be paired from the pool",
-    )
-    average_score = mapped_column(
-        Float, nullable=True, comment="The average of scores in the pool"
-    )
-    pairing_range = mapped_column(
-        Float,
-        nullable=True,
-        comment=(
-            "A percentage of the EWMA. "
-            "Two results(or Result Nodes) are paired if their score distances is within 0 - pairing_range."
-        ),
-    )
-    exp_weighted_moving_average = mapped_column(
-        Float,
-        nullable=True,
-        comment="The exponential moving average of pairwise diff. of the pool",
-    )
+    _statistics = mapped_column(String, nullable=True)
+
+    @hybrid_property
+    def statistics(self) -> dict:
+        try:
+            stats_dict = json.loads(self._statistics)
+            return stats_dict
+        except json.JSONDecodeError:
+            return {}
+
+    # mean_pairwise_difference = mapped_column(
+    #     Float, nullable=True, comment="Mean pairwise difference of the pool"
+    # )
+    # threshold = mapped_column(
+    #     Float,
+    #     nullable=True,
+    #     default=settings.PAIRING_THRESHOLD,
+    #     comment="The max. percentage of people who will be paired from the pool",
+    # )
+    # average_score = mapped_column(
+    #     Float, nullable=True, comment="The average of scores in the pool"
+    # )
+    # pairing_range = mapped_column(
+    #     Float,
+    #     nullable=True,
+    #     comment=(
+    #         "A percentage of the EWMA. "
+    #         "Two results(or Result Nodes) are paired if their score distances is within 0 - pairing_range."
+    #     ),
+    # )
+    # exp_weighted_moving_average = mapped_column(
+    #     Float,
+    #     nullable=True,
+    #     comment="The exponential moving average of pairwise diff. of the pool",
+    # )
+
+
+"""
+total_players: int
+statistics:
+{
+    "BIBLE": {
+        "players": float,
+        "mean_pairwise_difference": float,
+        "threshold": float,
+        "average_score": float,
+        "pairing_range": float,
+        "exp_weighted_moving_average": float
+    },
+    "FOOTBAL": {...}
+}
+"""
 
 
 class Sessions(Base):

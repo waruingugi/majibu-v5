@@ -56,7 +56,9 @@ class PairUsers:
             for result in available_results:
                 logger.info(f"Create a node for result: {result.id}")
 
-                result_in = ResultNodeSerializer(**result.__dict__)
+                result_in = ResultNodeSerializer(
+                    **result.__dict__, category=result.session.category
+                )
                 result_node = ResultNode(**result_in.dict())
 
                 # Insert the node into the sorted list based on the score
@@ -200,6 +202,14 @@ class PairUsers:
 
         return mean_pairwise_diff
 
+    def calculate_total_players(self, category: str | None = None):
+        """Calculate total players or total players in a category"""
+        if category is None:
+            return len(self.results_queue)
+
+        count = sum(1 for node in self.results_queue if node.category == category)
+        return count
+
     def set_pool_session_statistics(self) -> None:
         """Set statistics to the PoolSession model"""
         with SessionLocal() as db:
@@ -311,7 +321,7 @@ class PairUsers:
                 node is active and it is past the expiry time"""
                 nodes_to_deactivate = [party_a]
                 winner, party_b = None, None
-                duo_session_status = DuoSessionStatuses.PARTIALLY_REFUNDED
+                duo_session_status = None
 
                 if node.score == 0.0:
                     """The user played a session, but did not answer at least one question.
@@ -326,6 +336,9 @@ class PairUsers:
                     """
                     closest_nodes = self.get_closest_nodes(node)
                     party_b = self.get_pair_partner(node, closest_nodes)
+
+                    # The default state incase a user attempted atleast one question
+                    duo_session_status = DuoSessionStatuses.REFUNDED
 
                     if party_b is not None:
                         """If a pairing partner was found, get the winner between party_a and party_b"""

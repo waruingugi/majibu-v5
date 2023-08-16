@@ -61,10 +61,7 @@ class UserSessionStatsUpdateSerializer(UserSessionStatsBaseSerializer):
 
 class PoolSessionStatsBaseSerializer(BaseModel):
     total_players: int | None = 0
-    average_score: float | None = None
-    threshold: float | None = settings.PAIRING_THRESHOLD
-    mean_pairwise_difference: float | None = None
-    exp_weighted_moving_average: float | None = None
+    statistics: str | None
 
 
 class PoolSessionStatsCreateSerializer(PoolSessionStatsBaseSerializer):
@@ -73,3 +70,12 @@ class PoolSessionStatsCreateSerializer(PoolSessionStatsBaseSerializer):
 
 class PoolSessionStatsUpdateSerializer(PoolSessionStatsBaseSerializer):
     pass
+
+
+class PoolCategoryStatistics(BaseModel):
+    players: int | None = None
+    mean_paiwise_difference: float | None = None
+    threshold: float | None = None
+    average_score: float | None = None
+    pairing_range: float | None = None
+    exp_weighted_average: float | None = None

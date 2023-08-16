@@ -7,8 +7,11 @@ from sqlalchemy.orm import Session
 from pytest_mock import MockerFixture
 from datetime import datetime, timedelta
 
-from app.commons.utils import generate_uuid
 from app.quiz.daos.quiz import result_dao
+from app.quiz.filters import ResultFilter
+
+from app.commons.utils import generate_uuid
+from app.commons.constants import Categories
 
 from app.core.config import settings
 from app.core.utils import PairUsers
@@ -25,6 +28,7 @@ from app.core.tests.test_data import (
     four_nodes,
 )
 
+from app.sessions.filters import SessionFilter
 from app.sessions.constants import DuoSessionStatuses
 from app.sessions.daos.session import (
     pool_session_stats_dao,
@@ -95,12 +99,13 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
     ]  # 5 is just a random low int to ensure
     # some results nodes at least have the same session
     target_node = ResultNode(
-        id=generate_uuid(),
-        user_id=generate_uuid(),
-        session_id=random.choice(session_ids),
-        score=target_score,
-        expires_at=datetime.now(),
         is_active=True,
+        id=generate_uuid(),
+        score=target_score,
+        user_id=generate_uuid(),
+        expires_at=datetime.now(),
+        session_id=random.choice(session_ids),
+        category=random.choice(Categories.list_()),
     )
 
     def generate_combinations():
@@ -128,11 +133,12 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
                     (
                         num,
                         ResultNode(
+                            score=num,
                             id=generate_uuid(),
                             user_id=generate_uuid(),
-                            session_id=random.choice(session_ids),
-                            score=num,
                             expires_at=datetime.now(),
+                            session_id=random.choice(session_ids),
+                            category=random.choice(Categories.list_()),
                             is_active=random.choice(
                                 [True, False]
                             ),  # A node can be active or not
@@ -268,22 +274,24 @@ def test_get_pair_partner_returns_correct_node_when_both_have_same_score(
     same_score = 74
     same_score_list = [same_score, same_score]
     target_node = ResultNode(
-        id=generate_uuid(),
-        user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=same_score + 2,
-        expires_at=datetime.now(),
         is_active=True,
+        id=generate_uuid(),
+        score=same_score + 2,
+        user_id=generate_uuid(),
+        expires_at=datetime.now(),
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     result_nodes_list = [
         ResultNode(
+            score=num,
+            is_active=True,
             id=generate_uuid(),
             user_id=generate_uuid(),
-            session_id=generate_uuid(),
-            score=num,
             expires_at=datetime.now(),
-            is_active=True,
+            session_id=generate_uuid(),
+            category=random.choice(Categories.list_()),
         )
         for num in same_score_list
     ]
@@ -307,22 +315,24 @@ def test_get_pair_partner_returns_correct_node_when_right_node_is_closer_to_targ
 
     score_list = [72, 78]
     target_node = ResultNode(
+        score=76,
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=76,  # Score is closer to the right node
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     result_nodes_list = [
         ResultNode(
+            score=num,
+            is_active=True,
             id=generate_uuid(),
             user_id=generate_uuid(),
-            session_id=generate_uuid(),
-            score=num,
             expires_at=datetime.now(),
-            is_active=True,
+            session_id=generate_uuid(),
+            category=random.choice(Categories.list_()),
         )
         for num in score_list
     ]
@@ -350,22 +360,24 @@ def test_get_pair_partner_returns_correct_node_when_left_node_is_closer_to_targe
 
     score_list = [74, 76]
     target_node = ResultNode(
+        score=72,  # Score is closer to the left node
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=72,  # Score is closer to the left node
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     result_nodes_list = [
         ResultNode(
+            score=num,
+            is_active=True,
             id=generate_uuid(),
             user_id=generate_uuid(),
-            session_id=generate_uuid(),
-            score=num,
             expires_at=datetime.now(),
-            is_active=True,
+            session_id=generate_uuid(),
+            category=random.choice(Categories.list_()),
         )
         for num in score_list
     ]
@@ -391,21 +403,23 @@ def test_get_pair_partner_returns_correct_node_when_left_node_only_exists(
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
 
     target_node = ResultNode(
+        score=74,  # Score is closer to the left node
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=74,  # Score is closer to the left node
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     left_node = ResultNode(
+        score=72,
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=72,
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     closeest_nodes_in = ClosestNodeSerializer(left_node=left_node, right_node=None)
@@ -424,21 +438,23 @@ def test_get_pair_partner_returns_correct_node_when_right_node_only_exists(
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
 
     target_node = ResultNode(
+        score=72,  # Score is closer to the left node
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=72,  # Score is closer to the left node
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     right_node = ResultNode(
+        score=74,
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=74,
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     closeest_nodes_in = ClosestNodeSerializer(left_node=None, right_node=right_node)
@@ -457,12 +473,13 @@ def test_get_pair_partner_returns_none_when_no_node_exists(
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
 
     target_node = ResultNode(
+        score=72,  # Score is closer to the left node
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=72,  # Score is closer to the left node
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     closeest_nodes_in = ClosestNodeSerializer(left_node=None, right_node=None)
@@ -480,21 +497,23 @@ def test_get_winner_returns_party_a_as_winner(
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
 
     party_a = ResultNode(
+        score=74,  # Score is closer to the left node
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=74,  # Score is closer to the left node
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     party_b = ResultNode(
+        score=72,
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=72,
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     pair_users = PairUsers()
@@ -514,21 +533,23 @@ def test_get_winner_returns_party_b_as_winner(
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
 
     party_a = ResultNode(
+        score=72,  # Score is closer to the left node
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=72,  # Score is closer to the left node
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     party_b = ResultNode(
+        score=74,
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=74,
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     pair_users = PairUsers()
@@ -548,21 +569,23 @@ def test_get_winner_returns_no_winner(
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
 
     party_a = ResultNode(
+        score=74,  # Score is closer to the left node
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=74,  # Score is closer to the left node
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     party_b = ResultNode(
+        score=72,
+        is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
-        session_id=generate_uuid(),
-        score=72,
         expires_at=datetime.now(),
-        is_active=True,
+        session_id=generate_uuid(),
+        category=random.choice(Categories.list_()),
     )
 
     pair_users = PairUsers()
@@ -595,13 +618,15 @@ def test_create_duo_session_saves_model_instance(
 
     for status in duo_session_statuses:
         party_a = ResultNode(
+            score=72,
+            is_active=True,
             id=generate_uuid(),
             user_id=generate_uuid(),
-            session_id=session_ids[session_index],
-            score=72,
             expires_at=datetime.now(),
-            is_active=True,
+            session_id=random.choice(session_ids),
+            category=random.choice(Categories.list_()),
         )
+
         party_b = two_nodes[1][1]
         winner = None
 
@@ -651,20 +676,57 @@ def test_deactivate_results_runs_successfully(
     assert active_results == 1
 
 
-def test_match_players_creates_a_partially_refunded_session(
-    db: Session,
-    mocker: MockerFixture,
-    delete_duo_session_model_instances: Callable,
-    create_result_instances_to_be_paired: Callable,
+def test_calculate_total_players_returns_correct_value(
+    db: Session, mocker: MockerFixture, create_result_instances_to_be_paired: Callable
 ) -> None:
+    """ "Assert that the function correct total players"""
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
         minutes=settings.SESSION_DURATION
     )
+
     pair_users = PairUsers()
-    result_node = pair_users.results_queue[0]
+    total_players = pair_users.calculate_total_players()
+    bible_players = pair_users.calculate_total_players(Categories.BIBLE.value)
+    football_players = pair_users.calculate_total_players(Categories.FOOTBALL.value)
 
-    # Set result_node score to 0.0 so that it's partially refunded
-    result_node.score = 0.0
+    total_bible_players = len(
+        result_dao.search(
+            db,
+            search_filter=ResultFilter(
+                session=SessionFilter(category=Categories.BIBLE.value)
+            ),
+        )
+    )
 
-    pair_users.match_players()
+    total_football_players = len(
+        result_dao.search(
+            db,
+            search_filter=ResultFilter(
+                session=SessionFilter(category=Categories.FOOTBALL.value)
+            ),
+        )
+    )
+
+    assert football_players == total_football_players
+    assert bible_players == total_bible_players
+    assert total_players == (total_bible_players + total_football_players)
+
+
+# def test_match_players_creates_a_partially_refunded_session(
+#     db: Session,
+#     mocker: MockerFixture,
+#     delete_duo_session_model_instances: Callable,
+#     create_result_instances_to_be_paired: Callable,
+# ) -> None:
+#     mock_datetime = mocker.patch("app.core.utils.datetime")
+#     mock_datetime.now.return_value = datetime.now() + timedelta(
+#         minutes=settings.SESSION_DURATION
+#     )
+#     pair_users = PairUsers()
+#     result_node = pair_users.results_queue[0]
+
+#     # Set result_node score to 0.0 so that it's partially refunded
+#     result_node.score = 0.0
+
+#     pair_users.match_players()

@@ -4,10 +4,11 @@ from app.core.serializers.core import ResultNode
 
 node_args = {
     "id": None,
-    "user_id": None,
-    "session_id": None,
     "score": None,
+    "user_id": None,
     "is_active": True,
+    "category": None,
+    "session_id": None,
     "expires_at": datetime.now(),
 }
 

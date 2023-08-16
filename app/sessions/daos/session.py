@@ -34,10 +34,8 @@ class PoolSessionStatsDao(
     def on_pre_create(
         self, db: Session, id: str, values: dict, orig_values: dict
     ) -> None:
-        """Automatically compute the pairing_range field and set it to the model"""
-        values["pairing_range"] = (
-            values["exp_weighted_moving_average"] * settings.PAIRING_THRESHOLD
-        )
+        """Automatically assign value to the _statisitics value"""
+        values["_statistics"] = orig_values["statistics"]
 
 
 pool_session_stats_dao = PoolSessionStatsDao(PoolSessionStats)

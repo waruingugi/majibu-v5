@@ -8,6 +8,7 @@ class ResultNode:
         *,
         id: str,
         user_id: str,
+        category: str,
         session_id: str,
         score: float,
         expires_at: datetime,
@@ -15,6 +16,7 @@ class ResultNode:
     ) -> None:
         """Represent each result model instance as a node"""
         self.id = id
+        self.category = category
         self.user_id = user_id
         self.session_id = session_id
         self.score = score

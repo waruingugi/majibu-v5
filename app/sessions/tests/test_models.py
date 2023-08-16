@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import Callable
 import pytest
+import json
 
 from app.core.config import settings
 from app.commons.constants import Categories
@@ -18,6 +19,7 @@ from app.sessions.serializers.session import (
     UserSessionStatsCreateSerializer,
     UserSessionStatsUpdateSerializer,
     PoolSessionStatsCreateSerializer,
+    PoolCategoryStatistics,
 )
 from app.sessions.constants import DuoSessionStatuses
 
@@ -25,22 +27,41 @@ from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
 
 
+# def test_create_pool_session_stats_instance(db: Session) -> None:
+#     """Assert PoolSessionStats instance can be created in the model"""
+#     pool_session_stats = pool_session_stats_dao.create(
+#         db,
+#         obj_in=PoolSessionStatsCreateSerializer(
+#             total_players=2,
+#             average_score=72,
+#             mean_pairwise_difference=2,
+#             exp_weighted_moving_average=71,
+#         ),
+#     )
+
+#     assert pool_session_stats.total_players == 2
+#     assert pool_session_stats.average_score == 72
+#     assert pool_session_stats.threshold == settings.PAIRING_THRESHOLD
+#     assert pool_session_stats.pairing_range == (settings.PAIRING_THRESHOLD * 71)
 def test_create_pool_session_stats_instance(db: Session) -> None:
     """Assert PoolSessionStats instance can be created in the model"""
+    category_stats = PoolCategoryStatistics(players=1, threshold=0.85)
+    stats = {}
+    stats[Categories.BIBLE.value] = category_stats.dict()
+
     pool_session_stats = pool_session_stats_dao.create(
         db,
         obj_in=PoolSessionStatsCreateSerializer(
-            total_players=2,
-            average_score=72,
-            mean_pairwise_difference=2,
-            exp_weighted_moving_average=71,
+            total_players=2, statistics=json.dumps(stats)
         ),
     )
 
     assert pool_session_stats.total_players == 2
-    assert pool_session_stats.average_score == 72
-    assert pool_session_stats.threshold == settings.PAIRING_THRESHOLD
-    assert pool_session_stats.pairing_range == (settings.PAIRING_THRESHOLD * 71)
+    assert pool_session_stats.statistics is not None
+    assert pool_session_stats.statistics[Categories.BIBLE.value]["players"] == 1
+    assert (
+        pool_session_stats.statistics[Categories.BIBLE.value]["average_score"] is None
+    )
 
 
 def test_create_user_session_stats_instance(
