@@ -1,9 +1,11 @@
 from app.db.base_class import Base
 from app.core.config import settings
+from app.sessions.models import Sessions
 
+from sqlalchemy.sql import select
 from sqlalchemy import Float, text, DateTime, Boolean
-from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy import String, Text, ForeignKey, Integer
+from sqlalchemy.orm import mapped_column, relationship, column_property
 
 
 class Questions(Base):
@@ -121,3 +123,9 @@ class Results(Base):
 
     user = relationship("User", backref="result")
     session = relationship("Sessions", backref="result")
+    category = column_property(
+        select(Sessions.category)
+        .where(Sessions.id == session_id)
+        .correlate_except(Sessions)
+        .scalar_subquery()
+    )

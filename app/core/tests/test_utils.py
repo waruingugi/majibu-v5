@@ -23,7 +23,6 @@ from app.core.serializers.core import (
 )
 from app.core.raw_logger import logger
 from app.core.tests.test_data import (
-    two_nodes,
     no_result_nodes,
     one_result_node,
     two_result_nodes,
@@ -292,6 +291,7 @@ def test_set_pool_session_statistics_saves_instance_to_model(
     pool_session_obj = pool_session_stats_dao.get(db)
 
     assert pool_session_obj is not None
+    assert bool(pair_users.statistics) is not False
 
 
 def test_get_pair_partner_returns_correct_node_when_both_have_same_score(
@@ -599,7 +599,7 @@ def test_get_winner_returns_no_winner(
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
 
     party_a = ResultNode(
-        score=74,  # Score is closer to the left node
+        score=74,
         is_active=True,
         id=generate_uuid(),
         user_id=generate_uuid(),
@@ -653,11 +653,11 @@ def test_create_duo_session_saves_model_instance(
             id=generate_uuid(),
             user_id=generate_uuid(),
             expires_at=datetime.now(),
-            session_id=random.choice(session_ids),
+            session_id=session_ids[session_index],
             category=random.choice(Categories.list_()),
         )
 
-        party_b = two_nodes[1][1]
+        party_b = one_result_node[0]
         winner = None
 
         if status == DuoSessionStatuses.PAIRED:

@@ -4,9 +4,10 @@ from typing import List
 from app.db.base_class import Base
 from app.core.config import settings
 
-from sqlalchemy.orm import mapped_column, relationship
+from sqlalchemy.sql import select
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy import String, Text, ForeignKey, Float, Integer
+from sqlalchemy.orm import mapped_column, relationship, column_property
 
 
 class UserSessionStats(Base):
@@ -110,3 +111,9 @@ class DuoSession(Base):
     winner_id = mapped_column(String, nullable=True)
 
     session = relationship("Sessions", backref="duo_session")
+    category = column_property(
+        select(Sessions.category)
+        .where(Sessions.id == session_id)
+        .correlate_except(Sessions)
+        .scalar_subquery()
+    )

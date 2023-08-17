@@ -60,9 +60,7 @@ class PairUsers:
             for result in available_results:
                 logger.info(f"Create a node for result: {result.id}")
 
-                result_in = ResultNodeSerializer(
-                    **result.__dict__, category=result.session.category
-                )
+                result_in = ResultNodeSerializer(**result.__dict__)
                 result_node = ResultNode(**result_in.dict())
 
                 # Insert the node into the sorted list based on the score
@@ -371,8 +369,8 @@ class PairUsers:
 
     def match_players(self):
         """Loops through PoolSession to get players, find partners, or refund them"""
-        self.ewma = self.calculate_exp_weighted_moving_average()
-        self.pairing_range = self.ewma * settings.PAIRING_THRESHOLD
+        # self.ewma = self.calculate_exp_weighted_moving_average()
+        # self.pairing_range = self.ewma * settings.PAIRING_THRESHOLD
 
         # Save the current PoolSesssion stats to model
         self.set_pool_session_statistics()
