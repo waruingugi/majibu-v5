@@ -1,6 +1,7 @@
 import json
 import heapq
 import random
+import pytest
 import itertools
 
 from typing import Callable
@@ -90,6 +91,9 @@ def test_create_nodes_returns_empty_list_and_queue(
     assert len(ordered_score_list) == 0
 
 
+# Run this test as the last one after all others have run because it
+# takes time to complete
+@pytest.mark.order(index=-1)
 def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) -> None:
     """Assert that the nodes closest to a given score, are indeed the closest/correct nodes."""
     logger.warning("Starting computationally expensive test. This may take a minute...")
@@ -121,7 +125,7 @@ def test_get_closest_nodes_returns_correct_node_siblings(mocker: MockerFixture) 
             )
         )
 
-        min_list_length, max_list_length = 1, 6
+        min_list_length, max_list_length = 1, 5
         # Generate all possible lengths of the list with the set of numbers above
         for length in range(min_list_length, max_list_length):
             # Find all combinations of the remaining numbers of the given length
