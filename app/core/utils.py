@@ -36,7 +36,6 @@ class PairUsers:
         self.statistics = {}
 
         self.ewma = float("inf")
-        self.pairing_range = float("inf")
 
         self.create_nodes()
 
@@ -280,29 +279,16 @@ class PairUsers:
                 ),
             )
 
-            # average_score = self.calculate_average_score()
-            # mean_pair_wise_diff = self.calculate_mean_pairwise_difference()
-            # ewma = self.calculate_exp_weighted_moving_average()
-
-            # pool_session_stats_dao.create(
-            #     db,
-            #     obj_in=PoolSessionStatsCreateSerializer(
-            #         total_players=len(self.results_queue),
-            #         average_score=average_score,
-            #         mean_pairwise_difference=mean_pair_wise_diff,
-            #         exp_weighted_moving_average=ewma,
-            #     ),
-            # )
-
     def get_pair_partner(
         self, target_node: ResultNode, closest_nodes_in: ClosestNodeSerializer
     ) -> ResultNode | None:
-        """Receives No nodes, one or two nodes then returns the node closest to the target score"""
+        """Receives no nodes, one or two nodes then returns the node closest to the target score"""
         right_node = closest_nodes_in.right_node
         left_node = closest_nodes_in.left_node
 
         closest_node = None  # If no node is found, return None
         sibling_nodes = [right_node, left_node]
+
         closest_score_diff = float("inf")
         same_score_nodes = []
 
@@ -319,8 +305,8 @@ class PairUsers:
             elif score_diff == closest_score_diff:
                 same_score_nodes.append(node)
 
+        """If both nodes have same score, choose a random node and return it"""
         if same_score_nodes:
-            """If both nodes have same score, choose a random node and return it"""
             closest_node = random.choice(same_score_nodes)
 
         return closest_node
@@ -333,8 +319,11 @@ class PairUsers:
 
         score_diff = abs(party_a.score - party_b.score)
 
+        category_stats = self.statistics[party_a.category]
+        category_pairing_range = category_stats["pairing_range"]
+
         # Check if both nodes are within pairing range
-        if score_diff <= self.pairing_range:
+        if score_diff <= category_pairing_range:
             winner = party_a if party_a.score > party_b.score else party_b
 
         return winner

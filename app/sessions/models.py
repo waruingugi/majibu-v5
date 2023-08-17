@@ -66,23 +66,6 @@ class PoolSessionStats(Base):
     # )
 
 
-"""
-total_players: int
-statistics:
-{
-    "BIBLE": {
-        "players": float,
-        "mean_pairwise_difference": float,
-        "threshold": float,
-        "average_score": float,
-        "pairing_range": float,
-        "exp_weighted_moving_average": float
-    },
-    "FOOTBAL": {...}
-}
-"""
-
-
 class Sessions(Base):
     """Session model"""
 

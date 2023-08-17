@@ -203,7 +203,7 @@ def test_create_duo_session_instance_fails_if_already_exists(
     data_in = DuoSessionCreateSerializer(
         party_a=party_a.id,
         party_b=party_b.id,
-        status=DuoSessionStatuses.REFUNDED.value,
+        status=DuoSessionStatuses.PAIRED.value,
         session_id=session.id,
         amount=settings.SESSION_AMOUNT,
     )
@@ -244,6 +244,54 @@ def test_create_duo_session_instance_fails_if_party_a_and_party_b_are_same(
             party_a=party_a.id,  # party_a is same as party_b
             party_b=party_a.id,  # party_b is same as party_a
             status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
+            session_id=session.id,
+            amount=settings.SESSION_AMOUNT,
+        )
+        duo_session_dao.create(db, obj_in=data_in)
+
+
+def test_create_duo_session_instance_fails_if_party_b_exists_in_partial_refunds(
+    db: Session,
+    create_session_instance: Callable,
+    create_super_user_instance: Callable,
+    delete_duo_session_model_instances: Callable,
+):
+    """Test DuoSessions can not be created in model for partial refunds with party_b"""
+    session = session_dao.get_not_none(db)
+    party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    party_b = user_dao.get_or_create(
+        db, obj_in=UserCreateSerializer(phone="+254764845040")
+    )
+
+    with pytest.raises(DuoSessionFailedOnCreate):
+        data_in = DuoSessionCreateSerializer(
+            party_a=party_a.id,
+            party_b=party_b.id,
+            status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
+            session_id=session.id,
+            amount=settings.SESSION_AMOUNT,
+        )
+        duo_session_dao.create(db, obj_in=data_in)
+
+
+def test_create_duo_session_instance_fails_if_party_b_exists_in_refunds(
+    db: Session,
+    create_session_instance: Callable,
+    create_super_user_instance: Callable,
+    delete_duo_session_model_instances: Callable,
+):
+    """Test DuoSessions can not be created in model for refunds with party_b"""
+    session = session_dao.get_not_none(db)
+    party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    party_b = user_dao.get_or_create(
+        db, obj_in=UserCreateSerializer(phone="+254764845040")
+    )
+
+    with pytest.raises(DuoSessionFailedOnCreate):
+        data_in = DuoSessionCreateSerializer(
+            party_a=party_a.id,
+            party_b=party_b.id,
+            status=DuoSessionStatuses.REFUNDED.value,
             session_id=session.id,
             amount=settings.SESSION_AMOUNT,
         )

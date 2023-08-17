@@ -1,9 +1,10 @@
 from sqlalchemy.orm import Session
 
-from app.exceptions.custom import DuoSessionFailedOnCreate
+
 from app.db.dao import CRUDDao
-from app.core.helpers import convert_list_to_string
 from app.core.config import settings
+from app.core.helpers import convert_list_to_string
+from app.exceptions.custom import DuoSessionFailedOnCreate
 from app.exceptions.custom import QuestionExistsInASession, FewQuestionsInSession
 from app.sessions.models import (
     Sessions,
@@ -22,6 +23,7 @@ from app.sessions.serializers.session import (
     PoolSessionStatsUpdateSerializer,
 )
 from app.sessions.filters import DuoSessionFilter
+from app.sessions.constants import DuoSessionStatuses
 
 
 class PoolSessionStatsDao(
@@ -114,7 +116,7 @@ class DuoSessionDao(
                 dup_session.party_a if dup_session.party_a else dup_session.party_a
             )
             raise DuoSessionFailedOnCreate(
-                f"The user_id:{user_id} has this played the Duo Session id:{dup_session.id} before."
+                f"The user_id: {user_id} has this played the Duo Session id: {dup_session.id} before."
             )
 
         # Constraint 2: party_a and party_b can never be the same in a DuoSession instance
@@ -124,6 +126,17 @@ class DuoSessionDao(
                     f"Party A & Party B can not be the same for a DuoSession. "
                     f"Please update {orig_values['party_b']}"
                 )
+
+        # Constraint 3: party_b should not exist for PARTIAL_REFUNDS or REFUNDS.
+        # Only party_a is to be refunded
+        if "party_b" in orig_values and (
+            orig_values["status"] == DuoSessionStatuses.PARTIALLY_REFUNDED.value
+            or orig_values["status"] == DuoSessionStatuses.REFUNDED.value
+        ):
+            raise DuoSessionFailedOnCreate(
+                f"Party B should not exist for {orig_values['status']}. "
+                f"Please remove {orig_values['party_b']}"
+            )
 
 
 duo_session_dao = DuoSessionDao(DuoSession)

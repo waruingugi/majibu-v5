@@ -553,7 +553,11 @@ def test_get_winner_returns_party_a_as_winner(
     pair_users = PairUsers()
     """Pairing range should be less than the difference between party_a score and party_b score
     to enable pairing"""
-    pair_users.pairing_range = 3
+    pair_users.statistics = {
+        Categories.BIBLE.value: {"pairing_range": 3},
+        Categories.FOOTBALL.value: {"pairing_range": 3},
+    }
+
     pair_partner_in = PairPartnersSerializer(party_a=party_a, party_b=party_b)
     winner = pair_users.get_winner(pair_partner_in)
 
@@ -589,7 +593,10 @@ def test_get_winner_returns_party_b_as_winner(
     pair_users = PairUsers()
     """Pairing range should be less than the difference between party_a score and party_b score
     to enable pairing"""
-    pair_users.pairing_range = 3
+    pair_users.statistics = {
+        Categories.BIBLE.value: {"pairing_range": 3},
+        Categories.FOOTBALL.value: {"pairing_range": 3},
+    }
     pair_partner_in = PairPartnersSerializer(party_a=party_a, party_b=party_b)
     winner = pair_users.get_winner(pair_partner_in)
 
@@ -625,7 +632,10 @@ def test_get_winner_returns_no_winner(
     pair_users = PairUsers()
     """Pairing range should be less than the difference between party_a score and party_b score
     to enable pairing"""
-    pair_users.pairing_range = 1
+    pair_users.statistics = {
+        Categories.BIBLE.value: {"pairing_range": 1},
+        Categories.FOOTBALL.value: {"pairing_range": 1},
+    }
     pair_partner_in = PairPartnersSerializer(party_a=party_a, party_b=party_b)
     winner = pair_users.get_winner(pair_partner_in)
 
@@ -668,6 +678,7 @@ def test_create_duo_session_saves_model_instance(
             winner = party_a
         else:
             winner = None
+            party_b = None
 
         pair_users.create_duo_session(
             party_a=party_a, party_b=party_b, winner=winner, duo_session_status=status
