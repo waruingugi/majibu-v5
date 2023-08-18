@@ -30,11 +30,15 @@ from app.sessions.serializers.session import (
 
 class PairUsers:
     def __init__(self) -> None:
+        """Pair users based on their score."""
+
         logger.info("Initializing PairUsers class...")
+        """The ordered_score list is used for pairing and the results queue
+        is used to prioritize the earliest result to pair"""
         self.ordered_scores_list = []
         self.results_queue = []
-        self.statistics = {}
 
+        self.statistics = {}
         self.ewma = float("inf")
 
         self.create_nodes()
@@ -75,6 +79,7 @@ class PairUsers:
         Note: The self.ordered_scores_list is never an empty list because the score being
         searched for, needs to exist inside the list too
         """
+        logger.info(f"Get closest nodes for node id: {node.id}")
 
         def closest_node(index) -> ResultNode | None:
             """Return Node or None if there is no node"""
@@ -135,6 +140,8 @@ class PairUsers:
         if left_index == 0:
             """If the score index is at the beginning of the list,
             Then the closest node is always to the right."""
+            logger.info(f"Get closest node to the right for node id: {node.id}")
+
             closest_right_index = get_closest_index_to_the_right(left_index)
             closest_right_node = closest_node(closest_right_index)
             return ClosestNodeSerializer(right_node=closest_right_node)
@@ -142,6 +149,8 @@ class PairUsers:
         elif right_index == len(self.ordered_scores_list):
             """If the index of the score is at the end of the list,
             Then the closest node is always to the left."""
+            logger.info(f"Get closest node to the left for node id: {node.id}")
+
             closest_left_index = get_closest_index_to_the_left(left_index)
             closest_left_node = closest_node(closest_left_index)
 
@@ -150,6 +159,8 @@ class PairUsers:
         else:
             """If the index of the score is somewhere in the middle,
             then find closest nodes both to the left and right."""
+            logger.info(f"Get sibling nodes for node id: {node.id}")
+
             closest_right_index = get_closest_index_to_the_right(right_index)
             closest_right_node = closest_node(closest_right_index)
 
@@ -163,6 +174,10 @@ class PairUsers:
 
     def calculate_mean_pairwise_difference(self, category: str):
         """Calculate the mean difference between consecutive scores"""
+        logger.info(
+            f"Calculate consecutive mean pairwise difference for category {category}"
+        )
+
         scores = [
             node.score for node in self.results_queue if node.category == category
         ]
@@ -176,31 +191,26 @@ class PairUsers:
             return mean_pair_wise_difference
 
         return None
-        # if len(self.ordered_scores_list) > 1:
-        #     differences = [
-        #         abs(self.ordered_scores_list[i][0] - self.ordered_scores_list[i + 1][0])
-        #         for i in range(len(self.ordered_scores_list) - 1)
-        #     ]
-
-        #     # Calculate the mean of the pair-wise differences
-        #     mean_pair_wise_difference = sum(differences) / len(differences)
-        #     return mean_pair_wise_difference
-
-        # return None
 
     def calculate_average_score(self, category: str) -> float | None:
         """Calculate average score of the pool"""
+        logger.info(f"Calculate average score for category: {category}")
+
         if not self.results_queue:
             return None  # Return None for an empty list
 
-        total_score = sum(
+        scores = [
             node.score for node in self.results_queue if node.category == category
-        )
-        average_score = total_score / len(self.results_queue)
+        ]
+        total_score = sum(scores)
+
+        average_score = total_score / len(scores)
         return average_score
 
     def calculate_exp_weighted_moving_average(self, category: str) -> float:
         """Calculate the exponentially moving average"""
+        logger.info(f"Calculate exponentially moving average for category: {category}")
+
         mean_pairwise_diff = self.calculate_mean_pairwise_difference(category) or 0
 
         with SessionLocal() as db:
@@ -209,27 +219,33 @@ class PairUsers:
                 db, {"order_by": ["-created_at"]}
             )
 
-            if pool_session_stats:
-                prev_pool_session_stat = pool_session_stats[0]
-                prev_stats = prev_pool_session_stat.statistics
+        if pool_session_stats:
+            prev_pool_session_stat = pool_session_stats[0]
+            prev_stats = prev_pool_session_stat.statistics
 
-                category_stats = prev_stats.get(category, None)
-                exp_weighted_moving_avg = None
+            category_stats = prev_stats.get(category, None)
+            exp_weighted_moving_avg = None
 
-                # Assert the specificied category statistics exist
-                if category_stats is not None:
-                    exp_weighted_moving_avg = category_stats.get(
-                        "exp_weighted_moving_average", None
-                    )
+            # Assert the specificied category statistics exist
+            if category_stats is not None:
+                logger.info(
+                    f"Previous PoolSession statistics exist for category: {category}"
+                )
 
-                if (
-                    exp_weighted_moving_avg is not None
-                ):  # Calculate EWMA if previous EWMA exists
-                    ewma = (settings.EWMA_MIXING_PARAMETER * mean_pairwise_diff) + (
-                        1 - settings.EWMA_MIXING_PARAMETER
-                    ) * exp_weighted_moving_avg
+                exp_weighted_moving_avg = category_stats.get(
+                    "exp_weighted_moving_average", None
+                )
 
-                    return ewma
+            if (
+                exp_weighted_moving_avg is not None
+            ):  # Calculate EWMA if previous EWMA exists
+                logger.info(f"Calculating EWMA for category: {category}")
+
+                ewma = (settings.EWMA_MIXING_PARAMETER * mean_pairwise_diff) + (
+                    1 - settings.EWMA_MIXING_PARAMETER
+                ) * exp_weighted_moving_avg
+
+                return ewma
 
         # The mean pairwise difference is the default EWMA
         ewma = mean_pairwise_diff
@@ -237,6 +253,8 @@ class PairUsers:
 
     def calculate_total_players(self, category: str | None = None):
         """Calculate total players or total players in a category"""
+        logger.info("Get total players in PoolSession")
+
         if category is None:
             return len(self.results_queue)
 
@@ -245,6 +263,8 @@ class PairUsers:
 
     def set_pool_session_statistics(self) -> None:
         """Set statistics to the PoolSession model"""
+        logger.info("Saving PoolSession statistics...")
+
         with SessionLocal() as db:
             total_players = 0
 
@@ -283,6 +303,8 @@ class PairUsers:
         self, target_node: ResultNode, closest_nodes_in: ClosestNodeSerializer
     ) -> ResultNode | None:
         """Receives no nodes, one or two nodes then returns the node closest to the target score"""
+        logger.info(f"Get pair partner for node id: {target_node.id}")
+
         right_node = closest_nodes_in.right_node
         left_node = closest_nodes_in.left_node
 
@@ -307,12 +329,15 @@ class PairUsers:
 
         """If both nodes have same score, choose a random node and return it"""
         if same_score_nodes:
+            logger.info(f"Node id: {target_node.id} has siblings with same score")
             closest_node = random.choice(same_score_nodes)
 
         return closest_node
 
     def get_winner(self, pair_partners: PairPartnersSerializer) -> ResultNode | None:
         """Returns the winner between two nodes or None"""
+        logger.info("Get winner between two party_a and party_b")
+
         party_a = pair_partners.party_a
         party_b = pair_partners.party_b
         winner = None
@@ -338,6 +363,8 @@ class PairUsers:
     ) -> None:
         """Create a DuoSession instance.
         This is the final step before refund of transactions."""
+        logger.info(f"Creating DuoSession for party_a: {party_a}")
+
         duo_session_in = DuoSessionCreateSerializer(
             party_a=party_a.user_id,
             party_b=party_b.user_id if party_b else None,
@@ -352,14 +379,15 @@ class PairUsers:
         """Deactives both the node and the Result model instance"""
         with SessionLocal() as db:
             for node in result_nodes:
+                logger.info(f"Deactivate result_node id: {node.id}")
                 node.is_active = False
+
                 result_obj = result_dao.get_not_none(db, id=node.id)
                 result_dao.update(db, db_obj=result_obj, obj_in={"is_active": False})
 
     def match_players(self):
         """Loops through PoolSession to get players, find partners, or refund them"""
-        # self.ewma = self.calculate_exp_weighted_moving_average()
-        # self.pairing_range = self.ewma * settings.PAIRING_THRESHOLD
+        logger.info("Matching players...")
 
         # Save the current PoolSesssion stats to model
         self.set_pool_session_statistics()
@@ -371,6 +399,7 @@ class PairUsers:
             )
 
             if node.is_active is True and datetime.now() > time_to_expiry:
+                logger.info(f"Matching node id: {node.id}")
                 party_a = node
 
                 """party_a is removed from the results_queue by default because it's
@@ -383,6 +412,7 @@ class PairUsers:
                     """The user played a session, but did not answer at least one question.
                     So we do a partial refund. To receive a full refund, attempt to answer atleast
                     one question"""
+                    logger.info(f"Partially refund node id: {party_a.id}")
                     duo_session_status = DuoSessionStatuses.PARTIALLY_REFUNDED
                     nodes_to_deactivate = [party_a]
 
@@ -398,6 +428,8 @@ class PairUsers:
 
                     if party_b is not None:
                         """If a pairing partner was found, get the winner between party_a and party_b"""
+                        logger.info(f"Pairing partner found for node id: {party_a.id}")
+
                         winner = self.get_winner(
                             PairPartnersSerializer(party_a=party_a, party_b=party_b)
                         )
@@ -405,9 +437,15 @@ class PairUsers:
                         """If there's no winner, then set the status as REFUNDED so that party_a is refunded
                         and party_b is returned to the pool."""
                         if winner is not None:  # A winner was found
+                            logger.info(
+                                f"A winner has been found. Pairing node id: {party_a.id}..."
+                            )
                             duo_session_status = DuoSessionStatuses.PAIRED
                             nodes_to_deactivate = [party_a, party_b]
                         else:
+                            logger.info(
+                                f"No winner was found. Refunding node id: {party_a.id}..."
+                            )
                             duo_session_status = DuoSessionStatuses.REFUNDED
                             nodes_to_deactivate = [party_a]
 
@@ -415,7 +453,6 @@ class PairUsers:
                             party_b = None
 
                 self.deactivate_results(nodes_to_deactivate)
-
                 self.create_duo_session(
                     party_a=party_a,
                     party_b=party_b,
@@ -424,47 +461,4 @@ class PairUsers:
                 )
 
 
-# On pairing
-# if party_a has highest score and both parties not none,
-# create duo session with values
-# create transaction instance
-# send message to boths users background func
-
-# if partb has highest score and both parties not none
-# do the same
-# if part_a results none(answered no questsion) pure refund(move to top)
-# transaction func different
-# if part_a only and no partner full refund
-# flood with logs
-# else full refund
-# At each if stage add to pop list
-# if party_a only and no result pure refund
-# elif if party-a only, full refund
-# if pary_a and party_b - get winner at the top
-# if get winner none refund party_a
-# if get winner funct to run transactions, message , create instance
-# pop both func using list
-# remove win ratio from node, add to func
-# Create pairpartner func
-# --------------------------------------
-# Get mean pairwise diff or none, save to model automatically
-# Search recent ewma based on time,
-# If none, use current mean_pairwise diff
-# if results > 1
-# set ewma
-# ----
-# Duo sessions should use get or create
-# Search results instead of pending duo sessions - done
-# for node in results - done
-# if time almost expiry and is active - done
-# if result is none, partially refund user update stats
-# Get closest node
-# create pair partner functions, returns party_b or none
-# get winners func, run ewma, results none: if both parties
-# if response not none, add part_b to pop list
-# remove nodes from queues, set false
-# if winner, reward_winner, update stats
-# else fully_refund user, update stats
-# Do transactions
-# On create set, result as false
 # Send message

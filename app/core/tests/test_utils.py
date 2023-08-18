@@ -1,4 +1,5 @@
 import json
+import copy
 import heapq
 import random
 import pytest
@@ -9,8 +10,12 @@ from sqlalchemy.orm import Session
 from pytest_mock import MockerFixture
 from datetime import datetime, timedelta
 
+from app.users.daos.user import user_dao
+from app.users.serializers.user import UserCreateSerializer
+
 from app.quiz.daos.quiz import result_dao
 from app.quiz.filters import ResultFilter
+from app.quiz.serializers.quiz import ResultCreateSerializer
 
 from app.commons.utils import generate_uuid
 from app.commons.constants import Categories
@@ -221,19 +226,29 @@ def test_calculate_average_score_returns_correct_value(
     pair_users.results_queue = no_result_nodes
     assert pair_users.calculate_average_score(Categories.BIBLE.value) is None
 
-    pair_users.results_queue = four_result_nodes
-    assert pair_users.calculate_average_score(Categories.BIBLE.value) == 76
+    # Copy the elements of four_result_nodes to prevent it's modification
+    # (Changing four_result_nodes elements affects future tests becauses the variable
+    # is initialized only once and used in throughout the tests)
+    # And change the last node's category
+    new_result_nodes = copy.deepcopy(four_result_nodes)
+    new_result_nodes[3].category = Categories.FOOTBALL.value
+
+    pair_users.results_queue = new_result_nodes
+    assert (
+        pair_users.calculate_average_score(Categories.BIBLE.value) == 73.33333333333333
+    )
 
 
 def test_calculate_exp_weighted_moving_average_returns_mean_pairwise_diff(
     db: Session,
     mocker: MockerFixture,
+    delete_pool_session_stats_model_instances: Callable,
 ) -> None:
-    """Assert the function returns avrage score if there's no previous EWMA"""
+    """Assert the function returns average score if there's no previous EWMA"""
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
     pair_users = PairUsers()
-
     pair_users.results_queue = four_result_nodes
+
     assert (
         pair_users.calculate_exp_weighted_moving_average(Categories.BIBLE.value)
         == 4.666666666666667
@@ -724,7 +739,7 @@ def test_deactivate_results_runs_successfully(
 def test_calculate_total_players_returns_correct_value(
     db: Session, mocker: MockerFixture, create_result_instances_to_be_paired: Callable
 ) -> None:
-    """ "Assert that the function correct total players"""
+    """Assert that the function correct total players"""
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
         minutes=settings.SESSION_DURATION
@@ -758,20 +773,111 @@ def test_calculate_total_players_returns_correct_value(
     assert total_players == (total_bible_players + total_football_players)
 
 
-# def test_match_players_creates_a_partially_refunded_session(
-#     db: Session,
-#     mocker: MockerFixture,
-#     delete_duo_session_model_instances: Callable,
-#     create_result_instances_to_be_paired: Callable,
-# ) -> None:
-#     mock_datetime = mocker.patch("app.core.utils.datetime")
-#     mock_datetime.now.return_value = datetime.now() + timedelta(
-#         minutes=settings.SESSION_DURATION
-#     )
-#     pair_users = PairUsers()
-#     result_node = pair_users.results_queue[0]
+def test_match_players_creates_a_partially_refunded_session(
+    db: Session,
+    mocker: MockerFixture,
+    delete_duo_session_model_instances: Callable,
+    create_result_instances_to_be_paired: Callable,
+) -> None:
+    """Assert function partially refunds users who did not attempt atleast one question"""
+    mock_datetime = mocker.patch("app.core.utils.datetime")
+    mock_datetime.now.return_value = datetime.now() + timedelta(
+        minutes=settings.SESSION_DURATION
+    )
+    pair_users = PairUsers()
+    result_node = pair_users.results_queue[0]
 
-#     # Set result_node score to 0.0 so that it's partially refunded
-#     result_node.score = 0.0
+    # Set result_node score to 0.0 so that it's partially refunded
+    result_node.score = 0.0
 
-#     pair_users.match_players()
+    pair_users.match_players()
+
+    duo_session = duo_session_dao.get_not_none(
+        db, party_a=result_node.user_id, session_id=result_node.session_id
+    )
+
+    assert duo_session.status == DuoSessionStatuses.PARTIALLY_REFUNDED.value
+
+
+def test_match_players_creates_a_refunded_session(
+    db: Session,
+    mocker: MockerFixture,
+    delete_duo_session_model_instances: Callable,
+    create_result_instances_to_be_paired: Callable,
+) -> None:
+    """Assert function refunds users when no close partner was found"""
+    mock_datetime = mocker.patch("app.core.utils.datetime")
+    mock_datetime.now.return_value = datetime.now() + timedelta(
+        minutes=settings.SESSION_DURATION
+    )
+
+    result_objs = result_dao.get_all(db)
+    party_a_result = result_objs[0]
+    # Set an outrageous high score so that no partner is found
+    result_dao.update(db, db_obj=party_a_result, obj_in={"score": 100})
+
+    pair_users = PairUsers()
+    pair_users.match_players()
+
+    duo_session = duo_session_dao.get_not_none(
+        db, party_a=party_a_result.user_id, session_id=party_a_result.session_id
+    )
+
+    assert duo_session.status == DuoSessionStatuses.REFUNDED.value
+
+
+def test_match_players_creates_a_paired_session(
+    db: Session,
+    mocker: MockerFixture,
+    delete_duo_session_model_instances: Callable,
+    create_result_instances_to_be_paired: Callable,
+) -> None:
+    """Assert function creates a paired DuoSession for users who have very close scores"""
+    mock_datetime = mocker.patch("app.core.utils.datetime")
+    mock_datetime.now.return_value = datetime.now() + timedelta(
+        minutes=settings.SESSION_DURATION
+    )
+
+    # Get two users and modify their scores to be super close
+    party_b_user = user_dao.get_or_create(
+        db, UserCreateSerializer(phone="+254764845040")
+    )
+
+    """I noticed that if you don't use the earliest created result as party_a,
+    other results may pair with part_b causing this test to fail"""
+    result_objs = result_dao.search(db, {"order_by": ["created_at"]})
+    party_a_result = result_objs[0]
+
+    # Ensure their session_id is same and their scores are super close
+    party_b_result = result_dao.create(
+        db,
+        obj_in=ResultCreateSerializer(
+            user_id=party_b_user.id, session_id=party_a_result.session_id
+        ),
+    )
+    result_dao.update(
+        db,
+        db_obj=party_a_result,
+        obj_in={  # type: ignore
+            "score": 75.112  # System accuracy is only upto 7 digits: settings.SESSION_RESULT_DECIMAL_PLACES
+        },
+    )
+    result_dao.update(
+        db,
+        db_obj=party_b_result,
+        obj_in={
+            "score": 75.111  # System accuracy is only upto 7 digits: settings.SESSION_RESULT_DECIMAL_PLACES
+        },
+    )
+
+    pair_users = PairUsers()
+    pair_users.match_players()
+
+    duo_session = None
+
+    duo_session = duo_session_dao.get_not_none(
+        db, party_a=party_a_result.user_id, session_id=party_a_result.session_id
+    )
+
+    assert duo_session.status == DuoSessionStatuses.PAIRED.value
+    assert duo_session.party_b == party_b_result.user_id  # type: ignore
