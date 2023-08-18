@@ -30,16 +30,52 @@ class SessionUpdateSerializer(SesssionBaseSerializer):
 
 
 class DuoSessionBaseSerializer(BaseModel):
-    pass
+    party_a: str
+    session_id: str
+    status: str
 
 
 class DuoSessionCreateSerializer(DuoSessionBaseSerializer):
-    session_id: str
-    party_a: str
     amount: float = settings.SESSION_AMOUNT
+    party_b: str | None = None
+    winner_id: str | None = None
 
 
 class DuoSessionUpdateSerializer(DuoSessionBaseSerializer):
-    party_b: str | None
-    status: bool | None
-    winner_id: str | None
+    pass
+
+
+class UserSessionStatsBaseSerializer(BaseModel):
+    sessions_played: int | None = None
+    total_wins: int | None = None
+    total_losess: int | None = None
+
+
+class UserSessionStatsCreateSerializer(UserSessionStatsBaseSerializer):
+    user_id: str
+
+
+class UserSessionStatsUpdateSerializer(UserSessionStatsBaseSerializer):
+    pass
+
+
+class PoolSessionStatsBaseSerializer(BaseModel):
+    total_players: int | None = 0
+    statistics: str | None
+
+
+class PoolSessionStatsCreateSerializer(PoolSessionStatsBaseSerializer):
+    pass
+
+
+class PoolSessionStatsUpdateSerializer(PoolSessionStatsBaseSerializer):
+    pass
+
+
+class PoolCategoryStatistics(BaseModel):
+    players: int | None = None
+    threshold: float | None = None
+    average_score: float | None = None
+    pairing_range: float | None = None
+    mean_paiwise_difference: float | None = None
+    exp_weighted_moving_average: float | None = None

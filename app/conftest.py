@@ -6,17 +6,24 @@ from app.main import app
 
 from app.commons.constants import Categories
 from app.commons.utils import generate_uuid, random_phone
+
 from app.quiz.daos.quiz import result_dao
+from app.quiz.utils import CalculateScore
+from app.quiz.serializers.quiz import ResultCreateSerializer, ResultUpdateSerializer
 
 from app.users.daos.user import user_dao
 from app.users.serializers.user import UserCreateSerializer
-from app.sessions.daos.session import session_dao
 from app.sessions.serializers.session import SessionCreateSerializer
+from app.sessions.daos.session import (
+    session_dao,
+    pool_session_stats_dao,
+    duo_session_dao,
+)
 
 from app.core.config import settings, redis
 from app.core.deps import get_current_active_user
-from app.accounts.daos.mpesa import mpesa_payment_dao, withdrawal_dao
 from app.accounts.daos.account import transaction_dao
+from app.accounts.daos.mpesa import mpesa_payment_dao, withdrawal_dao
 
 from sqlalchemy.orm import Session
 from typing import Generator, Callable
@@ -58,6 +65,14 @@ def create_session_instance(db: Session) -> None:
 
 
 @pytest.fixture
+def delete_duo_session_model_instances(db: Session) -> None:
+    """Delete previously existing rows in DuoSession model"""
+    existing_duo_sessions = duo_session_dao.get_all(db)
+    for duo_session in existing_duo_sessions:
+        duo_session_dao.remove(db, id=duo_session.id)
+
+
+@pytest.fixture
 def delete_session_model_instances(db: Session) -> None:
     """Delete all existing rows in Sessions model"""
     sessions = session_dao.get_all(db)
@@ -71,6 +86,14 @@ def delete_result_model_instances(db: Session) -> None:
     results = result_dao.get_all(db)
     for result in results:
         result_dao.remove(db, id=result.id)
+
+
+@pytest.fixture
+def delete_pool_session_stats_model_instances(db: Session) -> None:
+    """Delete all existing rows in PoolSessionStats model"""
+    pool_session_stats = pool_session_stats_dao.get_all(db)
+    for stat in pool_session_stats:
+        pool_session_stats_dao.remove(db, id=stat.id)
 
 
 @pytest.fixture
@@ -111,6 +134,40 @@ def create_session_model_instances(
                 category=random.choice(Categories.list_()), questions=question_ids
             ),
         )
+
+
+@pytest.fixture
+def create_result_instances_to_be_paired(
+    db: Session,
+    delete_result_model_instances: Callable,
+    create_user_model_instances: Callable,
+    create_session_model_instances: Callable,
+) -> None:
+    """Create a random set of results that can be used to create a duo session"""
+    users = user_dao.get_all(db)
+    sessions = session_dao.get_all(db)
+
+    for user in users:
+        session = random.choice(sessions)
+        result_in = ResultCreateSerializer(user_id=user.id, session_id=session.id)
+        result_obj = result_dao.create(db, obj_in=result_in)
+
+        calculate_score = CalculateScore(db, user)
+        final_score = calculate_score.calculate_final_score(
+            random.uniform(0, settings.SESSION_TOTAL_ANSWERED_WEIGHT),
+            random.uniform(0, settings.SESSION_CORRECT_ANSWERED_WEIGHT),
+        )
+        total_correct = random.randint(0, settings.QUESTIONS_IN_SESSION)
+        total_answered = random.randint(0, total_correct)
+        moderated_score = calculate_score.moderate_score(final_score)
+
+        result_in = ResultUpdateSerializer(
+            total_correct=total_correct,
+            total_answered=total_answered,
+            total=final_score,
+            score=moderated_score,
+        )
+        result_dao.update(db, db_obj=result_obj, obj_in=result_in)
 
 
 @pytest.fixture(scope="session")

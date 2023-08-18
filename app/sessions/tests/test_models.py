@@ -1,17 +1,107 @@
 from sqlalchemy.orm import Session
 from typing import Callable
 import pytest
+import json
 
+from app.core.config import settings
 from app.commons.constants import Categories
-from app.sessions.daos.session import session_dao, duo_session_dao
-from app.users.daos.user import user_dao
-from app.users.serializers.user import UserCreateSerializer
+from app.exceptions.custom import DuoSessionFailedOnCreate
+
+from app.sessions.daos.session import (
+    session_dao,
+    duo_session_dao,
+    user_session_stats_dao,
+    pool_session_stats_dao,
+)
 from app.sessions.serializers.session import (
     SessionCreateSerializer,
     DuoSessionCreateSerializer,
-    DuoSessionUpdateSerializer,
+    UserSessionStatsCreateSerializer,
+    UserSessionStatsUpdateSerializer,
+    PoolSessionStatsCreateSerializer,
+    PoolCategoryStatistics,
 )
-from app.core.config import settings
+from app.sessions.constants import DuoSessionStatuses
+
+from app.users.daos.user import user_dao
+from app.users.serializers.user import UserCreateSerializer
+
+
+# def test_create_pool_session_stats_instance(db: Session) -> None:
+#     """Assert PoolSessionStats instance can be created in the model"""
+#     pool_session_stats = pool_session_stats_dao.create(
+#         db,
+#         obj_in=PoolSessionStatsCreateSerializer(
+#             total_players=2,
+#             average_score=72,
+#             mean_pairwise_difference=2,
+#             exp_weighted_moving_average=71,
+#         ),
+#     )
+
+#     assert pool_session_stats.total_players == 2
+#     assert pool_session_stats.average_score == 72
+#     assert pool_session_stats.threshold == settings.PAIRING_THRESHOLD
+#     assert pool_session_stats.pairing_range == (settings.PAIRING_THRESHOLD * 71)
+def test_create_pool_session_stats_instance(db: Session) -> None:
+    """Assert PoolSessionStats instance can be created in the model"""
+    category_stats = PoolCategoryStatistics(players=1, threshold=0.85)
+    stats = {}
+    stats[Categories.BIBLE.value] = category_stats.dict()
+
+    pool_session_stats = pool_session_stats_dao.create(
+        db,
+        obj_in=PoolSessionStatsCreateSerializer(
+            total_players=2, statistics=json.dumps(stats)
+        ),
+    )
+
+    assert pool_session_stats.total_players == 2
+    assert pool_session_stats.statistics is not None
+    assert pool_session_stats.statistics[Categories.BIBLE.value]["players"] == 1
+    assert (
+        pool_session_stats.statistics[Categories.BIBLE.value]["average_score"] is None
+    )
+
+
+def test_create_user_session_stats_instance(
+    db: Session,
+    create_super_user_instance: Callable,
+) -> None:
+    """Test UserSessionStats instance can be created in model"""
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    user_session_stats_in = UserSessionStatsCreateSerializer(user_id=user.id)
+
+    user_session_stats = user_session_stats_dao.get_or_create(
+        db, obj_in=user_session_stats_in
+    )
+
+    assert user_session_stats.total_wins == 0
+    assert user_session_stats.total_losses == 0
+    assert user_session_stats.sessions_played == 0
+
+
+def test_update_user_session_stats_instance(
+    db: Session,
+    create_super_user_instance: Callable,
+) -> None:
+    """Test UserSessionStats instance can be created in model"""
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    user_session_stats_obj = user_session_stats_dao.get_or_create(
+        db, obj_in=UserSessionStatsCreateSerializer(user_id=user.id)
+    )
+    user_session_stats_in = UserSessionStatsUpdateSerializer(
+        sessions_played=1, total_wins=1
+    )
+
+    user_session_stats_obj = user_session_stats_dao.update(
+        db, db_obj=user_session_stats_obj, obj_in=user_session_stats_in
+    )
+
+    assert user_session_stats_obj.total_wins == 1
+    assert user_session_stats_obj.total_losses == 0
+    assert user_session_stats_obj.sessions_played == 1
+    assert user_session_stats_obj.win_ratio == 1.0
 
 
 def test_create_session_instance(db: Session) -> None:
@@ -81,7 +171,10 @@ def test_create_duo_session_instance(
     session = session_dao.get_not_none(db)
     user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
     data_in = DuoSessionCreateSerializer(
-        party_a=user.id, session_id=session.id, amount=settings.SESSION_AMOUNT
+        party_a=user.id,
+        status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
+        session_id=session.id,
+        amount=settings.SESSION_AMOUNT,
     )
     duo_session = duo_session_dao.create(db, obj_in=data_in)
 
@@ -92,13 +185,13 @@ def test_create_duo_session_instance(
     assert duo_session.amount == settings.SESSION_AMOUNT
 
 
-def test_update_duo_session_instance(
+def test_create_duo_session_instance_fails_if_already_exists(
     db: Session,
     create_session_instance: Callable,
     create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
 ):
-    """Test DuoSession can be updated in model"""
+    """Test duplicate DuoSessions can not be created in model"""
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
 
@@ -108,47 +201,126 @@ def test_update_duo_session_instance(
 
     # Create DuoSession
     data_in = DuoSessionCreateSerializer(
-        party_a=party_a.id, session_id=session.id, amount=settings.SESSION_AMOUNT
+        party_a=party_a.id,
+        party_b=party_b.id,
+        status=DuoSessionStatuses.PAIRED.value,
+        session_id=session.id,
+        amount=settings.SESSION_AMOUNT,
     )
-    duo_session = duo_session_dao.create(db, obj_in=data_in)
+    duo_session_dao.create(db, obj_in=data_in)
 
-    # Update the DuoSession
-    updated_duo_session = duo_session_dao.update(
-        db,
-        db_obj=duo_session,
-        obj_in=DuoSessionUpdateSerializer(
-            party_b=party_b.id, status=False, winner_id=party_b.id
-        ),
-    )
+    # Create a similar duo session
+    with pytest.raises(DuoSessionFailedOnCreate):
+        data_in = DuoSessionCreateSerializer(
+            party_a=party_a.id,
+            status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
+            session_id=session.id,
+            amount=settings.SESSION_AMOUNT,
+        )
+        duo_session_dao.create(db, obj_in=data_in)
 
-    assert updated_duo_session.party_a == party_a.id
-    assert updated_duo_session.party_b == party_b.id
+    with pytest.raises(DuoSessionFailedOnCreate):
+        data_in = DuoSessionCreateSerializer(
+            party_a=party_b.id,
+            status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
+            session_id=session.id,
+            amount=settings.SESSION_AMOUNT,
+        )
+        duo_session_dao.create(db, obj_in=data_in)
 
-    assert updated_duo_session.winner_id == party_b.id
 
-
-def test_updated_duo_session_fails_if_user_is_the_same(
+def test_create_duo_session_instance_fails_if_party_a_and_party_b_are_same(
     db: Session,
     create_session_instance: Callable,
     create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
 ):
-    """Test DuoSession fails to pair the same user to themselves"""
+    """Test DuoSessions can not be created in model with the same party_a and party_b"""
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
 
-    # Create DuoSession
-    data_in = DuoSessionCreateSerializer(
-        party_a=party_a.id, session_id=session.id, amount=settings.SESSION_AMOUNT
-    )
-    duo_session = duo_session_dao.create(db, obj_in=data_in)
-
-    with pytest.raises(Exception):
-        # Update the DuoSession
-        duo_session_dao.update(
-            db,
-            db_obj=duo_session,
-            obj_in=DuoSessionUpdateSerializer(
-                party_b=party_a.id, status=False, winner_id=party_a.id
-            ),
+    with pytest.raises(DuoSessionFailedOnCreate):
+        data_in = DuoSessionCreateSerializer(
+            party_a=party_a.id,  # party_a is same as party_b
+            party_b=party_a.id,  # party_b is same as party_a
+            status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
+            session_id=session.id,
+            amount=settings.SESSION_AMOUNT,
         )
+        duo_session_dao.create(db, obj_in=data_in)
+
+
+def test_create_duo_session_instance_fails_if_party_b_exists_in_partial_refunds(
+    db: Session,
+    create_session_instance: Callable,
+    create_super_user_instance: Callable,
+    delete_duo_session_model_instances: Callable,
+):
+    """Test DuoSessions can not be created in model for partial refunds with party_b"""
+    session = session_dao.get_not_none(db)
+    party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    party_b = user_dao.get_or_create(
+        db, obj_in=UserCreateSerializer(phone="+254764845040")
+    )
+
+    with pytest.raises(DuoSessionFailedOnCreate):
+        data_in = DuoSessionCreateSerializer(
+            party_a=party_a.id,
+            party_b=party_b.id,
+            status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
+            session_id=session.id,
+            amount=settings.SESSION_AMOUNT,
+        )
+        duo_session_dao.create(db, obj_in=data_in)
+
+
+def test_create_duo_session_instance_fails_if_party_b_exists_in_refunds(
+    db: Session,
+    create_session_instance: Callable,
+    create_super_user_instance: Callable,
+    delete_duo_session_model_instances: Callable,
+):
+    """Test DuoSessions can not be created in model for refunds with party_b"""
+    session = session_dao.get_not_none(db)
+    party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    party_b = user_dao.get_or_create(
+        db, obj_in=UserCreateSerializer(phone="+254764845040")
+    )
+
+    with pytest.raises(DuoSessionFailedOnCreate):
+        data_in = DuoSessionCreateSerializer(
+            party_a=party_a.id,
+            party_b=party_b.id,
+            status=DuoSessionStatuses.REFUNDED.value,
+            session_id=session.id,
+            amount=settings.SESSION_AMOUNT,
+        )
+        duo_session_dao.create(db, obj_in=data_in)
+
+
+# Updates are no longer supported on DuoSession instances
+# def test_updated_duo_session_fails_if_user_is_the_same(
+#     db: Session,
+#     create_session_instance: Callable,
+#     create_super_user_instance: Callable,
+#     delete_duo_session_model_instances: Callable,
+# ):
+#     """Test DuoSession fails to pair the same user to themselves"""
+#     session = session_dao.get_not_none(db)
+#     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+
+#     # Create DuoSession
+#     data_in = DuoSessionCreateSerializer(
+#         party_a=party_a.id, session_id=session.id, amount=settings.SESSION_AMOUNT
+#     )
+#     duo_session = duo_session_dao.create(db, obj_in=data_in)
+
+#     with pytest.raises(Exception):
+#         # Update the DuoSession
+#         duo_session_dao.update(
+#             db,
+#             db_obj=duo_session,
+#             obj_in=DuoSessionUpdateSerializer(
+#                 party_b=party_a.id, status=False, winner_id=party_a.id
+#             ),
+#         )

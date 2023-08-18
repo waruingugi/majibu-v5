@@ -85,11 +85,11 @@ class ResultUpdateSerializer(BaseModel):
 
 
 class ResultNodeSerializer(ResultBaseSerializer):
-    user_id: str
-    session_id: str
+    id: str
     score: float
-    expires_at: datetime
+    category: str
     is_active: bool
+    expires_at: datetime
 
 
 class QuizObjectSerializer(QuestionReadSerializer):

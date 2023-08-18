@@ -1,19 +1,20 @@
-from fastapi_sqlalchemy_filter import Filter
+from fastapi_sqlalchemy_filter import Filter, FilterDepends, with_prefix
 from typing import List
 
 from app.quiz.models import Results, Questions, Choices
+from app.sessions.filters import SessionFilter
 
 
 class ResultBaseFilter(Filter):
-    user__phone: str | None
-    is_active: bool | None
+    user__id: str | None = None
+    is_active: bool | None = None
 
     class Constants(Filter.Constants):
         model = Results
 
 
 class ResultFilter(ResultBaseFilter):
-    session__category: str | None
+    session: SessionFilter = FilterDepends(with_prefix("session", SessionFilter))
 
 
 class QuestionBaseFilter(Filter):

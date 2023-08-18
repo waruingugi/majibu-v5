@@ -18,8 +18,8 @@ class ObjectDoesNotExist(Exception):
         self.message = message
 
 
-class DuoSessionFailedOnUpdate(Exception):
-    """An exception happened when updating a DuoSession instance"""
+class DuoSessionFailedOnCreate(Exception):
+    """An exception happened when creating a DuoSession instance"""
 
     def __init__(self, message: str) -> None:
         self.message = message

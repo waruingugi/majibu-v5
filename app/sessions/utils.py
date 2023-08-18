@@ -24,10 +24,17 @@ from app.accounts.constants import (
 from app.accounts.serializers.account import TransactionCreateSerializer
 
 from app.quiz.daos.quiz import result_dao
+from app.quiz.filters import ResultFilter
 from app.quiz.serializers.quiz import ResultCreateSerializer
-from app.sessions.filters import DuoSessionFilter, SessionFilter
-from app.sessions.constants import DuoSessionStatuses
-from app.sessions.daos.session import duo_session_dao, session_dao
+from app.sessions.serializers.session import (
+    UserSessionStatsCreateSerializer,
+    UserSessionStatsUpdateSerializer,
+)
+from app.sessions.filters import SessionFilter
+from app.sessions.daos.session import (
+    session_dao,
+    user_session_stats_dao,
+)
 
 from app.quiz.models import Results
 from app.exceptions.custom import (
@@ -69,7 +76,7 @@ class GetAvailableSession:
         if not active_results:
             logger.info(f"No active results for {self.user.phone}")
             self.played_session_ids = self.query_sessions_played()
-            available_session_ids = self.query_available_pending_duo_sessions()
+            available_session_ids = self.query_is_active_result_sessions()
 
             if not available_session_ids:
                 logger.info(f"No available pending sessions for {self.user.phone}")
@@ -100,24 +107,26 @@ class GetAvailableSession:
 
         return played_session_ids
 
-    def query_available_pending_duo_sessions(self) -> list:
+    def query_is_active_result_sessions(self) -> list:
         """
-        Query DuoSessions and get all that are pending in the specified category
-        but not played by the user.
+        Query Results model and get all results that are not paired.
+        These results should be active(i.e not paired), same as category specified and
+        not played by the user.
         """
-        available_pending_duo_sessions = duo_session_dao.search(
+        # When we say `available`, I mean active results sessions that can be paired to the user
+        available_active_result_sessions = result_dao.search(
             self.db,
-            search_filter=DuoSessionFilter(
-                status=DuoSessionStatuses.PENDING.value,
+            search_filter=ResultFilter(
+                is_active=True,
                 session=SessionFilter(
                     category=self.category,
-                    id__not_in=self.played_session_ids,
-                ),  # type: ignore
+                    id__not_in=self.played_session_ids,  # Do not include sessions played by the user
+                ),
             ),
         )
 
         available_session_ids = list(
-            map(lambda x: x.session_id, available_pending_duo_sessions)
+            map(lambda x: x.session_id, available_active_result_sessions)
         )
 
         # Remove duplicates and return list
@@ -157,9 +166,17 @@ def create_session(db: Session, *, user: User, session_id: str) -> str | None:
                 service=TransactionServices.MAJIBU.value,
                 description=description,
                 amount=settings.SESSION_AMOUNT,
-                fee=0.0,  # No fee for session withdrawals
-                tax=0.0,  # No tax for session withdrawals
             ),
+        )
+
+        # Update the number of sessions has played by one
+        user_session_stats_obj = user_session_stats_dao.get_or_create(
+            db, UserSessionStatsCreateSerializer(user_id=user.id)
+        )
+        user_session_stats_dao.update(
+            db,
+            db_obj=user_session_stats_obj,
+            obj_in=UserSessionStatsUpdateSerializer(user_id=user.id, sessions_played=1),
         )
 
         # Create the result instance

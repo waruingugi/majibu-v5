@@ -1,29 +1,141 @@
 from sqlalchemy.orm import Session
 
-from app.exceptions.custom import DuoSessionFailedOnUpdate
+
 from app.db.dao import CRUDDao
-from app.core.helpers import convert_list_to_string
 from app.core.config import settings
+from app.core.helpers import convert_list_to_string
+from app.exceptions.custom import DuoSessionFailedOnCreate
 from app.exceptions.custom import QuestionExistsInASession, FewQuestionsInSession
-from app.sessions.models import Sessions, DuoSession
+from app.sessions.models import (
+    Sessions,
+    DuoSession,
+    UserSessionStats,
+    PoolSessionStats,
+)
 from app.sessions.serializers.session import (
     SessionCreateSerializer,
     SessionUpdateSerializer,
     DuoSessionCreateSerializer,
     DuoSessionUpdateSerializer,
+    UserSessionStatsCreateSerializer,
+    UserSessionStatsUpdateSerializer,
+    PoolSessionStatsCreateSerializer,
+    PoolSessionStatsUpdateSerializer,
 )
+from app.sessions.filters import DuoSessionFilter
+from app.sessions.constants import DuoSessionStatuses
+
+
+class PoolSessionStatsDao(
+    CRUDDao[
+        PoolSessionStats,
+        PoolSessionStatsCreateSerializer,
+        PoolSessionStatsUpdateSerializer,
+    ]
+):
+    def on_pre_create(
+        self, db: Session, id: str, values: dict, orig_values: dict
+    ) -> None:
+        """Automatically assign value to the _statisitics value"""
+        values["_statistics"] = orig_values["statistics"]
+
+
+pool_session_stats_dao = PoolSessionStatsDao(PoolSessionStats)
+
+
+class UserSessionStatsDao(
+    CRUDDao[
+        UserSessionStats,
+        UserSessionStatsCreateSerializer,
+        UserSessionStatsUpdateSerializer,
+    ]
+):
+    def get_or_create(
+        self,
+        db: Session,
+        obj_in: UserSessionStatsCreateSerializer,
+    ) -> UserSessionStats:
+        """Get or create a UserSessionStats"""
+        user_session_stats_in = self.get(db, user_id=obj_in.user_id)
+        if not user_session_stats_in:
+            user_session_stats_data = UserSessionStatsCreateSerializer(**obj_in.dict())
+            user_session_stats_in = self.create(db, obj_in=user_session_stats_data)
+
+        return user_session_stats_in
+
+
+user_session_stats_dao = UserSessionStatsDao(UserSessionStats)
 
 
 class DuoSessionDao(
     CRUDDao[DuoSession, DuoSessionCreateSerializer, DuoSessionUpdateSerializer]
 ):
-    def on_pre_update(
-        self, db: Session, db_obj: DuoSession, values: dict, orig_values: dict
+    # Updates on DuoSession are no longer supported
+    # def on_pre_update(
+    #     self, db: Session, db_obj: DuoSession, values: dict, orig_values: dict
+    # ) -> None:
+    #     """Run validation checks before updating DuoSession instance"""
+    #     if db_obj.party_a == values["party_b"]:
+    #         raise DuoSessionFailedOnUpdate(
+    #             f"Can not pair user id{db_obj.party_a} to themselves"
+    #         )
+    def on_pre_create(
+        self, db: Session, id: str, values: dict, orig_values: dict
     ) -> None:
-        """Run validation checks before updating DuoSession instance"""
-        if db_obj.party_a == values["party_b"]:
-            raise DuoSessionFailedOnUpdate(
-                f"Can not pair user id{db_obj.party_a} to themselves"
+        """Check these constraints before creating a DuoSession instance in the model."""
+        # Constraint 1: Parties can not play a session_id twice
+        """Assert that none of the parties have played a DuoSession with the same session_id before."""
+        sessions_played = []
+
+        # Search if party_a has played this DuoSession before
+        if "party_a" in orig_values:
+            party_a_sessions = self.search(
+                db,
+                search_filter=DuoSessionFilter(
+                    search=orig_values["party_a"],  # type: ignore
+                    session_id=orig_values["session_id"],
+                ),
+            )
+            sessions_played.extend(party_a_sessions)
+
+        # Search if party_b has played this DuoSession before
+        if "party_b" in orig_values:
+            party_b_sessions = self.search(
+                db,
+                search_filter=DuoSessionFilter(
+                    search=orig_values["party_b"],  # type: ignore
+                    session_id=orig_values["session_id"],
+                ),
+            )
+            sessions_played.extend(party_b_sessions)
+
+        """If any of the parties have played the session before, raise an exception"""
+        if sessions_played:
+            dup_session = sessions_played.pop()  # Duplicate session
+            user_id = (
+                dup_session.party_a if dup_session.party_a else dup_session.party_a
+            )
+            raise DuoSessionFailedOnCreate(
+                f"The user_id: {user_id} has this played the Duo Session id: {dup_session.id} before."
+            )
+
+        # Constraint 2: party_a and party_b can never be the same in a DuoSession instance
+        if "party_a" in orig_values and "party_b" in orig_values:
+            if orig_values["party_a"] == orig_values["party_b"]:
+                raise DuoSessionFailedOnCreate(
+                    f"Party A & Party B can not be the same for a DuoSession. "
+                    f"Please update {orig_values['party_b']}"
+                )
+
+        # Constraint 3: party_b should not exist for PARTIAL_REFUNDS or REFUNDS.
+        # Only party_a is to be refunded
+        if "party_b" in orig_values and (
+            orig_values["status"] == DuoSessionStatuses.PARTIALLY_REFUNDED.value
+            or orig_values["status"] == DuoSessionStatuses.REFUNDED.value
+        ):
+            raise DuoSessionFailedOnCreate(
+                f"Party B should not exist for {orig_values['status']}. "
+                f"Please remove {orig_values['party_b']}"
             )
 
 

@@ -98,10 +98,14 @@ class Settings(BaseSettings):
     SESSION_CORRECT_ANSWERED_WEIGHT = 0.8
     SESSION_TOTAL_ANSWERED_WEIGHT = 0.2
 
+    PAIRING_THRESHOLD = 0.85
+    EWMA_MIXING_PARAMETER = 0.7
+
     SESSION_RESULT_DECIMAL_PLACES: int = 7  # High accuracy to pevent draws
     SESSION_DURATION: int = 15  # How long the session lasts
     SESSION_BUFFER_TIME = 3  # Buffer time = SESSION DURATION + SESSION_BUFFER_TIME
     LOAD_SESSION_INTO_QUEUE_AFTER_SECONDS: int = 180  # 3 minutes
+    RESULT_EXPIRES_AT_BUFFER_TIME: int = 300  # 5 minutes
 
     MODERATED_LOWEST_SCORE: float = 70.0
     MODERATED_HIGHEST_SCORE: float = 85.0

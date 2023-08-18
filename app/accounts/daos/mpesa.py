@@ -46,8 +46,6 @@ class MpesaPaymentDao(
                     service=TransactionServices.MPESA.value,
                     description=description,
                     amount=db_obj.amount,
-                    fee=0.0,  # No charge for deposits
-                    tax=0.0,  # No tax for deposits
                     external_response=db_obj.external_response,
                 ),
             )
@@ -84,7 +82,6 @@ class WithdrawalDao(
                     description=description,
                     amount=db_obj.transaction_amount,
                     fee=settings.MPESA_B2C_CHARGE,
-                    tax=0.0,  # No tax for withdrawals
                     external_response=db_obj.external_response,
                 ),
             )
