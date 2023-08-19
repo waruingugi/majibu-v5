@@ -857,7 +857,7 @@ def test_match_players_creates_a_paired_session(
     )
     result_dao.update(
         db,
-        db_obj=party_a_result,
+        db_obj=party_a_result,  # type: ignore
         obj_in={  # type: ignore
             "score": 75.112  # System accuracy is only upto 7 digits: settings.SESSION_RESULT_DECIMAL_PLACES
         },
@@ -870,10 +870,9 @@ def test_match_players_creates_a_paired_session(
         },
     )
 
+    duo_session = None
     pair_users = PairUsers()
     pair_users.match_players()
-
-    duo_session = None
 
     duo_session = duo_session_dao.get_not_none(
         db, party_a=party_a_result.user_id, session_id=party_a_result.session_id

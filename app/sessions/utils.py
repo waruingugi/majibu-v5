@@ -163,7 +163,7 @@ def create_session(db: Session, *, user: User, session_id: str) -> str | None:
                 cash_flow=TransactionCashFlow.OUTWARD.value,
                 type=TransactionTypes.WITHDRAWAL.value,
                 status=TransactionStatuses.SUCCESSFUL.value,
-                service=TransactionServices.MAJIBU.value,
+                service=TransactionServices.SESSION_WITHDRAWAL.value,
                 description=description,
                 amount=settings.SESSION_AMOUNT,
             ),

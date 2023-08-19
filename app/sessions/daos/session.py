@@ -1,3 +1,4 @@
+from typing import List
 from sqlalchemy.orm import Session
 
 
@@ -70,15 +71,6 @@ user_session_stats_dao = UserSessionStatsDao(UserSessionStats)
 class DuoSessionDao(
     CRUDDao[DuoSession, DuoSessionCreateSerializer, DuoSessionUpdateSerializer]
 ):
-    # Updates on DuoSession are no longer supported
-    # def on_pre_update(
-    #     self, db: Session, db_obj: DuoSession, values: dict, orig_values: dict
-    # ) -> None:
-    #     """Run validation checks before updating DuoSession instance"""
-    #     if db_obj.party_a == values["party_b"]:
-    #         raise DuoSessionFailedOnUpdate(
-    #             f"Can not pair user id{db_obj.party_a} to themselves"
-    #         )
     def on_pre_create(
         self, db: Session, id: str, values: dict, orig_values: dict
     ) -> None:
@@ -137,6 +129,11 @@ class DuoSessionDao(
                 f"Party B should not exist for {orig_values['status']}. "
                 f"Please remove {orig_values['party_b']}"
             )
+
+    def on_post_create(
+        self, db: Session, db_obj: DuoSession | List[DuoSession]
+    ) -> None:
+        pass
 
 
 duo_session_dao = DuoSessionDao(DuoSession)

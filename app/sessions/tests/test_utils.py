@@ -195,7 +195,7 @@ def test_create_session_deducts_from_user_wallet_balance(
     result_id = create_session(db, user=user, session_id=session.id)
 
     transaction_obj = transaction_dao.get_not_none(
-        db, service=TransactionServices.MAJIBU.value
+        db, service=TransactionServices.SESSION_WITHDRAWAL.value
     )
     result = result_dao.get_not_none(db)
 
@@ -203,7 +203,7 @@ def test_create_session_deducts_from_user_wallet_balance(
     assert result.session_id == session.id
     assert transaction_obj.amount == settings.SESSION_AMOUNT
     assert transaction_obj.cash_flow == TransactionCashFlow.OUTWARD.value
-    assert transaction_obj.service == TransactionServices.MAJIBU.value
+    assert transaction_obj.service == TransactionServices.SESSION_WITHDRAWAL.value
 
 
 def test_create_session_fails_for_insufficient_wallet_balance(
