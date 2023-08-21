@@ -32,6 +32,32 @@ PARTIALLY_REFUND_SESSION_DESCRIPTION = (
     "Partially refund user: {} for playing session id: {}"
 )
 
+# SMS message sent to user on winning a session
+SESSION_WIN_MESSAGE = (
+    "Congrats! You've won KES {} for your {} session. "
+    "Your skill paid off big time. Good luck on your next session!"
+)
+
+# SMS message sent to user on losing a session
+SESSION_LOSS_MESSAGE = (
+    "You lost {} session to your opponent. "
+    "Please check Majibu history for full results."
+)
+
+# SMS message sent to user on refund
+SESSION_REFUND_MESSAGE = (
+    f"You've received a {settings.SESSION_REFUND_RATIO * 100}% refund of "
+    "KES {} for your {} session. "
+    "Thank you for choosing Majibu and best of luck on your next session!"
+)
+
+# SMS message sent to user on partial refund
+SESSION_PARTIAL_REFUND_MESSAGE = (
+    f"You've received a {settings.SESSION_PARTIAL_REFUND_RATIO * 100}% partial refund of "
+    "KES {} for your {} session. "
+    "Please attempt atleast one question to be paired or to receive a full refund on Majibu"
+)
+
 # SMS message sent to user on M-Pesa withdrawal
 MPESA_PAYMENT_WITHDRAW = (
     "You've successfully withdrawn Ksh{} for your account {}. "

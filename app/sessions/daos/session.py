@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from fastapi import BackgroundTasks
 
 from app.db.dao import CRUDDao
 from app.core.config import settings
@@ -10,14 +11,19 @@ from app.accounts.constants import (
     TransactionTypes,
     TransactionCashFlow,
     TransactionServices,
+    SESSION_LOSS_MESSAGE,
+    SESSION_REFUND_MESSAGE,
     SESSION_WIN_DESCRIPION,
     REFUND_SESSION_DESCRIPTION,
+    SESSION_PARTIAL_REFUND_MESSAGE,
     PARTIALLY_REFUND_SESSION_DESCRIPTION,
 )
 from app.accounts.serializers.account import TransactionCreateSerializer
 
+from app.accounts.constants import SESSION_WIN_MESSAGE
 from app.exceptions.custom import DuoSessionFailedOnCreate
 from app.exceptions.custom import QuestionExistsInASession, FewQuestionsInSession
+
 from app.sessions.models import (
     Sessions,
     DuoSession,
@@ -36,6 +42,10 @@ from app.sessions.serializers.session import (
 )
 from app.sessions.filters import DuoSessionFilter
 from app.sessions.constants import DuoSessionStatuses
+
+from app.notifications.daos.notifications import notifications_dao
+from app.notifications.constants import NotificationChannels, NotificationTypes
+from app.notifications.serializers.notifications import CreateNotificationSerializer
 
 
 class PoolSessionStatsDao(
@@ -141,18 +151,42 @@ class DuoSessionDao(
                 f"Please remove {orig_values['party_b']}"
             )
 
-    def on_post_create(self, db: Session, db_obj: DuoSession) -> None:
-        """Update user wallets"""
+    def on_post_create(
+        self,
+        db: Session,
+        db_obj: DuoSession,
+        background_tasks: BackgroundTasks = BackgroundTasks(),
+    ) -> None:
+        """Update user wallets and send notifications"""
+
+        def send_message(phone: str, message: str) -> None:
+            """Send message to DuoSession players"""
+            channel = NotificationChannels.SMS.value
+            type = NotificationTypes.SESSION.value
+
+            background_tasks.add_task(
+                notifications_dao.send_notification,
+                db,
+                obj_in=CreateNotificationSerializer(
+                    channel=channel,
+                    phone=phone,
+                    message=message,
+                    type=type,
+                ),
+            )
+
+        """Updates the winner's wallet to reflect the new amount"""
         if db_obj.status == DuoSessionStatuses.PAIRED:
-            # Updates the winner's wallet to reflect the new amount
-            user = user_dao.get_not_none(db, id=db_obj.winner_id)
-            description = SESSION_WIN_DESCRIPION.format(user.phone, db_obj.session_id)
+            winner = user_dao.get_not_none(db, id=db_obj.winner_id)
+            description = SESSION_WIN_DESCRIPION.format(winner.phone, db_obj.session_id)
+
             amount_won = settings.SESSION_WIN_RATIO * float(db_obj.amount)
+            winner_message = SESSION_WIN_MESSAGE.format(amount_won, db_obj.category)
 
             transaction_dao.create(
                 db,
                 obj_in=TransactionCreateSerializer(
-                    account=user.phone,
+                    account=winner.phone,
                     external_transaction_id=generate_transaction_code(),
                     cash_flow=TransactionCashFlow.INWARD.value,
                     type=TransactionTypes.DEPOSIT.value,
@@ -162,13 +196,29 @@ class DuoSessionDao(
                 ),
             )
 
+            # Send message to the winner
+            send_message(winner.phone, winner_message)
+
+            # Get the opponent id
+            opponent_id = (
+                db_obj.party_a if winner.id != db_obj.party_a else db_obj.party_b
+            )
+            opponent = user_dao.get_not_none(db, id=opponent_id)
+            opponent_message = SESSION_LOSS_MESSAGE.format(db_obj.category)
+
+            # Send message to the opponent
+            send_message(opponent.phone, opponent_message)
+
+        """Update party_a's wallet to reflect the refund"""
         if db_obj.status == DuoSessionStatuses.REFUNDED:
-            # Update party_a's wallet to reflect the refund
             user = user_dao.get_not_none(db, id=db_obj.party_a)
             description = REFUND_SESSION_DESCRIPTION.format(
                 user.phone, db_obj.session_id
             )
             refund_amount = settings.SESSION_REFUND_RATIO * float(db_obj.amount)
+            refund_message = SESSION_REFUND_MESSAGE.format(
+                refund_amount, db_obj.category
+            )
 
             transaction_dao.create(
                 db,
@@ -183,14 +233,21 @@ class DuoSessionDao(
                 ),
             )
 
+            # Send message to party_a on refund
+            send_message(user.phone, refund_message)
+
+        """Update party_a's wallet to reflect the partial refund"""
         if db_obj.status == DuoSessionStatuses.PARTIALLY_REFUNDED:
-            # Update party_a's wallet to reflect the partial refund
             user = user_dao.get_not_none(db, id=db_obj.party_a)
             description = PARTIALLY_REFUND_SESSION_DESCRIPTION.format(
                 user.phone, db_obj.session_id
             )
+
             partial_refund_amount = settings.SESSION_PARTIAL_REFUND_RATIO * float(
                 db_obj.amount
+            )
+            partial_refund_message = SESSION_PARTIAL_REFUND_MESSAGE.format(
+                partial_refund_amount, db_obj.category
             )
 
             transaction_dao.create(
@@ -205,6 +262,9 @@ class DuoSessionDao(
                     amount=partial_refund_amount,
                 ),
             )
+
+            # Send message to party_a on partial refund
+            send_message(user.phone, partial_refund_message)
 
 
 duo_session_dao = DuoSessionDao(DuoSession)
