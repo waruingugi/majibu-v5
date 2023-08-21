@@ -660,6 +660,7 @@ def test_get_winner_returns_no_winner(
 def test_create_duo_session_saves_model_instance(
     db: Session,
     mocker: MockerFixture,
+    create_user_model_instances: Callable,
     create_session_model_instances: Callable,
     delete_duo_session_model_instances: Callable,
 ) -> None:
@@ -668,25 +669,32 @@ def test_create_duo_session_saves_model_instance(
 
     sessions = session_dao.get_all(db)
     session_ids = list(map(lambda x: x.id, sessions))
-    duo_session_statuses = DuoSessionStatuses.list_()
 
+    users = user_dao.get_all(db)
+    user_ids = list(map(lambda x: x.id, users))
+    party_a_user_id = user_ids[0]
+
+    duo_session_statuses = DuoSessionStatuses.list_()
     pair_users = PairUsers()
+
     """Each user can play a session only once, that's why we loop through
     the session ids rather than picking a random choice"""
     session_index = 0
+    user_index = 1  # Start from 1 because party_a is users[0]
 
     for status in duo_session_statuses:
         party_a = ResultNode(
             score=72,
             is_active=True,
             id=generate_uuid(),
-            user_id=generate_uuid(),
+            user_id=party_a_user_id,
             expires_at=datetime.now(),
             session_id=session_ids[session_index],
             category=random.choice(Categories.list_()),
         )
 
         party_b = one_result_node[0]
+        party_b.user_id = user_ids[user_index]
         winner = None
 
         if status == DuoSessionStatuses.PAIRED:
@@ -699,6 +707,7 @@ def test_create_duo_session_saves_model_instance(
             party_a=party_a, party_b=party_b, winner=winner, duo_session_status=status
         )
         session_index += 1
+        user_index += 1
 
     duo_session_objs = duo_session_dao.get_all(db)
 

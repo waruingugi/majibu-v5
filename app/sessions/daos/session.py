@@ -1,10 +1,21 @@
-from typing import List
 from sqlalchemy.orm import Session
-
 
 from app.db.dao import CRUDDao
 from app.core.config import settings
-from app.core.helpers import convert_list_to_string
+from app.core.helpers import convert_list_to_string, generate_transaction_code
+
+from app.users.daos.user import user_dao
+from app.accounts.daos.account import transaction_dao
+from app.accounts.constants import (
+    TransactionTypes,
+    TransactionCashFlow,
+    TransactionServices,
+    SESSION_WIN_DESCRIPION,
+    REFUND_SESSION_DESCRIPTION,
+    PARTIALLY_REFUND_SESSION_DESCRIPTION,
+)
+from app.accounts.serializers.account import TransactionCreateSerializer
+
 from app.exceptions.custom import DuoSessionFailedOnCreate
 from app.exceptions.custom import QuestionExistsInASession, FewQuestionsInSession
 from app.sessions.models import (
@@ -130,10 +141,70 @@ class DuoSessionDao(
                 f"Please remove {orig_values['party_b']}"
             )
 
-    def on_post_create(
-        self, db: Session, db_obj: DuoSession | List[DuoSession]
-    ) -> None:
-        pass
+    def on_post_create(self, db: Session, db_obj: DuoSession) -> None:
+        """Update user wallets"""
+        if db_obj.status == DuoSessionStatuses.PAIRED:
+            # Updates the winner's wallet to reflect the new amount
+            user = user_dao.get_not_none(db, id=db_obj.winner_id)
+            description = SESSION_WIN_DESCRIPION.format(user.phone, db_obj.session_id)
+            amount_won = settings.SESSION_WIN_RATIO * float(db_obj.amount)
+
+            transaction_dao.create(
+                db,
+                obj_in=TransactionCreateSerializer(
+                    account=user.phone,
+                    external_transaction_id=generate_transaction_code(),
+                    cash_flow=TransactionCashFlow.INWARD.value,
+                    type=TransactionTypes.DEPOSIT.value,
+                    service=TransactionServices.SESSION.value,
+                    description=description,
+                    amount=amount_won,
+                ),
+            )
+
+        if db_obj.status == DuoSessionStatuses.REFUNDED:
+            # Update party_a's wallet to reflect the refund
+            user = user_dao.get_not_none(db, id=db_obj.party_a)
+            description = REFUND_SESSION_DESCRIPTION.format(
+                user.phone, db_obj.session_id
+            )
+            refund_amount = settings.SESSION_REFUND_RATIO * float(db_obj.amount)
+
+            transaction_dao.create(
+                db,
+                obj_in=TransactionCreateSerializer(
+                    account=user.phone,
+                    external_transaction_id=generate_transaction_code(),
+                    cash_flow=TransactionCashFlow.INWARD.value,
+                    type=TransactionTypes.REFUND.value,
+                    service=TransactionServices.SESSION.value,
+                    description=description,
+                    amount=refund_amount,
+                ),
+            )
+
+        if db_obj.status == DuoSessionStatuses.PARTIALLY_REFUNDED:
+            # Update party_a's wallet to reflect the partial refund
+            user = user_dao.get_not_none(db, id=db_obj.party_a)
+            description = PARTIALLY_REFUND_SESSION_DESCRIPTION.format(
+                user.phone, db_obj.session_id
+            )
+            partial_refund_amount = settings.SESSION_PARTIAL_REFUND_RATIO * float(
+                db_obj.amount
+            )
+
+            transaction_dao.create(
+                db,
+                obj_in=TransactionCreateSerializer(
+                    account=user.phone,
+                    external_transaction_id=generate_transaction_code(),
+                    cash_flow=TransactionCashFlow.INWARD.value,
+                    type=TransactionTypes.REFUND.value,
+                    service=TransactionServices.SESSION.value,
+                    description=description,
+                    amount=partial_refund_amount,
+                ),
+            )
 
 
 duo_session_dao = DuoSessionDao(DuoSession)

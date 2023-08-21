@@ -203,6 +203,7 @@ def test_create_duo_session_instance_fails_if_already_exists(
     data_in = DuoSessionCreateSerializer(
         party_a=party_a.id,
         party_b=party_b.id,
+        winner_id=party_b.id,
         status=DuoSessionStatuses.PAIRED.value,
         session_id=session.id,
         amount=settings.SESSION_AMOUNT,

@@ -187,15 +187,17 @@ def test_create_session_deducts_from_user_wallet_balance(
     delete_result_model_instances: Callable,
     delete_transcation_model_instances: Callable,
 ):
-    """Test that the function create_session creates a result model instance
-    Test that the function create_session deducts from the users wallet the correct values"""
+    """
+    - Test that the function create_session creates a result model instance
+    - Test that the function create_session deducts from the users wallet the correct values
+    """
     session = session_dao.get_not_none(db)
     user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
 
     result_id = create_session(db, user=user, session_id=session.id)
 
     transaction_obj = transaction_dao.get_not_none(
-        db, service=TransactionServices.SESSION_WITHDRAWAL.value
+        db, service=TransactionServices.SESSION.value
     )
     result = result_dao.get_not_none(db)
 
@@ -203,7 +205,7 @@ def test_create_session_deducts_from_user_wallet_balance(
     assert result.session_id == session.id
     assert transaction_obj.amount == settings.SESSION_AMOUNT
     assert transaction_obj.cash_flow == TransactionCashFlow.OUTWARD.value
-    assert transaction_obj.service == TransactionServices.SESSION_WITHDRAWAL.value
+    assert transaction_obj.service == TransactionServices.SESSION.value
 
 
 def test_create_session_fails_for_insufficient_wallet_balance(

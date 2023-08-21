@@ -19,7 +19,18 @@ PAYBILL_DEPOSIT_DESCRIPTION = "Deposit of Ksh {} for account {} using M-Pesa pay
 PAYBILL_B2C_DESCRIPTION = "Payment of Ksh {} for account {} using B2C payment."
 
 # Withdrawal to play session description
-SESSION_WITHDRAWAL_DESCRIPTION = "Withdrawal by user {} for session id: {}."
+SESSION_WITHDRAWAL_DESCRIPTION = "Withdrawal by user: {} for session id: {}."
+
+# Deposit from winning a session description
+SESSION_WIN_DESCRIPION = "Deposit to user: {} for winning session id: {}"
+
+# Refund for party_a for playing a session description
+REFUND_SESSION_DESCRIPTION = "Refund user: {} for playing session id: {}"
+
+# Partially refund for party_a for playing a session description
+PARTIALLY_REFUND_SESSION_DESCRIPTION = (
+    "Partially refund user: {} for playing session id: {}"
+)
 
 # SMS message sent to user on M-Pesa withdrawal
 MPESA_PAYMENT_WITHDRAW = (
@@ -47,7 +58,7 @@ class B2CMpesaCommandIDs(str, Enum):
 class TransactionStatuses(str, Enum):
     PENDING = "PENDING"
     SUCCESSFUL = "SUCCESSFUL"
-    REFUNDED = "REFUNDED"
+    FAILED = "FAILED"
 
 
 class MpesaAccountTypes(str, Enum):
@@ -61,19 +72,17 @@ class TransactionCashFlow(str, Enum):
 
 
 class TransactionTypes(str, Enum):
+    BONUS = "BONUS"
+    REFUND = "REFUND"
     REWARD = "REWARD"
     DEPOSIT = "DEPOSIT"
     WITHDRAWAL = "WITHDRAWAL"
-    BONUS = "BONUS"
 
 
 class TransactionServices(str, Enum):
-    MAJIBU = "MAJIBU"
     MPESA = "MPESA"
-    SESSION_WITHDRAWAL = "SESSION_WITHDRAWAL"
-    SESSION_REFUND = "SESSION_REFUND"
-    SESSION_PARTIAL_REFUND = "SESSION_PARTIAL_REFUND"
-    SESSION_WIN = "SESSION_WIN"
+    MAJIBU = "MAJIBU"
+    SESSION = "SESSION"
 
 
 MPESA_WHITE_LISTED_IPS = [
