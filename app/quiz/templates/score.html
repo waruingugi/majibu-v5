@@ -1,0 +1,42 @@
+{% extends "templates/layout.html" %}
+
+{% block content %}
+    {% include "templates/navbar.html" %}
+        
+        <section id="content-full-height" class="py-4 bg-light">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-5">
+                        <div class="card mt-5 border-0 py-2" id="content-card">
+                            <div class="row">
+                                <div class="col">
+                                    <div>
+                                        <h4 class="card-header bg-white border-0 text-center">You scored</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="bg-light border-success mx-3 py-3 text-center rounded" style="border-left-style: solid; border-right: solid;">
+                                        <h2 class="text-success mb-0" style="line-height: 26px; font-size: 38px;">{{ "%.2f" | format(score) }}%</h2><span class="font-monospace text-muted" style="font-size: small;">CATEGORY: BIBLE</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row justify-content-center my-2">
+                                <div class="col-11"><small>We're searching for other users to pair with you. If you're not paired within {{ expires_at.strftime('%H:%M') }}, you'll receive a full refund.</small></div>
+                                <div class="col-11"><small><em>Best of luck!</em>&nbsp;🎉</small></div>
+                            </div>
+                            <div class="card-footer bg-white border-0">
+                                <div class="row">
+                                    <div class="col"><button class="btn btn-light d-block w-100" type="button">Top Up</button></div>
+                                    <div class="col"><a class="btn btn-light d-block w-100 px-1" role="button" id="btn-preferred">View History</a></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    {% include 'templates/footer.html' %}
+
+{% endblock %}

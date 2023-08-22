@@ -79,6 +79,7 @@ async def post_session(
     get_available_session: GetAvailableSession = Depends(GetAvailableSession),
     db: Session = Depends(get_db),
 ):
+    """Post the session selected. Redirects to questions thereafter"""
     if business_is_open:
         session_id = get_available_session(category=category_in.category, user=user)
 

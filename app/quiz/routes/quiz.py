@@ -2,12 +2,14 @@ from fastapi import Request, APIRouter, Depends
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
-# from app.users.models import User
-# from app.quiz.utils import GetSessionQuestions
+from app.users.models import User
+
+from app.quiz.utils import GetSessionQuestions
 from app.quiz.utils import CalculateScore
+from app.quiz.daos.quiz import result_dao
 from app.core.config import templates
 from app.core.deps import (
-    # get_current_active_user,
+    get_current_active_user,
     get_db,
 )
 from app.core.logger import LoggingRoute
@@ -22,8 +24,8 @@ async def get_questions(
     request: Request,
     result_id: str,
     db: Session = Depends(get_db),
-    # user: User = Depends(get_current_active_user),
-    # get_session_questions=Depends(GetSessionQuestions),
+    user: User = Depends(get_current_active_user),
+    get_session_questions=Depends(GetSessionQuestions),
 ):
     """Get questions and choices page"""
     # quiz = get_session_questions(result_id=result_id)
@@ -150,6 +152,7 @@ async def post_answers(
     # get_session_questions=Depends(GetSessionQuestions),
     calculate_score=Depends(CalculateScore),
 ):
+    """POST answers to API, calculate the score then redirect to results page"""
     # form_data = await request.form()
 
     # calculate_score(form_data._dict)
@@ -264,6 +267,27 @@ async def post_answers(
     return templates.TemplateResponse(
         f"{template_prefix}questions.html",
         {"request": request, "title": "Quiz", "quiz": quiz},
+    )
+
+
+@router.get("/score/{result_id}", response_class=HTMLResponse)
+async def get_result_score(
+    request: Request,
+    result_id: str,
+    db: Session = Depends(get_db),
+):
+    """Page is shown immediately after playing a session"""
+    result = result_dao.get_not_none(db, id=result_id)
+
+    return templates.TemplateResponse(
+        f"{template_prefix}score.html",
+        {
+            "request": request,
+            "title": "Your Score",
+            "score": result.score,
+            "expires_at": result.expires_at,
+            "category": result.category,
+        },
     )
 
 
