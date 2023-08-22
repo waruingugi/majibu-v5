@@ -275,16 +275,18 @@ async def get_result_score(
     request: Request,
     result_id: str,
     db: Session = Depends(get_db),
+    user: User = Depends(get_current_active_user),
 ):
     """Page is shown immediately after playing a session"""
-    result = result_dao.get_not_none(db, id=result_id)
+    # The following line ensures a user can only see their own score
+    result = result_dao.get_not_none(db, user_id=user.id, id=result_id)
 
     return templates.TemplateResponse(
         f"{template_prefix}score.html",
         {
             "request": request,
             "title": "Your Score",
-            "score": result.score,
+            "score": float(result.score),
             "expires_at": result.expires_at,
             "category": result.category,
         },
