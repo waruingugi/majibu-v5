@@ -195,6 +195,18 @@ async def get_result_score(
 # Redirect template on quiz
 # If withdraw balance bank is below, fail transactions
 
-# Set css
+# {
+#     "created_at":
+#     "category":
+#     "viewer": +2568
+#     "status": refunded-g, won-g,lost-r, pending-y , PARTIALL-RE-r
+#     "+2547857777": {
+#         "score":
+#     },
+#     "+25478xxx517": {
+#         "score":
+#     }
+# }
 # limit results to 7 most recent
 # if no results, show dialog
+# Fix buttons url in quiz and score

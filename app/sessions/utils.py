@@ -10,8 +10,9 @@ from app.core.deps import (
 )
 from app.core.config import redis, settings
 from app.core.raw_logger import logger
-from app.core.helpers import md5_hash, generate_transaction_code
+from app.core.helpers import md5_hash, mask_phone_number, generate_transaction_code
 
+from app.users.daos.user import user_dao
 from app.users.models import User
 from app.accounts.daos.account import transaction_dao
 from app.accounts.constants import (
@@ -30,9 +31,11 @@ from app.sessions.serializers.session import (
     UserSessionStatsCreateSerializer,
     UserSessionStatsUpdateSerializer,
 )
-from app.sessions.filters import SessionFilter
+from app.sessions.constants import DuoSessionStatuses
+from app.sessions.filters import SessionFilter, DuoSessionFilter
 from app.sessions.daos.session import (
     session_dao,
+    duo_session_dao,
     user_session_stats_dao,
 )
 
@@ -188,3 +191,71 @@ def create_session(db: Session, *, user: User, session_id: str) -> str | None:
 
     # If user balance is not sufficient, raise error: a redudancy check
     raise InsufficientUserBalance
+
+
+def view_session_history(db: Session, user: User) -> list:
+    """Provide minimalist view of sessions played by user"""
+    result_objs = result_dao.get_all(db, user_id=user.id)
+    session_history = []
+
+    for result in result_objs:
+        # Create default dictionary that will be appended to list
+        session_history_dict = {
+            "created_at": result.created_at,
+            "category": result.category,
+            "status": None,  # Status from the user's viewpoint
+            user.phone: {"score": float(result.score)},
+        }
+
+        duo_session_obj = duo_session_dao.search(
+            db,
+            search_filter=DuoSessionFilter(
+                session_id=result.session_id, search=user.id  # type: ignore
+            ),
+        )
+
+        if duo_session_obj:
+            # Only one instance will always exists in the list
+            duo_session = duo_session_obj[0]
+
+            if duo_session.status == DuoSessionStatuses.REFUNDED:
+                session_history_dict["status"] = "REFUNDED"
+                session_history.append(session_history_dict)
+
+            elif duo_session.status == DuoSessionStatuses.PARTIALLY_REFUNDED:
+                session_history_dict["status"] = "PARTIALLY_REFUNDED"
+                session_history.append(session_history_dict)
+
+            elif duo_session.status == DuoSessionStatuses.PAIRED:
+                if duo_session.winner_id == user.id:
+                    session_history_dict["status"] = "WON"
+                else:
+                    session_history_dict["status"] = "LOST"
+
+                # Get and set the opponent details
+                opponent_id = (
+                    duo_session.party_a
+                    if duo_session.party_a != user.id
+                    else duo_session.party_b
+                )
+                opponent = user_dao.get_not_none(db, id=opponent_id)
+
+                opponent_phone = mask_phone_number(opponent.phone)
+                opponent_result = result_dao.get_not_none(
+                    db, user_id=opponent.id, session_id=result.session_id
+                )
+
+                session_history_dict[opponent_phone] = {"score": opponent_result.score}
+                session_history.append(session_history_dict)
+
+        else:
+            """ "The result has not been paired yet"""
+            session_history_dict["status"] = "PENDING"
+            session_history.append(session_history_dict)
+
+    # Sort the list by created_at value in descending order(most recent to last)
+    sorted_sessions_history = sorted(
+        session_history, key=lambda x: x["created_at"], reverse=True
+    )
+
+    return sorted_sessions_history

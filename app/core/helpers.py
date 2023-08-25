@@ -170,7 +170,7 @@ def format_mpesa_result_params_to_dict(result_parameters):
     return result_dict
 
 
-def format_b2c_mpesa_date_to_timestamp(date_string):
+def format_b2c_mpesa_date_to_timestamp(date_string) -> datetime:
     datetime_obj = datetime.strptime(date_string, "%d.%m.%Y %H:%M:%S")
     return datetime_obj
 
@@ -178,3 +178,9 @@ def format_b2c_mpesa_date_to_timestamp(date_string):
 def convert_list_to_string(list_value: List[str]) -> str:
     """Convert list to string"""
     return ", ".join(map(str, set(list_value))) if list_value else ""
+
+
+def mask_phone_number(phone_number: str) -> str:
+    """Mask a phone number. Example result: +254703xxx675"""
+    masked_number = phone_number[:7] + "xxx" + phone_number[10:]
+    return masked_number
