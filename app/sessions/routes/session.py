@@ -66,6 +66,7 @@ async def get_home(
             "business_is_open": business_is_open,
             "session_amount": settings.SESSION_AMOUNT,
             "session_fee": settings.SESSION_FEE,
+            "session_duration": settings.SESSION_DURATION,
         },
     )
 

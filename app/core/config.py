@@ -60,8 +60,8 @@ class Settings(BaseSettings):
 
     SUPERUSER_PHONE: str
 
-    SESSION_AMOUNT: int = 500
-    SESSION_FEE: float = 45.0
+    SESSION_AMOUNT: int = 1000
+    SESSION_FEE: float = 201.0
     SESSION_REFUND_RATIO: float = 1.03  # Refund session amount by this rate
     SESSION_PARTIAL_REFUND_RATIO: float = (
         1.00  # Partially refund session amount by this rate
