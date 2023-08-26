@@ -204,7 +204,10 @@ def view_session_history(db: Session, user: User) -> list:
             "created_at": result.created_at,
             "category": result.category,
             "status": None,  # Status from the user's viewpoint
-            user.phone: {"score": float(result.score)},
+            "party_a": {
+                "phone_number": user.phone,
+                "score": round(float(result.score), 2),
+            },
         }
 
         duo_session_obj = duo_session_dao.search(
@@ -245,7 +248,11 @@ def view_session_history(db: Session, user: User) -> list:
                     db, user_id=opponent.id, session_id=result.session_id
                 )
 
-                session_history_dict[opponent_phone] = {"score": opponent_result.score}
+                # Here, party_b is always the opponent
+                session_history_dict["party_b"] = {
+                    "phone": opponent_phone,
+                    "score": round(float(opponent_result.score), 2),
+                }
                 session_history.append(session_history_dict)
 
         else:

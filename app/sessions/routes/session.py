@@ -5,7 +5,7 @@ from typing import Callable
 from http import HTTPStatus
 
 from app.sessions.serializers.session import SessionCategoryFormSerializer
-from app.sessions.utils import GetAvailableSession, create_session
+from app.sessions.utils import view_session_history, GetAvailableSession, create_session
 from app.users.models import User
 from app.exceptions.custom import NoAvailabeSession
 from app.accounts.daos.account import transaction_dao
@@ -110,3 +110,66 @@ async def get_preferred_redirect(
     )
 
     return RedirectResponse(redirect_url, status_code=302)
+
+
+@router.get("/history/", response_class=HTMLResponse)
+async def get_sessions_history(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+):
+    """Get summarized history of all the sessions played"""
+    sessions_history = view_session_history(db, user=user)
+
+    # from datetime import datetime
+    # sessions_history = [
+    #     {
+    #         "created_at": datetime.now(),
+    #         "category": 'BIBLE',
+    #         "status": 'REFUNDED',
+    #         "party_a": {
+    #             "phone": +254704845041,
+    #             "score": 74.56
+    #         }
+    #     },
+    #     {
+    #         "created_at": datetime.now(),
+    #         "category": 'FOOTBALL',
+    #         "status": 'PARTIALLY_REFUNDED',
+    #         "party_a": {
+    #             "phone": +254704845041,
+    #             "score": 0.00
+    #         }
+    #     },
+    #     {
+    #         "created_at": datetime.now(),
+    #         "category": 'BIBLE',
+    #         "status": 'WON',
+    #         "party_a": {
+    #             "phone": +254704845041,
+    #             "score": 74.56
+    #         },
+    #         "party_b": {
+    #             "phone": +254704845041,
+    #             "score": 74.54
+    #         },
+    #     },
+    #     {
+    #         "created_at": datetime.now(),
+    #         "category": 'BIBLE',
+    #         "status": 'LOST',
+    #         "party_a": {
+    #             "phone": +254704845041,
+    #             "score": 74.54
+    #         },
+    #         "party_b": {
+    #             "phone": +254704845041,
+    #             "score": 74.54
+    #         },
+    #     }
+    # ]
+
+    return templates.TemplateResponse(
+        f"{template_prefix}history.html",
+        {"request": request, "title": "History", "sessions_history": sessions_history},
+    )

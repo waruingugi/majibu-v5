@@ -28,8 +28,8 @@
                             </div>
                             <div class="card-footer bg-white border-0">
                                 <div class="row">
-                                    <div class="col"><button class="btn btn-light d-block w-100" type="button">Top Up</button></div>
-                                    <div class="col"><a class="btn btn-light d-block w-100 px-1" role="button" id="btn-preferred">View History</a></div>
+                                    <div class="col"><a href="{{ url_for('get_deposit') }}" class="btn btn-light d-block w-100" role="button">Top Up</a></div>
+                                    <div class="col"><a href="{{ url_for('get_sessions_history') }}" class="btn btn-light d-block w-100 px-1" role="button" id="btn-preferred">View History</a></div>
                                 </div>
                             </div>
                         </div>

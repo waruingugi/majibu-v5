@@ -1,0 +1,143 @@
+{% extends "templates/layout.html" %}
+
+{% block content %}
+    {% include "templates/navbar.html" %}
+        
+    <section id="content-full-height" class="py-4 bg-light">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-6">
+                    <div class="card mt-5" id="content-card">
+                        <div class="card-body pt-2">
+                            <h4 class="text-center">History</h4>
+                            <hr class="mt-0">
+
+                            {% if sessions_history %}
+
+                                {% for session in sessions_history %}
+                                    {% if session['status'] == 'REFUNDED' %}
+                                        <div class="border-start rounded-start border-2 border-warning my-2">
+                                            <div class="table-responsive px-2 my-3 bg-light score-history-table">
+                                                <table class="table table-sm table-borderless">
+                                                    <thead class="text-muted">
+                                                        <tr class="score-basic-info">
+                                                            <th class="text-left pt-2 pb-0 score-basic-info" colspan="2" style="text-align: left;">{{ session['created_at'].strftime("%H:%M, %d %b") }} - {{ session['category'] }}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="fw-bold">
+                                                            <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["score"] }}%</td>
+                                                            <td class="py-0 text-success border-start w-50" colspan="1">...</td>
+                                                        </tr>
+                                                        <tr class="partner-details">
+                                                            <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["phone"] }} (You)</td>
+                                                            <td class="py-0 text-success border-start w-50" colspan="1"></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    
+                                    {% elif session['status'] == 'PARTIALLY_REFUNDED' %}
+                                        
+                                        <div class="border-start rounded-start border-2 border-danger my-2">
+                                            <div class="table-responsive px-2 my-3 bg-light score-history-table">
+                                                <table class="table table-sm table-borderless">
+                                                    <thead class="text-muted">
+                                                        <tr class="score-basic-info">
+                                                            <th class="text-left pt-2 pb-0 score-basic-info" colspan="2" style="text-align: left;">{{ session['created_at'].strftime("%H:%M, %d %b") }} - {{ session['category'] }}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="fw-bold">
+                                                            <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["score"] }}%</td>
+                                                            <td class="py-0 border-start w-50" colspan="1">...</td>
+                                                        </tr>
+                                                        <tr class="partner-details">
+                                                            <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["phone"] }} (You)</td>
+                                                            <td class="py-0 border-start w-50" colspan="1"></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        
+                                        {% elif session['status'] == 'WON' %}
+                                        
+                                            <div class="border-start rounded-start border-2 border-success my-2">
+                                                <div class="table-responsive px-2 my-3 bg-light score-history-table">
+                                                    <table class="table table-sm table-borderless">
+                                                        <thead class="text-muted">
+                                                            <tr class="score-basic-info">
+                                                                <th class="text-left pt-2 pb-0 score-basic-info" colspan="2" style="text-align: left;">{{ session['created_at'].strftime("%H:%M, %d %b") }} - {{ session['category'] }}</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr class="fw-bold">
+                                                                <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["score"] }}%</td>
+                                                                <td class="py-0 border-start w-50" colspan="1">{{ session["party_b"]["score"] }}%</td>
+                                                            </tr>
+                                                            <tr class="partner-details">
+                                                                <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["phone"] }} (You)</td>
+                                                                <td class="py-0 border-start w-50" colspan="1"> {{ session["party_b"]["phone"] }} </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div> 
+
+                                        {% elif session['status'] == 'LOST' %}
+                                        
+                                            <div class="border-start rounded-start border-2 border-danger my-2">
+                                                <div class="table-responsive px-2 my-3 bg-light score-history-table">
+                                                    <table class="table table-sm table-borderless">
+                                                        <thead class="text-muted">
+                                                            <tr class="score-basic-info">
+                                                                <th class="text-left pt-2 pb-0 score-basic-info" colspan="2" style="text-align: left;">{{ session['created_at'].strftime("%H:%M, %d %b") }} - {{ session['category'] }}</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr class="fw-bold">
+                                                                <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["score"] }}%</td>
+                                                                <td class="py-0 border-start w-50" colspan="1">{{ session["party_b"]["score"] }}%</td>
+                                                            </tr>
+                                                            <tr class="partner-details">
+                                                                <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["phone"] }} (You)</td>
+                                                                <td class="py-0 border-start w-50" colspan="1"> {{ session["party_b"]["phone"] }} </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div> 
+                                    {% endif %}
+
+                                {% endfor %}
+
+                            {% else %}
+
+                                <div id="info-box" class="bg-light border-warning">
+                                    <span class="text-">No recent sessions. Please play one or more sessions to see your history here.</span>
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+                        <div class="card-footer bg-white border-0">
+                            <div class="row">
+                                <div class="col-6">
+                                    <a href="{{ url_for('get_home') }}" class="btn btn-light" role="button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 0 512 512" width="1em" height="1em" fill="currentColor" class="me-2">
+                                            <!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                            <path d="M447.1 256C447.1 273.7 433.7 288 416 288H109.3l105.4 105.4c12.5 12.5 12.5 32.75 0 45.25C208.4 444.9 200.2 448 192 448s-16.38-3.125-22.62-9.375l-160-160c-12.5-12.5-12.5-32.75 0-45.25l160-160c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25L109.3 224H416C433.7 224 447.1 238.3 447.1 256z"></path>
+                                        </svg>Go Back</a></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+        
+    {% include 'templates/footer.html' %}
+
+{% endblock %}

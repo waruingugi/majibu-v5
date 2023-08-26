@@ -247,7 +247,7 @@ def test_view_session_history_returns_correct_value_for_pending_session(
     assert result_history["status"] == "PENDING"
     assert result_history["category"] == result.category
 
-    assert result_history[user.phone]["score"] == float(result.score)
+    assert result_history["party_a"]["score"] == round(result.score, 2)
 
 
 def test_view_session_history_returns_empty_list_for_no_results_played(
@@ -287,7 +287,7 @@ def test_view_session_history_returns_correct_value_for_a_partially_refunded_ses
 
     assert result_history["status"] == "PARTIALLY_REFUNDED"
     assert result_history["category"] == result_node.category
-    assert user.phone in result_history
+    assert "party_a" in result_history
 
 
 def test_view_session_history_returns_correct_value_for_a_refunded_session(
@@ -316,7 +316,7 @@ def test_view_session_history_returns_correct_value_for_a_refunded_session(
 
     assert result_history["status"] == "REFUNDED"
     assert result_history["category"] == party_a_result.category
-    assert result_history[user.phone]["score"] == 100
+    assert result_history["party_a"]["score"] == 100.00
 
 
 def test_view_session_history_returns_correct_value_for_a_paired_session(
@@ -376,8 +376,8 @@ def test_view_session_history_returns_correct_value_for_a_paired_session(
 
     assert party_a_result_history["status"] == "WON"
     assert party_a_result_history["category"] == party_a_result.category
-    assert party_a_result_history[party_a_user.phone]["score"] == 75.112
+    assert party_a_result_history["party_a"]["score"] == 75.11
 
     assert party_b_result_history["status"] == "LOST"
     assert party_b_result_history["category"] == party_b_result.category
-    assert party_b_result_history[party_b_user.phone]["score"] == 75.111
+    assert party_b_result_history["party_b"]["score"] == 75.11
