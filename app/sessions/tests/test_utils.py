@@ -8,8 +8,8 @@ import pytest
 from app.core.utils import PairUsers
 from app.core.config import settings
 from app.users.daos.user import user_dao
-from app.users.serializers.user import UserCreateSerializer
 from app.commons.constants import Categories
+from app.users.serializers.user import UserCreateSerializer
 
 from app.sessions.utils import (
     view_session_history,
@@ -287,6 +287,8 @@ def test_view_session_history_returns_correct_value_for_a_partially_refunded_ses
 
     assert result_history["status"] == "PARTIALLY_REFUNDED"
     assert result_history["category"] == result_node.category
+
+    assert "session_id" in result_history
     assert "party_a" in result_history
 
 
@@ -316,7 +318,9 @@ def test_view_session_history_returns_correct_value_for_a_refunded_session(
 
     assert result_history["status"] == "REFUNDED"
     assert result_history["category"] == party_a_result.category
+
     assert result_history["party_a"]["score"] == 100.00
+    assert "id" in result_history["party_a"]
 
 
 def test_view_session_history_returns_correct_value_for_a_paired_session(

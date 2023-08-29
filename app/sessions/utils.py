@@ -24,9 +24,10 @@ from app.accounts.constants import (
 )
 from app.accounts.serializers.account import TransactionCreateSerializer
 
-from app.quiz.daos.quiz import result_dao
 from app.quiz.filters import ResultFilter
 from app.quiz.serializers.quiz import ResultCreateSerializer
+from app.quiz.daos.quiz import result_dao
+
 from app.sessions.serializers.session import (
     UserSessionStatsCreateSerializer,
     UserSessionStatsUpdateSerializer,
@@ -196,15 +197,18 @@ def create_session(db: Session, *, user: User, session_id: str) -> str | None:
 def view_session_history(db: Session, user: User) -> list:
     """Provide minimalist view of sessions played by user"""
     result_objs = result_dao.get_all(db, user_id=user.id)
+
     session_history = []
 
     for result in result_objs:
         # Create default dictionary that will be appended to list
         session_history_dict = {
             "created_at": result.created_at,
+            "session_id": result.session_id,
             "category": result.category,
             "status": None,  # Status from the user's viewpoint
             "party_a": {
+                "id": user.id,
                 "phone_number": user.phone,
                 "score": round(float(result.score), 2),
             },
@@ -250,6 +254,7 @@ def view_session_history(db: Session, user: User) -> list:
 
                 # Here, party_b is always the opponent
                 session_history_dict["party_b"] = {
+                    "id": opponent_id,
                     "phone": opponent_phone,
                     "score": round(float(opponent_result.score), 2),
                 }
@@ -265,4 +270,5 @@ def view_session_history(db: Session, user: User) -> list:
         session_history, key=lambda x: x["created_at"], reverse=True
     )
 
-    return sorted_sessions_history
+    # Return only the 7 most recent sessions because pagination has not been implemented yet
+    return sorted_sessions_history[:7]

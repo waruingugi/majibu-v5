@@ -4,9 +4,7 @@ from sqlalchemy.orm import Session
 from http import HTTPStatus
 
 from app.users.models import User
-
-from app.quiz.utils import GetSessionQuestions
-from app.quiz.utils import CalculateScore
+from app.quiz.utils import get_user_answer_results, CalculateScore, GetSessionQuestions
 from app.quiz.daos.quiz import result_dao
 from app.core.config import templates
 from app.core.deps import (
@@ -191,22 +189,28 @@ async def get_result_score(
     )
 
 
+@router.get("/results/{user_id}/{session_id}", response_class=HTMLResponse)
+async def get_session_results(
+    request: Request,
+    user_id: str,
+    session_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+):
+    """Get user answers for that session"""
+    results = get_user_answer_results(db, user_id=user_id, session_id=session_id)
+
+    return templates.TemplateResponse(
+        f"{template_prefix}results.html",
+        {"request": request, "title": "Results", "results": results},
+    )
+
+
 # Remove docs
 # Redirect template on quiz
 # If withdraw balance bank is below, fail transactions
 
-# {
-#     "created_at":
-#     "category":
-#     "viewer": +2568
-#     "status": refunded-g, won-g,lost-r, pending-y , PARTIALL-RE-r
-#     "+2547857777": {
-#         "score":
-#     },
-#     "+25478xxx517": {
-#         "score":
-#     }
-# }
+
 # limit results to 7 most recent
 # if no results, show dialog
 # Fix buttons url in quiz and score
