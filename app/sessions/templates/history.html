@@ -26,11 +26,11 @@
                                                     </thead>
                                                     <tbody>
                                                         <tr class="fw-bold">
-                                                            <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["score"] }}%</td>
+                                                            <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["score"] }}%</td>
                                                             <td class="py-0 text-success border-start w-50" colspan="1">...</td>
                                                         </tr>
                                                         <tr class="partner-details">
-                                                            <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["phone"] }} (You)</td>
+                                                            <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["phone"] }} (You)</td>
                                                             <td class="py-0 text-success border-start w-50" colspan="1"></td>
                                                         </tr>
                                                     </tbody>
@@ -50,11 +50,11 @@
                                                     </thead>
                                                     <tbody>
                                                         <tr class="fw-bold">
-                                                            <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["score"] }}%</td>
+                                                            <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["score"] }}%</td>
                                                             <td class="py-0 border-start w-50" colspan="1">...</td>
                                                         </tr>
                                                         <tr class="partner-details">
-                                                            <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["phone"] }} (You)</td>
+                                                            <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["phone"] }} (You)</td>
                                                             <td class="py-0 border-start w-50" colspan="1"></td>
                                                         </tr>
                                                     </tbody>
@@ -74,12 +74,12 @@
                                                         </thead>
                                                         <tbody>
                                                             <tr class="fw-bold">
-                                                                <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["score"] }}%</td>
-                                                                <td class="py-0 border-start w-50" colspan="1">{{ session["party_b"]["score"] }}%</td>
+                                                                <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["score"] }}%</td>
+                                                                <td style="cursor: pointer;" class="py-0 border-start w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_b"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_b"]["score"] }}%</td>
                                                             </tr>
                                                             <tr class="partner-details">
-                                                                <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["phone"] }} (You)</td>
-                                                                <td class="py-0 border-start w-50" colspan="1"> {{ session["party_b"]["phone"] }} </td>
+                                                                <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["phone"] }} (You)</td>
+                                                                <td style="cursor: pointer;" class="py-0 border-start w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_b"]["id"], session_id=session["session_id"]) }}&#39;)'> {{ session["party_b"]["phone"] }} </td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
@@ -98,12 +98,12 @@
                                                         </thead>
                                                         <tbody>
                                                             <tr class="fw-bold">
-                                                                <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["score"] }}%</td>
-                                                                <td class="py-0 border-start w-50" colspan="1">{{ session["party_b"]["score"] }}%</td>
+                                                                <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["score"] }}%</td>
+                                                                <td style="cursor: pointer;" class="py-0 border-start w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_b"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_b"]["score"] }}%</td>
                                                             </tr>
                                                             <tr class="partner-details">
-                                                                <td class="py-0 border-end w-50" colspan="1" onclick="redirectToLink(&#39;https://www.google.com&#39;)">{{ session["party_a"]["phone"] }} (You)</td>
-                                                                <td class="py-0 border-start w-50" colspan="1"> {{ session["party_b"]["phone"] }} </td>
+                                                                <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["phone"] }} (You)</td>
+                                                                <td style="cursor: pointer;" class="py-0 border-start w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_b"]["id"], session_id=session["session_id"]) }}&#39;)'> {{ session["party_b"]["phone"] }} </td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
@@ -139,5 +139,9 @@
     </section>
         
     {% include 'templates/footer.html' %}
+
+    {% block scripts %}
+        <script src="{{ url_for('static', path='assets/js/tables.js') }}"> </script>
+    {% endblock %}
 
 {% endblock %}

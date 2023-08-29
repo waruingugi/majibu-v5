@@ -127,8 +127,10 @@ async def get_sessions_history(
     #     {
     #         "created_at": datetime.now(),
     #         "category": 'BIBLE',
+    #         "session_id": "fga73nkkka",
     #         "status": 'REFUNDED',
     #         "party_a": {
+    #             "id": "jkha439yphqhwoioe",
     #             "phone": +254704845041,
     #             "score": 74.56
     #         }
@@ -136,8 +138,10 @@ async def get_sessions_history(
     #     {
     #         "created_at": datetime.now(),
     #         "category": 'FOOTBALL',
+    #         "session_id": "fga73nkkka",
     #         "status": 'PARTIALLY_REFUNDED',
     #         "party_a": {
+    #             "id": "jkha439yphqhwoioe",
     #             "phone": +254704845041,
     #             "score": 0.00
     #         }
@@ -145,12 +149,15 @@ async def get_sessions_history(
     #     {
     #         "created_at": datetime.now(),
     #         "category": 'BIBLE',
+    #         "session_id": "fga73nkkka",
     #         "status": 'WON',
     #         "party_a": {
+    #             "id": "jkha439yphqhwoioe",
     #             "phone": +254704845041,
     #             "score": 74.56
     #         },
     #         "party_b": {
+    #             "id": "jkha43987tqlwoioe",
     #             "phone": +254704845041,
     #             "score": 74.54
     #         },
@@ -158,12 +165,15 @@ async def get_sessions_history(
     #     {
     #         "created_at": datetime.now(),
     #         "category": 'BIBLE',
+    #         "session_id": "fga73nkkka",
     #         "status": 'LOST',
     #         "party_a": {
+    #             "id": "jkha439yphqhwoioe",
     #             "phone": +254704845041,
     #             "score": 74.54
     #         },
     #         "party_b": {
+    #             "id": "jkha43987tqlwoioe",
     #             "phone": +254704845041,
     #             "score": 74.54
     #         },

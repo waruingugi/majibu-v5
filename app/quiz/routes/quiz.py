@@ -200,6 +200,38 @@ async def get_session_results(
     """Get user answers for that session"""
     results = get_user_answer_results(db, user_id=user_id, session_id=session_id)
 
+    # results = {
+    #     'category': 'BIBLE',
+    #     'phone': '+254704xxx040',
+    #     'questions': [
+    #         {
+    #             'question': 'e61b3c57-4429-450a-b99c-9fa4935c3ece',
+    #             'answer': '33882584-3966-41c0-aee4-2fff5a58ab8c',
+    #             'correct': True
+    #         },
+    #         {
+    #             'question': 'a87a65cc-6d66-42c9-8526-c4b59c206f49',
+    #             'answer': 'c79a7511-3e54-4e07-bd8d-3b020326c6a8',
+    #             'correct': True
+    #         },
+    #         {
+    #             'question': '1d2b62e6-6426-4dac-a184-a0b8d0610eda',
+    #             'answer': '6b17ad05-3e1c-42c5-b1d1-096f4e5e9f33',
+    #             'correct': True
+    #         },
+    #         {
+    #             'question': '7f0f49bf-e428-44b0-8eca-e2fbe332516e',
+    #             'answer': '87395603-d724-45dc-8f31-b1021a6a66f1',
+    #             'correct': True
+    #         },
+    #         {
+    #             'question': '6942c1f8-926a-412e-84df-42e69168d00f',
+    #             'answer': '85f5eb83-b59d-40cf-a9d9-0394d7991d6b',
+    #             'correct': True
+    #         }
+    #     ]
+    # }
+
     return templates.TemplateResponse(
         f"{template_prefix}results.html",
         {"request": request, "title": "Results", "results": results},
