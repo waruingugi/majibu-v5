@@ -1,0 +1,9 @@
+# Celery
+# Query B2C pending transactions or use retry feature
+# Pagination
+# Protect docs
+# Host on heroku, buy domain
+
+
+# Remove docs
+# If withdraw balance bank is below, fail transactions

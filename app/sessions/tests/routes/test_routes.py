@@ -104,3 +104,17 @@ def test_post_session_redirects_to_get_question_route(
     )
 
     assert response.template.name == "quiz/templates/questions.html"
+
+
+def test_get_sessions_history_returns_correct_data(
+    db: Session,
+    client: TestClient,
+    mocker: MockerFixture,
+) -> None:
+    """Test the route returns the correct data"""
+    mocker.patch("app.sessions.routes.session.view_session_history", return_value=[])
+
+    response = client.get("/session/history")
+
+    assert "sessions_history" in response.context
+    assert response.template.name == "sessions/templates/history.html"

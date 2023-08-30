@@ -195,7 +195,7 @@ async def get_session_results(
     user_id: str,
     session_id: str,
     db: Session = Depends(get_db),
-    user: User = Depends(get_current_active_user),
+    _: User = Depends(get_current_active_user),
 ):
     """Get user answers for that session"""
     results = get_user_answer_results(db, user_id=user_id, session_id=session_id)
@@ -236,13 +236,3 @@ async def get_session_results(
         f"{template_prefix}results.html",
         {"request": request, "title": "Results", "results": results},
     )
-
-
-# Remove docs
-# Redirect template on quiz
-# If withdraw balance bank is below, fail transactions
-
-
-# limit results to 7 most recent
-# if no results, show dialog
-# Fix buttons url in quiz and score

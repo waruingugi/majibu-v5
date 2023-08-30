@@ -38,3 +38,17 @@ def test_get_result_score_returns_correct_data(
 
     assert "category" in response.context
     assert response.template.name == "quiz/templates/score.html"
+
+
+def test_get_session_results_returns_correct_data(
+    db: Session,
+    client: TestClient,
+    mocker: MockerFixture,
+) -> None:
+    """Test the route returns the correct data"""
+    mocker.patch("app.quiz.routes.quiz.get_user_answer_results", return_value=[])
+
+    response = client.get("/quiz/results/random_user_id/random_session_id")
+
+    assert "results" in response.context
+    assert response.template.name == "quiz/templates/results.html"

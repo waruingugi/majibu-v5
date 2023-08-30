@@ -278,21 +278,3 @@ def get_user_answer_results(db: Session, *, user_id: str, session_id: str) -> di
         )
 
     return result
-
-
-# init - set up user
-# call - run checks
-# calculate score
-# Get or create useranswers
-# Another function to check correct answers
-# Save number of correct answers
-# Save number of questions answered
-# check if submitted before
-# On call, should we return final score or raise error
-# On pairing, if results is none for late submission, refund without bonus
-
-# CorrectWeight = 0.8 (to give more weight to the number of correct answers)
-# AnsweredWeight = 0.2 (to give less weight to the number of questions attempted)
-# CorrectScore = (TotalCorrect / TotalQuestions) * CorrectWeight
-# AnsweredScore = (TotalAnswered / TotalQuestions) * AnsweredWeight
-# FinalScore = CorrectScore + AnsweredScore
