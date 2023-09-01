@@ -19,7 +19,10 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 
-app = FastAPI()
+app = FastAPI(
+    docs_url=None,  # Disable docs (Swagger UI)
+    redoc_url=None,  # Disable redoc
+)
 
 # Rate limiter
 app.state.limiter = limiter

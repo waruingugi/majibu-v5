@@ -1,6 +1,6 @@
 from typing import Generator, Dict, Callable
 from sqlalchemy.orm import Session, load_only
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from app.db.session import SessionLocal
 from app.core.security import (
@@ -158,11 +158,8 @@ async def business_is_open(
     _: Callable = Depends(business_in_maintenance_mode),
 ) -> bool:
     """Check business is open or business is within operating hours"""
-    utc_now = datetime.now()
-
     # Calculate the current time in EAT
-    eat_offset = timedelta(hours=3)  # EAT offset is 3 hours ahead of UTC = Nairobi time
-    eat_now = utc_now + eat_offset
+    eat_now = datetime.now()
 
     # Extract the time components from open_time and close_time
     open_hour, open_minute = map(int, settings.BUSINESS_OPENS_AT.split(":"))

@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session, load_only
+from datetime import datetime, timedelta
 from fastapi import Depends
 from typing import Optional
 import random
@@ -196,6 +197,7 @@ def create_session(db: Session, *, user: User, session_id: str) -> str | None:
 
 def view_session_history(db: Session, user: User) -> list:
     """Provide minimalist view of sessions played by user"""
+    logger.info(f"Get session history for user_id: {user.id}")
     result_objs = result_dao.get_all(db, user_id=user.id)
 
     session_history = []
@@ -214,6 +216,7 @@ def view_session_history(db: Session, user: User) -> list:
             },
         }
 
+        logger.info(f"Searching for DuoSession history for user_id: {user.id} ...")
         duo_session_obj = duo_session_dao.search(
             db,
             search_filter=DuoSessionFilter(
@@ -266,9 +269,34 @@ def view_session_history(db: Session, user: User) -> list:
             session_history.append(session_history_dict)
 
     # Sort the list by created_at value in descending order(most recent to last)
+    logger.info(f"Sorting session history for user_id: {user.id} ...")
     sorted_sessions_history = sorted(
         session_history, key=lambda x: x["created_at"], reverse=True
     )
 
     # Return only the 7 most recent sessions because pagination has not been implemented yet
     return sorted_sessions_history[:7]
+
+
+def business_opens_next_at() -> str:
+    """Returns the date the business will open next as a string"""
+    logger.info("Get business open next at time")
+    closes_at = datetime.strptime(settings.BUSINESS_CLOSES_AT, "%H:%M")
+
+    # Get the current date and time
+    current_datetime = datetime.now()
+
+    # Set the time of the current date to the given time
+    current_datetime = current_datetime.replace(
+        hour=closes_at.hour, minute=closes_at.minute, second=0, microsecond=0
+    )
+
+    # Check if the given time has already passed today
+    if current_datetime < datetime.now():
+        # If it has passed, set the variable to tomorrow's date
+        tomorrow_date = datetime.now() + timedelta(days=1)
+        return tomorrow_date.strftime("%Y-%m-%d")
+
+    # If it hasn't passed yet today, set the variable to today's date
+    # which means the business is still open
+    return datetime.now().strftime("%Y-%m-%d")

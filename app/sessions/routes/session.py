@@ -5,7 +5,12 @@ from typing import Callable
 from http import HTTPStatus
 
 from app.sessions.serializers.session import SessionCategoryFormSerializer
-from app.sessions.utils import view_session_history, GetAvailableSession, create_session
+from app.sessions.utils import (
+    business_opens_next_at,
+    view_session_history,
+    GetAvailableSession,
+    create_session,
+)
 from app.users.models import User
 from app.exceptions.custom import NoAvailabeSession
 from app.accounts.daos.account import transaction_dao
@@ -66,6 +71,7 @@ async def get_home(
             "business_is_open": business_is_open,
             "session_amount": settings.SESSION_AMOUNT,
             "session_fee": settings.SESSION_FEE,
+            "business_opens_next_at": business_opens_next_at(),
             "session_duration": settings.SESSION_DURATION,
         },
     )
