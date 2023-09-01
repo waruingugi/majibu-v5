@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session, load_only
+from datetime import datetime, timedelta
 from fastapi import Depends
 from typing import Optional
 import random
@@ -10,8 +11,9 @@ from app.core.deps import (
 )
 from app.core.config import redis, settings
 from app.core.raw_logger import logger
-from app.core.helpers import md5_hash, generate_transaction_code
+from app.core.helpers import md5_hash, mask_phone_number, generate_transaction_code
 
+from app.users.daos.user import user_dao
 from app.users.models import User
 from app.accounts.daos.account import transaction_dao
 from app.accounts.constants import (
@@ -23,16 +25,19 @@ from app.accounts.constants import (
 )
 from app.accounts.serializers.account import TransactionCreateSerializer
 
-from app.quiz.daos.quiz import result_dao
 from app.quiz.filters import ResultFilter
 from app.quiz.serializers.quiz import ResultCreateSerializer
+from app.quiz.daos.quiz import result_dao
+
 from app.sessions.serializers.session import (
     UserSessionStatsCreateSerializer,
     UserSessionStatsUpdateSerializer,
 )
-from app.sessions.filters import SessionFilter
+from app.sessions.constants import DuoSessionStatuses
+from app.sessions.filters import SessionFilter, DuoSessionFilter
 from app.sessions.daos.session import (
     session_dao,
+    duo_session_dao,
     user_session_stats_dao,
 )
 
@@ -163,7 +168,7 @@ def create_session(db: Session, *, user: User, session_id: str) -> str | None:
                 cash_flow=TransactionCashFlow.OUTWARD.value,
                 type=TransactionTypes.WITHDRAWAL.value,
                 status=TransactionStatuses.SUCCESSFUL.value,
-                service=TransactionServices.MAJIBU.value,
+                service=TransactionServices.SESSION.value,
                 description=description,
                 amount=settings.SESSION_AMOUNT,
             ),
@@ -176,7 +181,7 @@ def create_session(db: Session, *, user: User, session_id: str) -> str | None:
         user_session_stats_dao.update(
             db,
             db_obj=user_session_stats_obj,
-            obj_in=UserSessionStatsUpdateSerializer(user_id=user.id, sessions_played=1),
+            obj_in=UserSessionStatsUpdateSerializer(sessions_played=1),
         )
 
         # Create the result instance
@@ -188,3 +193,110 @@ def create_session(db: Session, *, user: User, session_id: str) -> str | None:
 
     # If user balance is not sufficient, raise error: a redudancy check
     raise InsufficientUserBalance
+
+
+def view_session_history(db: Session, user: User) -> list:
+    """Provide minimalist view of sessions played by user"""
+    logger.info(f"Get session history for user_id: {user.id}")
+    result_objs = result_dao.get_all(db, user_id=user.id)
+
+    session_history = []
+
+    for result in result_objs:
+        # Create default dictionary that will be appended to list
+        session_history_dict = {
+            "created_at": result.created_at,
+            "session_id": result.session_id,
+            "category": result.category,
+            "status": None,  # Status from the user's viewpoint
+            "party_a": {
+                "id": user.id,
+                "phone_number": user.phone,
+                "score": round(float(result.score), 2),
+            },
+        }
+
+        logger.info(f"Searching for DuoSession history for user_id: {user.id} ...")
+        duo_session_obj = duo_session_dao.search(
+            db,
+            search_filter=DuoSessionFilter(
+                session_id=result.session_id, search=user.id  # type: ignore
+            ),
+        )
+
+        if duo_session_obj:
+            # Only one instance will always exists in the list
+            duo_session = duo_session_obj[0]
+
+            if duo_session.status == DuoSessionStatuses.REFUNDED:
+                session_history_dict["status"] = "REFUNDED"
+                session_history.append(session_history_dict)
+
+            elif duo_session.status == DuoSessionStatuses.PARTIALLY_REFUNDED:
+                session_history_dict["status"] = "PARTIALLY_REFUNDED"
+                session_history.append(session_history_dict)
+
+            elif duo_session.status == DuoSessionStatuses.PAIRED:
+                if duo_session.winner_id == user.id:
+                    session_history_dict["status"] = "WON"
+                else:
+                    session_history_dict["status"] = "LOST"
+
+                # Get and set the opponent details
+                opponent_id = (
+                    duo_session.party_a
+                    if duo_session.party_a != user.id
+                    else duo_session.party_b
+                )
+                opponent = user_dao.get_not_none(db, id=opponent_id)
+
+                opponent_phone = mask_phone_number(opponent.phone)
+                opponent_result = result_dao.get_not_none(
+                    db, user_id=opponent.id, session_id=result.session_id
+                )
+
+                # Here, party_b is always the opponent
+                session_history_dict["party_b"] = {
+                    "id": opponent_id,
+                    "phone": opponent_phone,
+                    "score": round(float(opponent_result.score), 2),
+                }
+                session_history.append(session_history_dict)
+
+        else:
+            """ "The result has not been paired yet"""
+            session_history_dict["status"] = "PENDING"
+            session_history.append(session_history_dict)
+
+    # Sort the list by created_at value in descending order(most recent to last)
+    logger.info(f"Sorting session history for user_id: {user.id} ...")
+    sorted_sessions_history = sorted(
+        session_history, key=lambda x: x["created_at"], reverse=True
+    )
+
+    # Return only the 7 most recent sessions because pagination has not been implemented yet
+    return sorted_sessions_history[:7]
+
+
+def business_opens_next_at() -> str:
+    """Returns the date the business will open next as a string"""
+    logger.info("Get business open next at time")
+    closes_at = datetime.strptime(settings.BUSINESS_CLOSES_AT, "%H:%M")
+
+    # Get the current date and time
+    current_datetime = datetime.now()
+
+    # Set the time of the current date to the given time
+    current_datetime = current_datetime.replace(
+        hour=closes_at.hour, minute=closes_at.minute, second=0, microsecond=0
+    )
+
+    # Check if the given time has already passed today
+    if current_datetime < datetime.now():
+        # If it has passed, set the variable to tomorrow's date
+        tomorrow_date = datetime.now() + timedelta(days=1)
+        return tomorrow_date.strftime("%Y-%m-%d")
+
+    # If it hasn't passed yet today, set the variable to today's date
+    # which means the business is still open
+    return datetime.now().strftime("%Y-%m-%d")

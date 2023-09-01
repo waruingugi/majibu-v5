@@ -12,9 +12,10 @@ celery = Celery(
 
 
 scheduled_tasks = {
-    "update_business_partner_locations": {
-        "task": "app.sessions.tasks.first_celery_task",
-        "schedule": crontab(minute="*/1"),
+    # Run a period task that pairs users, this is the heart of the system
+    "pair_users_in_pool": {
+        "task": "app.sessions.tasks.pair_users_task",
+        "schedule": crontab(minute="*/3"),
         "options": {"queue": settings.CELERY_SCHEDULER_QUEUE},
     },
 }

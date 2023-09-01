@@ -60,8 +60,13 @@ class Settings(BaseSettings):
 
     SUPERUSER_PHONE: str
 
-    SESSION_AMOUNT: int = 500
-    SESSION_FEE: float = 45.0
+    SESSION_AMOUNT: int = 1000
+    SESSION_FEE: float = 201.0
+    SESSION_REFUND_RATIO: float = 1.03  # Refund session amount by this rate
+    SESSION_PARTIAL_REFUND_RATIO: float = (
+        1.00  # Partially refund session amount by this rate
+    )
+    SESSION_WIN_RATIO = 1.79  # Double session amount by this rate on win
 
     MPESA_B2C_CHARGE: int = 16
     MPESA_B2C_CONSUMER_KEY: str
@@ -104,6 +109,7 @@ class Settings(BaseSettings):
     SESSION_RESULT_DECIMAL_PLACES: int = 7  # High accuracy to pevent draws
     SESSION_DURATION: int = 15  # How long the session lasts
     SESSION_BUFFER_TIME = 3  # Buffer time = SESSION DURATION + SESSION_BUFFER_TIME
+
     LOAD_SESSION_INTO_QUEUE_AFTER_SECONDS: int = 180  # 3 minutes
     RESULT_EXPIRES_AT_BUFFER_TIME: int = 300  # 5 minutes
 

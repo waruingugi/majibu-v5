@@ -119,18 +119,14 @@ async def post_otp_verification(
 async def logout(
     request: Request,
     response: Response,
-    user: User = Depends(get_current_active_user_or_none),
+    _: User = Depends(get_current_active_user_or_none),
 ):
     """Log out the current user"""
     # response.set_cookie(key="access_token", value="", max_age=1)
     # response.delete_cookie("access_token", domain="localhost")
     response = templates.TemplateResponse(
         f"{template_prefix}login.html",
-        {
-            "request": request,
-            "title": "Login",
-            "is_logged_in": False if user is None else True,
-        },
+        {"request": request, "title": "Login"},
     )
     response.delete_cookie("access_token")
     return response

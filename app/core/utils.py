@@ -265,7 +265,7 @@ class PairUsers:
         """Set statistics to the PoolSession model"""
         logger.info("Saving PoolSession statistics...")
 
-        with SessionLocal() as db:
+        with SessionLocal() as db:  # type: ignore
             total_players = 0
 
             """Loop through each category and save the stats to the model"""
@@ -462,3 +462,6 @@ class PairUsers:
 
 
 # Send message
+# On refund, transaction create, test
+# On partial refund
+# Update user dao stats

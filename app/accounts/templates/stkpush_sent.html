@@ -14,18 +14,17 @@
                             <div id="info-box" class="bg-light border-warning">
                                 <span class="text-">An M-Pesa request was sent to your phone. Kindly enter your pin to approve the top up.</span>
                             </div>
-                            <div class="card-footer bg-white border-0 mt-2 px-1">
-                                <div class="row">
-                                    <div class="col px-2">
-                                        <a href="{{ url_for('get_wallet') }}" class="btn btn-light d-block w-100" role="button">&nbsp;<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 0 512 512" width="1em" height="1em" fill="currentColor" class="me-2">
-                                                <!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
-                                                <path d="M447.1 256C447.1 273.7 433.7 288 416 288H109.3l105.4 105.4c12.5 12.5 12.5 32.75 0 45.25C208.4 444.9 200.2 448 192 448s-16.38-3.125-22.62-9.375l-160-160c-12.5-12.5-12.5-32.75 0-45.25l160-160c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25L109.3 224H416C433.7 224 447.1 238.3 447.1 256z"></path>
-                                            </svg>Account
-                                        </a>
-                                    </div>
-                                    <div class="col px-2">
-                                        <a href="{{ url_for('get_preferred_redirect') }}" class="btn btn-primary d-block w-100" role="button" id="btn-preferred">Go Back</a>
-                                    </div>
+                        </div>
+ 
+                        <div class="card-footer bg-white border-0">
+                            <div class="row">
+                                <div class="col px-2">
+                                    <a href="{{ url_for('get_wallet') }}" class="btn btn-light d-block w-100" role="button">&nbsp;<svg xmlns="http://www.w3.org/2000/svg" viewBox="-32 0 512 512" width="1em" height="1em" fill="currentColor" class="me-2">
+                                            <!--! Font Awesome Free 6.1.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. -->
+                                            <path d="M447.1 256C447.1 273.7 433.7 288 416 288H109.3l105.4 105.4c12.5 12.5 12.5 32.75 0 45.25C208.4 444.9 200.2 448 192 448s-16.38-3.125-22.62-9.375l-160-160c-12.5-12.5-12.5-32.75 0-45.25l160-160c12.5-12.5 32.75-12.5 45.25 0s12.5 32.75 0 45.25L109.3 224H416C433.7 224 447.1 238.3 447.1 256z"></path>
+                                        </svg>Account</a></div>
+                                <div class="col px-2">
+                                    <a href="{{ url_for('get_home') }}" class="btn btn-primary d-block w-100" role="button" id="btn-preferred">Play now</a>
                                 </div>
                             </div>
                         </div>

@@ -237,10 +237,3 @@ async def post_withdrawal_time_out(
     Callback URL to receive response after posting
     withdrawal request to M-Pesa in case of time out"""
     pass
-
-
-# Celery
-# Query B2C pending transactions or use retry feature
-# Pagination
-# Protect docs
-# Host on heroku, buy domain

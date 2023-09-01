@@ -9,9 +9,12 @@ from app.core.deps import (
 )
 from app.core.raw_logger import logger
 from app.core.config import settings
+from app.core.helpers import mask_phone_number
 
 from app.exceptions.custom import SessionExpired, LateSessionSubmission
 from app.sessions.daos.session import session_dao
+from app.users.daos.user import user_dao
+
 from app.quiz.daos.quiz import (
     result_dao,
     question_dao,
@@ -246,19 +249,32 @@ class CalculateScore:
         return moderated_score
 
 
-# init - set up user
-# call - run checks
-# calculate score
-# Get or create useranswers
-# Another function to check correct answers
-# Save number of correct answers
-# Save number of questions answered
-# check if submitted before
-# On call, should we return final score or raise error
-# On pairing, if results is none for late submission, refund without bonus
+def get_user_answer_results(db: Session, *, user_id: str, session_id: str) -> dict:
+    """Get answers that user selected during a session and whether the answers
+    are correct or wrong"""
+    user_answers = user_answer_dao.search(
+        db, {"user_id": user_id, "session_id": session_id}
+    )
+    session = session_dao.get_not_none(db, id=session_id)
 
-# CorrectWeight = 0.8 (to give more weight to the number of correct answers)
-# AnsweredWeight = 0.2 (to give less weight to the number of questions attempted)
-# CorrectScore = (TotalCorrect / TotalQuestions) * CorrectWeight
-# AnsweredScore = (TotalAnswered / TotalQuestions) * AnsweredWeight
-# FinalScore = CorrectScore + AnsweredScore
+    user = user_dao.get_not_none(db, id=user_id)
+    masked_phone = mask_phone_number(user.phone)
+
+    result = {"category": session.category, "phone": masked_phone, "questions": []}
+
+    for answer in user_answers:
+        question = question_dao.get_not_none(db, id=answer.question_id)
+        user_choice = choice_dao.get_not_none(db, id=answer.choice_id)
+        correct_answer = answer_dao.get_not_none(db, question_id=answer.question_id)
+
+        result["questions"].append(
+            {
+                "question": question.question_text,
+                "answer": user_choice.choice_text,
+                "correct": True
+                if user_choice.id == correct_answer.choice_id
+                else False,
+            }
+        )
+
+    return result

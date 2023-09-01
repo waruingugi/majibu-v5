@@ -6,6 +6,7 @@ import json
 from app.core.config import settings
 from app.commons.constants import Categories
 from app.exceptions.custom import DuoSessionFailedOnCreate
+from app.accounts.daos.account import transaction_dao
 
 from app.sessions.daos.session import (
     session_dao,
@@ -190,7 +191,7 @@ def test_create_duo_session_instance_fails_if_already_exists(
     create_session_instance: Callable,
     create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
-):
+) -> None:
     """Test duplicate DuoSessions can not be created in model"""
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
@@ -203,6 +204,7 @@ def test_create_duo_session_instance_fails_if_already_exists(
     data_in = DuoSessionCreateSerializer(
         party_a=party_a.id,
         party_b=party_b.id,
+        winner_id=party_b.id,
         status=DuoSessionStatuses.PAIRED.value,
         session_id=session.id,
         amount=settings.SESSION_AMOUNT,
@@ -234,7 +236,7 @@ def test_create_duo_session_instance_fails_if_party_a_and_party_b_are_same(
     create_session_instance: Callable,
     create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
-):
+) -> None:
     """Test DuoSessions can not be created in model with the same party_a and party_b"""
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
@@ -255,7 +257,7 @@ def test_create_duo_session_instance_fails_if_party_b_exists_in_partial_refunds(
     create_session_instance: Callable,
     create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
-):
+) -> None:
     """Test DuoSessions can not be created in model for partial refunds with party_b"""
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
@@ -279,7 +281,7 @@ def test_create_duo_session_instance_fails_if_party_b_exists_in_refunds(
     create_session_instance: Callable,
     create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
-):
+) -> None:
     """Test DuoSessions can not be created in model for refunds with party_b"""
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
@@ -296,6 +298,89 @@ def test_create_duo_session_instance_fails_if_party_b_exists_in_refunds(
             amount=settings.SESSION_AMOUNT,
         )
         duo_session_dao.create(db, obj_in=data_in)
+
+
+def test_duo_session_creates_transaction_instance_on_paired_state(
+    db: Session,
+    create_session_instance: Callable,
+    create_user_model_instances: Callable,
+    delete_duo_session_model_instances: Callable,
+    delete_transcation_model_instances: Callable,
+) -> None:
+    """Test that DuoSession creates a transaction after pairing two users"""
+    session = session_dao.get_not_none(db)
+    users = user_dao.get_all(db)
+
+    party_a = users[0]
+    party_b = users[1]
+
+    data_in = DuoSessionCreateSerializer(
+        party_a=party_a.id,
+        party_b=party_b.id,
+        winner_id=party_a.id,
+        status=DuoSessionStatuses.PAIRED.value,
+        session_id=session.id,
+        amount=settings.SESSION_AMOUNT,
+    )
+    duo_session_dao.create(db, obj_in=data_in)
+
+    winner_obj = transaction_dao.get_not_none(db, account=party_a.phone)
+    opponent_obj = transaction_dao.get_or_none(db, account=party_b.phone)
+
+    assert float(winner_obj.amount) == (
+        settings.SESSION_AMOUNT * settings.SESSION_WIN_RATIO
+    )
+    assert opponent_obj is None
+
+
+def test_duo_session_creates_transaction_instance_on_refunded_state(
+    db: Session,
+    create_session_instance: Callable,
+    create_user_model_instances: Callable,
+    delete_duo_session_model_instances: Callable,
+    delete_transcation_model_instances: Callable,
+) -> None:
+    """Test that DuoSession creates a transaction after refunding user"""
+    session = session_dao.get_not_none(db)
+    party_a = user_dao.get_not_none(db)
+
+    data_in = DuoSessionCreateSerializer(
+        party_a=party_a.id,
+        status=DuoSessionStatuses.REFUNDED.value,
+        session_id=session.id,
+        amount=settings.SESSION_AMOUNT,
+    )
+    duo_session_dao.create(db, obj_in=data_in)
+    db_obj = transaction_dao.get_not_none(db, account=party_a.phone)
+
+    assert float(db_obj.amount) == (
+        settings.SESSION_AMOUNT * settings.SESSION_REFUND_RATIO
+    )
+
+
+def test_duo_session_creates_transaction_instance_on_partially_refunded_state(
+    db: Session,
+    create_session_instance: Callable,
+    create_user_model_instances: Callable,
+    delete_duo_session_model_instances: Callable,
+    delete_transcation_model_instances: Callable,
+) -> None:
+    """Test that DuoSession creates a transaction after partially refunding user"""
+    session = session_dao.get_not_none(db)
+    party_a = user_dao.get_not_none(db)
+
+    data_in = DuoSessionCreateSerializer(
+        party_a=party_a.id,
+        status=DuoSessionStatuses.PARTIALLY_REFUNDED.value,
+        session_id=session.id,
+        amount=settings.SESSION_AMOUNT,
+    )
+    duo_session_dao.create(db, obj_in=data_in)
+    db_obj = transaction_dao.get_not_none(db, account=party_a.phone)
+
+    assert float(db_obj.amount) == (
+        settings.SESSION_AMOUNT * settings.SESSION_PARTIAL_REFUND_RATIO
+    )
 
 
 # Updates are no longer supported on DuoSession instances

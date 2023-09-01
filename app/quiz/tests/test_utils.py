@@ -6,14 +6,18 @@ import pytest
 
 from app.core.config import settings
 from app.users.daos.user import user_dao
-from app.quiz.serializers.quiz import ResultCreateSerializer
+from app.quiz.serializers.quiz import ResultCreateSerializer, UserAnswerCreateSerializer
 from app.quiz.daos.quiz import (
     result_dao,
     choice_dao,
     user_answer_dao,
     answer_dao,
 )
-from app.quiz.utils import GetSessionQuestions, CalculateScore
+from app.quiz.utils import (
+    get_user_answer_results,
+    GetSessionQuestions,
+    CalculateScore,
+)
 from app.sessions.daos.session import session_dao
 from app.commons.constants import Categories
 from app.exceptions.custom import SessionExpired, LateSessionSubmission
@@ -296,3 +300,33 @@ def test_calculate_score_updates_result_model_instances(
         * 100
     )
     assert float(updated_result_obj.score) == settings.MODERATED_HIGHEST_SCORE
+
+
+def test_get_user_answer_results_returns_correct_values(
+    db: Session,
+    delete_session_model_instances: Callable,
+    create_super_user_instance: Callable,
+    create_choice_model_instances: Callable,
+) -> None:
+    """Test that the function gets answers selected by user during the session and
+    returns whether they are correct or not"""
+    user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
+    session = session_dao.get_not_none(db, category=Categories.BIBLE.value)
+    questions = session.questions
+
+    for question_id in questions:
+        choice = choice_dao.get_not_none(db, question_id=question_id)
+        user_answer_in = UserAnswerCreateSerializer(
+            user_id=user.id,
+            question_id=question_id,
+            session_id=session.id,
+            choice_id=choice.id,
+        )
+
+        user_answer_dao.get_or_create(db, obj_in=user_answer_in)
+
+    results = get_user_answer_results(db, user_id=user.id, session_id=session.id)
+
+    assert results["category"] == session.category
+    assert len(results["questions"]) == 5
+    assert "phone" in results

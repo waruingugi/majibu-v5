@@ -60,7 +60,8 @@ class TransactionDao(
         """Send notifications on new transactions to their wallet"""
         channel = NotificationChannels.SMS.value
         phone = db_obj.account
-        message = type = ""
+        message = None
+        type = ""
 
         if (
             db_obj.cash_flow == TransactionCashFlow.INWARD.value
@@ -74,7 +75,7 @@ class TransactionDao(
         if (
             db_obj.cash_flow == TransactionCashFlow.OUTWARD.value
             and db_obj.service == TransactionServices.MPESA.value
-        ):  # Means if the transaction is an M-Pesa Deposit
+        ):  # Means if the transaction is an M-Pesa Withdrawal
             message = MPESA_PAYMENT_WITHDRAW.format(
                 db_obj.amount, db_obj.account, db_obj.final_balance
             )
@@ -82,23 +83,27 @@ class TransactionDao(
 
         if (
             db_obj.cash_flow == TransactionCashFlow.OUTWARD.value
-            and db_obj.service == TransactionServices.MAJIBU.value
+            and db_obj.service == TransactionServices.SESSION.value
         ):  # Means if the transaction was a withdrawal for a session
             message = WALLET_DEDUCTION_FOR_SESSION.format(
                 db_obj.transaction_id, db_obj.account, db_obj.final_balance
             )
             type = NotificationTypes.SESSION.value
 
-        background_tasks.add_task(
-            notifications_dao.send_notification,
-            db,
-            obj_in=CreateNotificationSerializer(
-                channel=channel,
-                phone=phone,
-                message=message,
-                type=type,
-            ),
-        )
+        # Note that not all transaction notifications are handled here.
+        # That's why we use if statements. A message will be sent if the logic
+        # entered one of the if statements above
+        if message is not None:
+            background_tasks.add_task(
+                notifications_dao.send_notification,
+                db,
+                obj_in=CreateNotificationSerializer(
+                    channel=channel,
+                    phone=phone,
+                    message=message,
+                    type=type,
+                ),
+            )
 
     def get_user_balance(self, db: Session, *, account: str) -> float:
         latest_transactions = self.search(

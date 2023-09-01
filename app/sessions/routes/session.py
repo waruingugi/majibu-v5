@@ -5,7 +5,12 @@ from typing import Callable
 from http import HTTPStatus
 
 from app.sessions.serializers.session import SessionCategoryFormSerializer
-from app.sessions.utils import GetAvailableSession, create_session
+from app.sessions.utils import (
+    business_opens_next_at,
+    view_session_history,
+    GetAvailableSession,
+    create_session,
+)
 from app.users.models import User
 from app.exceptions.custom import NoAvailabeSession
 from app.accounts.daos.account import transaction_dao
@@ -66,6 +71,8 @@ async def get_home(
             "business_is_open": business_is_open,
             "session_amount": settings.SESSION_AMOUNT,
             "session_fee": settings.SESSION_FEE,
+            "business_opens_next_at": business_opens_next_at(),
+            "session_duration": settings.SESSION_DURATION,
         },
     )
 
@@ -79,6 +86,7 @@ async def post_session(
     get_available_session: GetAvailableSession = Depends(GetAvailableSession),
     db: Session = Depends(get_db),
 ):
+    """Post the session selected. Redirects to questions thereafter"""
     if business_is_open:
         session_id = get_available_session(category=category_in.category, user=user)
 
@@ -109,3 +117,76 @@ async def get_preferred_redirect(
     )
 
     return RedirectResponse(redirect_url, status_code=302)
+
+
+@router.get("/history/", response_class=HTMLResponse)
+async def get_sessions_history(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_active_user),
+):
+    """Get summarized history of all the sessions played"""
+    sessions_history = view_session_history(db, user=user)
+
+    # from datetime import datetime
+    # sessions_history = [
+    #     {
+    #         "created_at": datetime.now(),
+    #         "category": 'BIBLE',
+    #         "session_id": "fga73nkkka",
+    #         "status": 'REFUNDED',
+    #         "party_a": {
+    #             "id": "jkha439yphqhwoioe",
+    #             "phone": +254704845041,
+    #             "score": 74.56
+    #         }
+    #     },
+    #     {
+    #         "created_at": datetime.now(),
+    #         "category": 'FOOTBALL',
+    #         "session_id": "fga73nkkka",
+    #         "status": 'PARTIALLY_REFUNDED',
+    #         "party_a": {
+    #             "id": "jkha439yphqhwoioe",
+    #             "phone": +254704845041,
+    #             "score": 0.00
+    #         }
+    #     },
+    #     {
+    #         "created_at": datetime.now(),
+    #         "category": 'BIBLE',
+    #         "session_id": "fga73nkkka",
+    #         "status": 'WON',
+    #         "party_a": {
+    #             "id": "jkha439yphqhwoioe",
+    #             "phone": +254704845041,
+    #             "score": 74.56
+    #         },
+    #         "party_b": {
+    #             "id": "jkha43987tqlwoioe",
+    #             "phone": +254704845041,
+    #             "score": 74.54
+    #         },
+    #     },
+    #     {
+    #         "created_at": datetime.now(),
+    #         "category": 'BIBLE',
+    #         "session_id": "fga73nkkka",
+    #         "status": 'LOST',
+    #         "party_a": {
+    #             "id": "jkha439yphqhwoioe",
+    #             "phone": +254704845041,
+    #             "score": 74.54
+    #         },
+    #         "party_b": {
+    #             "id": "jkha43987tqlwoioe",
+    #             "phone": +254704845041,
+    #             "score": 74.54
+    #         },
+    #     }
+    # ]
+
+    return templates.TemplateResponse(
+        f"{template_prefix}history.html",
+        {"request": request, "title": "History", "sessions_history": sessions_history},
+    )

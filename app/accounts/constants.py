@@ -19,7 +19,44 @@ PAYBILL_DEPOSIT_DESCRIPTION = "Deposit of Ksh {} for account {} using M-Pesa pay
 PAYBILL_B2C_DESCRIPTION = "Payment of Ksh {} for account {} using B2C payment."
 
 # Withdrawal to play session description
-SESSION_WITHDRAWAL_DESCRIPTION = "Withdrawal by user {} for session id: {}."
+SESSION_WITHDRAWAL_DESCRIPTION = "Withdrawal by user: {} for session id: {}."
+
+# Deposit from winning a session description
+SESSION_WIN_DESCRIPION = "Deposit to user: {} for winning session id: {}"
+
+# Refund for party_a for playing a session description
+REFUND_SESSION_DESCRIPTION = "Refund user: {} for playing session id: {}"
+
+# Partially refund for party_a for playing a session description
+PARTIALLY_REFUND_SESSION_DESCRIPTION = (
+    "Partially refund user: {} for playing session id: {}"
+)
+
+# SMS message sent to user on winning a session
+SESSION_WIN_MESSAGE = (
+    "Congrats! You've won KES {} for your {} session. "
+    "Your skill paid off big time. Good luck on your next session!"
+)
+
+# SMS message sent to user on losing a session
+SESSION_LOSS_MESSAGE = (
+    "You lost {} session to your opponent. "
+    "Please check Majibu history for full results."
+)
+
+# SMS message sent to user on refund
+SESSION_REFUND_MESSAGE = (
+    f"You've received a {settings.SESSION_REFUND_RATIO * 100}% refund of "
+    "KES {} for your {} session. "
+    "Thank you for choosing Majibu and best of luck on your next session!"
+)
+
+# SMS message sent to user on partial refund
+SESSION_PARTIAL_REFUND_MESSAGE = (
+    f"You've received a {settings.SESSION_PARTIAL_REFUND_RATIO * 100}% partial refund of "
+    "KES {} for your {} session. "
+    "Please attempt atleast one question to be paired or to receive a full refund on Majibu"
+)
 
 # SMS message sent to user on M-Pesa withdrawal
 MPESA_PAYMENT_WITHDRAW = (
@@ -47,7 +84,7 @@ class B2CMpesaCommandIDs(str, Enum):
 class TransactionStatuses(str, Enum):
     PENDING = "PENDING"
     SUCCESSFUL = "SUCCESSFUL"
-    REFUNDED = "REFUNDED"
+    FAILED = "FAILED"
 
 
 class MpesaAccountTypes(str, Enum):
@@ -61,15 +98,17 @@ class TransactionCashFlow(str, Enum):
 
 
 class TransactionTypes(str, Enum):
+    BONUS = "BONUS"
+    REFUND = "REFUND"
     REWARD = "REWARD"
     DEPOSIT = "DEPOSIT"
     WITHDRAWAL = "WITHDRAWAL"
-    BONUS = "BONUS"
 
 
 class TransactionServices(str, Enum):
-    MAJIBU = "MAJIBU"
     MPESA = "MPESA"
+    MAJIBU = "MAJIBU"
+    SESSION = "SESSION"
 
 
 MPESA_WHITE_LISTED_IPS = [

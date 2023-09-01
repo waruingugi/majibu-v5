@@ -244,3 +244,8 @@ input[type='radio'] {
 .form-check-label {
   display: block;
 }
+
+.border-danger {
+  color: #D20D42;
+  border-color: #f0134d;
+}

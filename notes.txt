@@ -1,0 +1,11 @@
+# Celery
+# Query B2C pending transactions or use retry feature
+# Pagination
+# Host on heroku, buy domain
+# Browser icon, logo
+# Set server time to EAT
+# Add questions
+# put date in timer
+
+
+# If withdraw balance bank is below, fail transactions

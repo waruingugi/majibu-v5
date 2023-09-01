@@ -71,7 +71,7 @@ def create_choice_model_instances(
     session = session_dao.get_not_none(db)
 
     for question_id in session.questions:
-        for i in range(settings.CHOICES_IN_QUESTION):
+        for _ in range(settings.CHOICES_IN_QUESTION):
             choice_in = ChoiceCreateSerializer(
                 question_id=question_id, choice_text=generate_uuid()
             )
