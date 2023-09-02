@@ -37,8 +37,9 @@ class Settings(BaseSettings):
     POSTGRES_DB: str | None
 
     # If values are not set, default to HEROKU env variables
+    DATABASE_URL: str = os.environ.get("DATABASE_URL", "")
     SQLALCHEMY_DATABASE_URI: str = os.environ.get(
-        "SQLALCHEMY_DATABASE_URI", "DATABASE_URL"
+        "SQLALCHEMY_DATABASE_URI", DATABASE_URL
     )
 
     @validator("SQLALCHEMY_DATABASE_URI", pre=True)
@@ -49,7 +50,7 @@ class Settings(BaseSettings):
         return uri
 
     ASYNC_SQLALCHEMY_DATABASE_URI: str = os.environ.get(
-        "ASYNC_SQLALCHEMY_DATABASE_URI", "DATABASE_URL"
+        "ASYNC_SQLALCHEMY_DATABASE_URI", POSTGRES_PORT
     )
 
     @validator("ASYNC_SQLALCHEMY_DATABASE_URI", pre=True)
@@ -145,8 +146,9 @@ class Settings(BaseSettings):
     WITHDRAWAL_BUFFER_PERIOD: int = 120  # Once every 2 minutes
 
     # If values are not set, default to HEROKU env variables
-    CELERY_BROKER: str = os.environ.get("CELERY_BROKER", "REDIS_URL")
-    CELERY_RESULT_BACKEND: str = os.environ.get("CELERY_RESULT_BACKEND", "REDIS_URL")
+    REDIS_URL: str = os.environ.get("REDIS_URL", "")
+    CELERY_BROKER: str = os.environ.get("CELERY_BROKER", REDIS_URL)
+    CELERY_RESULT_BACKEND: str = os.environ.get("CELERY_RESULT_BACKEND", REDIS_URL)
 
     CELERY_SCHEDULER_QUEUE: str = "scheduler-queue"
 
