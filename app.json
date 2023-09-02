@@ -3,14 +3,14 @@
         "test": {
             "buildpacks": [
                 {"url": "https://github.com/moneymeets/python-poetry-buildpack.git"},
-                {"url": "https://github.com/heroku/heroku-buildpack-python.git"} 
+                {"url": "heroku/python"} 
             ],
             "addons": [
                 "heroku-postgresql:in-dyno",
                 "heroku-redis:in-dyno"
             ],
             "scripts": {
-                "test-setup": "export $(grep -v '^#' .env.test | xargs) && redis-server --daemonize yes && echo 'Clearing all redis data...' && redis-cli FLUSHDB",
+                "test-setup": "./heroku_test.sh",
                 "test": "echo 'Running tests $1' && pytest --log-cli-level=WARNING -vv $1"
             },
             "env": {
@@ -20,6 +20,9 @@
                 "HOST_PINNACLE_SMS_BASE_URL": "https://smsportal.hostpinnacle.co.ke",
                 "MOBI_TECH_API_KEY": "random_api_key",
                 "MOBI_TECH_SMS_BASE_URL": "https://api.mobitechtechnologies.com",
+                "POSTGRES_USER": "random_user",
+                "POSTGRES_PASSWORD": "random_pass",
+                "POSTGRES_DB": "random_db",
                 "TOTP_EXPIRY_TIME": 300,
                 "BUSINESS_OPENS_AT": "09:00",
                 "BUSINESS_CLOSES_AT": "16:00"
