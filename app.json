@@ -1,6 +1,10 @@
 {
     "environments": {
         "test": {
+            "buildpacks": [
+                "https://github.com/moneymeets/python-poetry-buildpack.git",
+                "heroku/python"
+            ],
             "addons": [
                 "heroku-postgresql:in-dyno",
                 "heroku-redis:in-dyno"
