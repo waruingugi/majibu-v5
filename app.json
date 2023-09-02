@@ -11,10 +11,9 @@
             ],
             "scripts": {
                 "test-setup": "echo 'Starting redis server in the background...' && redis-server --daemonize yes && redis-cli FLUSHDB",
-                "test": "echo 'Running tests...' && pytest --log-cli-level=WARNING -vv"
+                "test": "echo 'Set DB env variables...' && export ASYNC_SQLALCHEMY_DATABASE_URI=\"$DATABASE_URL\" && export SQLALCHEMY_DATABASE_URI=\"$DATABASE_URL\" && echo 'Running tests...' && pytest --log-cli-level=WARNING -vv"
             },
             "env": {
-                "ASYNC_SQLALCHEMY_DATABASE_URI": "$DATABASE_URL",
                 "BUSINESS_OPENS_AT": "09:00",
                 "BUSINESS_CLOSES_AT": "16:00",
                 "CELERY_BROKER": "$REDIS_URL",
@@ -28,8 +27,7 @@
                 "POSTGRES_USER": "random_user",
                 "POSTGRES_PASSWORD": "random_pass",
                 "POSTGRES_DB": "random_db",
-                "TOTP_EXPIRY_TIME": 300,
-                "SQLALCHEMY_DATABASE_URI": "$DATABASE_URL"
+                "TOTP_EXPIRY_TIME": 300
             }
         }
     }
