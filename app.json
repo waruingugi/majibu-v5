@@ -2,8 +2,8 @@
     "environments": {
         "test": {
             "buildpacks": [
-                "https://github.com/moneymeets/python-poetry-buildpack.git",
-                "heroku/python"
+                {"url": "https://github.com/moneymeets/python-poetry-buildpack.git"},
+                {"url": "heroku/python"} 
             ],
             "addons": [
                 "heroku-postgresql:in-dyno",
