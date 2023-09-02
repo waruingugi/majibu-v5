@@ -1,12 +1,13 @@
-from functools import lru_cache
-from pydantic import BaseSettings
-from typing import cast
-from redis import Redis
-from fastapi.templating import Jinja2Templates
-
-from os.path import dirname
 import os
 import app
+
+from redis import Redis
+from os.path import dirname
+from functools import lru_cache
+
+from pydantic import BaseSettings, validator
+from typing import cast, Any, Dict
+from fastapi.templating import Jinja2Templates
 
 
 # Template configurations
@@ -39,9 +40,24 @@ class Settings(BaseSettings):
     SQLALCHEMY_DATABASE_URI: str = os.environ.get(
         "SQLALCHEMY_DATABASE_URI", "DATABASE_URL"
     )
+
+    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
+    def assemble_db_connection(cls, uri: str, values: Dict[str, Any]) -> Any:
+        """https://help.heroku.com/ZKNTJQSK/why-is-sqlalchemy-1-4-x-not-connecting-to-heroku-postgres"""
+        if uri.startswith("postgres://"):
+            uri = uri.replace("postgres://", "postgresql://", 1)
+        return uri
+
     ASYNC_SQLALCHEMY_DATABASE_URI: str = os.environ.get(
         "ASYNC_SQLALCHEMY_DATABASE_URI", "DATABASE_URL"
     )
+
+    @validator("ASYNC_SQLALCHEMY_DATABASE_URI", pre=True)
+    def assemble_async_db_connection(cls, uri: str, values: Dict[str, Any]) -> Any:
+        """https://help.heroku.com/ZKNTJQSK/why-is-sqlalchemy-1-4-x-not-connecting-to-heroku-postgres"""
+        if uri.startswith("postgres://"):
+            uri = uri.replace("postgres://", "postgresql://", 1)
+        return uri
 
     HOST_PINNACLE_SENDER_ID: str
     HOST_PINNACLE_PASSWORD: str
