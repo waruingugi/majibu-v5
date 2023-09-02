@@ -77,7 +77,7 @@ def get_mpesa_access_token(
             else redis.set("mpesa_access_token", access_token, ex=timeout)
         )
 
-    return access_token
+    return str(access_token)
 
 
 def initiate_mpesa_stkpush_payment(
