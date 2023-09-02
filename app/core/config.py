@@ -5,8 +5,8 @@ from redis import Redis
 from os.path import dirname
 from functools import lru_cache
 
-from pydantic import BaseSettings, validator
 from typing import cast, Any, Dict
+from pydantic import BaseSettings, validator
 from fastapi.templating import Jinja2Templates
 
 
@@ -187,12 +187,16 @@ settings = cast(Settings, get_app_settings())
 
 @lru_cache
 def get_redis() -> Redis:
-    return Redis(
-        host=settings.REDIS_HOST or "localhost",
-        port=settings.REDIS_PORT,
-        password=settings.REDIS_PASSWORD,
-        db=settings.REDIS_DB,
-        decode_responses=True,
+    return (
+        Redis(
+            host=settings.REDIS_HOST or "localhost",
+            port=settings.REDIS_PORT,
+            password=settings.REDIS_PASSWORD,
+            db=settings.REDIS_DB,
+            decode_responses=True,
+        )
+        if settings.REDIS_URL == ""
+        else Redis(settings.REDIS_URL)
     )
 
 
