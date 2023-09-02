@@ -1,5 +1,5 @@
 from functools import lru_cache
-from pydantic import BaseSettings, PostgresDsn
+from pydantic import BaseSettings
 from typing import cast
 from redis import Redis
 from fastapi.templating import Jinja2Templates
@@ -34,8 +34,8 @@ class Settings(BaseSettings):
     POSTGRES_PORT: str = "5432"
     POSTGRES_DB: str | None
 
-    SQLALCHEMY_DATABASE_URI: PostgresDsn
-    ASYNC_SQLALCHEMY_DATABASE_URI: PostgresDsn
+    SQLALCHEMY_DATABASE_URI: str
+    ASYNC_SQLALCHEMY_DATABASE_URI: str
 
     HOST_PINNACLE_SENDER_ID: str
     HOST_PINNACLE_PASSWORD: str
