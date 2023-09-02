@@ -10,10 +10,12 @@
                 "heroku-redis:in-dyno"
             ],
             "scripts": {
-                "test-setup": "./heroku_test.sh",
+                "test-setup": "redis-server --daemonize yes && echo 'Clearing all redis data...' && redis-cli FLUSHDB",
                 "test": "echo 'Running tests $1' && pytest --log-cli-level=WARNING -vv $1"
             },
             "env": {
+                "BUSINESS_OPENS_AT": "09:00",
+                "BUSINESS_CLOSES_AT": "16:00",
                 "HOST_PINNACLE_SENDER_ID": "sender_id",
                 "HOST_PINNACLE_PASSWORD": "random_pass",
                 "HOST_PINNACLE_USER_ID": "random_user_id",
@@ -23,9 +25,7 @@
                 "POSTGRES_USER": "random_user",
                 "POSTGRES_PASSWORD": "random_pass",
                 "POSTGRES_DB": "random_db",
-                "TOTP_EXPIRY_TIME": 300,
-                "BUSINESS_OPENS_AT": "09:00",
-                "BUSINESS_CLOSES_AT": "16:00"
+                "TOTP_EXPIRY_TIME": 300
             }
         }
     }

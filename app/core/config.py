@@ -1,11 +1,13 @@
-from functools import lru_cache
-from pydantic import BaseSettings, PostgresDsn
-from typing import cast
-from redis import Redis
-from fastapi.templating import Jinja2Templates
-
-from os.path import dirname
+import os
 import app
+
+from redis import Redis
+from os.path import dirname
+from functools import lru_cache
+
+from pydantic import BaseSettings, validator
+from typing import cast, Any, Dict
+from fastapi.templating import Jinja2Templates
 
 
 # Template configurations
@@ -34,8 +36,29 @@ class Settings(BaseSettings):
     POSTGRES_PORT: str = "5432"
     POSTGRES_DB: str | None
 
-    SQLALCHEMY_DATABASE_URI: PostgresDsn
-    ASYNC_SQLALCHEMY_DATABASE_URI: PostgresDsn
+    # If values are not set, default to HEROKU env variables
+    DATABASE_URL: str = os.environ.get("DATABASE_URL", "")
+    SQLALCHEMY_DATABASE_URI: str = os.environ.get(
+        "SQLALCHEMY_DATABASE_URI", DATABASE_URL
+    )
+
+    @validator("SQLALCHEMY_DATABASE_URI", pre=True)
+    def assemble_db_connection(cls, uri: str, values: Dict[str, Any]) -> Any:
+        """https://help.heroku.com/ZKNTJQSK/why-is-sqlalchemy-1-4-x-not-connecting-to-heroku-postgres"""
+        if uri.startswith("postgres://"):
+            uri = uri.replace("postgres://", "postgresql://", 1)
+        return uri
+
+    ASYNC_SQLALCHEMY_DATABASE_URI: str = os.environ.get(
+        "ASYNC_SQLALCHEMY_DATABASE_URI", POSTGRES_PORT
+    )
+
+    @validator("ASYNC_SQLALCHEMY_DATABASE_URI", pre=True)
+    def assemble_async_db_connection(cls, uri: str, values: Dict[str, Any]) -> Any:
+        """https://help.heroku.com/ZKNTJQSK/why-is-sqlalchemy-1-4-x-not-connecting-to-heroku-postgres"""
+        if uri.startswith("postgres://"):
+            uri = uri.replace("postgres://", "postgresql://", 1)
+        return uri
 
     HOST_PINNACLE_SENDER_ID: str
     HOST_PINNACLE_PASSWORD: str
@@ -122,8 +145,10 @@ class Settings(BaseSettings):
 
     WITHDRAWAL_BUFFER_PERIOD: int = 120  # Once every 2 minutes
 
-    CELERY_BROKER: str
-    CELERY_RESULT_BACKEND: str
+    # If values are not set, default to HEROKU env variables
+    REDIS_URL: str = os.environ.get("REDIS_URL", "")
+    CELERY_BROKER: str = os.environ.get("CELERY_BROKER", REDIS_URL)
+    CELERY_RESULT_BACKEND: str = os.environ.get("CELERY_RESULT_BACKEND", REDIS_URL)
 
     CELERY_SCHEDULER_QUEUE: str = "scheduler-queue"
 
