@@ -4,7 +4,7 @@
 # DO NOT RUN IT LOCALLY!!
 
 # Override these variables with those Heroku has provided
-echo "Overriding environment variables set by user..."
+echo "Over-riding environment variables set by user..."
 export ASYNC_SQLALCHEMY_DATABASE_URI="$DATABASE_URL"
 export SQLALCHEMY_DATABASE_URI="$DATABASE_URL"
 
