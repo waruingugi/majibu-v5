@@ -28,11 +28,11 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRY_IN_SECONDS: int = 60 * 60 * 24
     REFRESH_TOKEN_EXPIRY_IN_SECONDS: int = 60 * 60 * 7
 
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
+    POSTGRES_USER: str | None
+    POSTGRES_PASSWORD: str | None
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_PORT: str = "5432"
-    POSTGRES_DB: str
+    POSTGRES_DB: str | None
 
     SQLALCHEMY_DATABASE_URI: PostgresDsn
     ASYNC_SQLALCHEMY_DATABASE_URI: PostgresDsn
@@ -141,23 +141,23 @@ def get_app_settings() -> Settings:
 settings = cast(Settings, get_app_settings())
 
 
-ASYNC_SQLALCHEMY_DATABASE_URI = PostgresDsn.build(
-    scheme="postgresql+asyncpg",
-    user=settings.POSTGRES_USER,
-    password=settings.POSTGRES_PASSWORD,
-    host=settings.POSTGRES_SERVER,
-    path=f"/{settings.POSTGRES_DB}",
-    port=settings.POSTGRES_PORT,
-)
+# ASYNC_SQLALCHEMY_DATABASE_URI = PostgresDsn.build(
+#     scheme="postgresql+asyncpg",
+#     user=settings.POSTGRES_USER,
+#     password=settings.POSTGRES_PASSWORD,
+#     host=settings.POSTGRES_SERVER,
+#     path=f"/{settings.POSTGRES_DB}",
+#     port=settings.POSTGRES_PORT,
+# )
 
-SQLALCHEMY_DATABASE_URI = PostgresDsn.build(
-    scheme="postgresql+psycopg2",
-    user=settings.POSTGRES_USER,
-    password=settings.POSTGRES_PASSWORD,
-    host=settings.POSTGRES_SERVER,
-    path=f"/{settings.POSTGRES_DB}",
-    port=settings.POSTGRES_PORT,
-)
+# SQLALCHEMY_DATABASE_URI = PostgresDsn.build(
+#     scheme="postgresql+psycopg2",
+#     user=settings.POSTGRES_USER,
+#     password=settings.POSTGRES_PASSWORD,
+#     host=settings.POSTGRES_SERVER,
+#     path=f"/{settings.POSTGRES_DB}",
+#     port=settings.POSTGRES_PORT,
+# )
 
 
 @lru_cache
