@@ -1,0 +1,25 @@
+{
+    "environments": {
+        "test": {
+            "addons": [
+                "heroku-postgresql:in-dyno",
+                "heroku-redis:in-dyno"
+            ],
+            "scripts": {
+                "test-setup": "export $(grep -v '^#' .env.test | xargs) && redis-server --daemonize yes && echo 'Clearing all redis data...' && redis-cli FLUSHDB",
+                "test": "echo 'Running tests $1' && pytest --log-cli-level=WARNING -vv $1"
+            },
+            "env": {
+                "HOST_PINNACLE_SENDER_ID": "",
+                "HOST_PINNACLE_PASSWORD": "",
+                "HOST_PINNACLE_USER_ID": "",
+                "HOST_PINNACLE_SMS_BASE_URL": "https://smsportal.hostpinnacle.co.ke",
+                "MOBI_TECH_API_KEY": "xxxx",
+                "MOBI_TECH_SMS_BASE_URL": "https://api.mobitechtechnologies.com",
+                "TOTP_EXPIRY_TIME": 300,
+                "BUSINESS_OPENS_AT": "09:00",
+                "BUSINESS_CLOSES_AT": "16:00"
+            }
+        }
+    }
+}
