@@ -187,16 +187,15 @@ settings = cast(Settings, get_app_settings())
 
 @lru_cache
 def get_redis() -> Redis:
-    return (
-        Redis(
-            host=settings.REDIS_HOST or "localhost",
-            port=settings.REDIS_PORT,
-            password=settings.REDIS_PASSWORD,
-            db=settings.REDIS_DB,
-            decode_responses=True,
-        )
-        if settings.REDIS_URL == ""
-        else Redis(settings.REDIS_URL)
+    if settings.REDIS_URL != "":  # If the Redis url is set
+        return Redis(settings.REDIS_URL, port=settings.REDIS_PORT)
+
+    return Redis(
+        host=settings.REDIS_HOST or "localhost",
+        port=settings.REDIS_PORT,
+        password=settings.REDIS_PASSWORD,
+        db=settings.REDIS_DB,
+        decode_responses=True,
     )
 
 
