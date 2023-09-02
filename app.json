@@ -10,7 +10,7 @@
                 "heroku-redis:in-dyno"
             ],
             "scripts": {
-                "test-setup": "export $(grep -v '^#' .env.test | xargs) && export CELERY_RESULT_BACKEND=$REDIS_URL && export CELERY_BROKER=$REDIS_URL && export ASYNC_SQLALCHEMY_DATABASE_URI=$DATABASE_URL && export SQLALCHEMY_DATABASE_URI=$DATABASE_URL && redis-server --daemonize yes && echo 'Clearing all redis data...' && redis-cli FLUSHDB",
+                "test-setup": "redis-server --daemonize yes && echo 'Clearing all redis data...' && redis-cli FLUSHDB",
                 "test": "echo 'Running tests $1' && pytest --log-cli-level=WARNING -vv $1"
             },
             "env": {

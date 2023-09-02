@@ -5,6 +5,7 @@ from redis import Redis
 from fastapi.templating import Jinja2Templates
 
 from os.path import dirname
+import os
 import app
 
 
@@ -34,8 +35,9 @@ class Settings(BaseSettings):
     POSTGRES_PORT: str = "5432"
     POSTGRES_DB: str | None
 
-    SQLALCHEMY_DATABASE_URI: str
-    ASYNC_SQLALCHEMY_DATABASE_URI: str
+    # If values are not set, default to HEROKU env variables
+    SQLALCHEMY_DATABASE_URI: str = os.environ["DATABASE_URL"]
+    ASYNC_SQLALCHEMY_DATABASE_URI: str = os.environ["DATABASE_URL"]
 
     HOST_PINNACLE_SENDER_ID: str
     HOST_PINNACLE_PASSWORD: str
@@ -122,8 +124,9 @@ class Settings(BaseSettings):
 
     WITHDRAWAL_BUFFER_PERIOD: int = 120  # Once every 2 minutes
 
-    CELERY_BROKER: str
-    CELERY_RESULT_BACKEND: str
+    # If values are not set, default to HEROKU env variables
+    CELERY_BROKER: str = os.environ["DATABASE_URL"]
+    CELERY_RESULT_BACKEND: str = os.environ["DATABASE_URL"]
 
     CELERY_SCHEDULER_QUEUE: str = "scheduler-queue"
 
