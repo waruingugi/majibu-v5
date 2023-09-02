@@ -10,10 +10,15 @@
                 "heroku-redis:in-dyno"
             ],
             "scripts": {
-                "test-setup": "echo 'Setting up Heroku test env...' && export ASYNC_SQLALCHEMY_DATABASE_URI=\"$DATABASE_URL\" && export SQLALCHEMY_DATABASE_URI=\"$DATABASE_URL\" && export CELERY_BROKER=\"$REDIS_URL\" && export CELERY_RESULT_BACKEND=\"$REDIS_URL\" && redis-server --daemonize yes && redis-cli FLUSHDB",
-                "test": "echo 'Running tests $1' && pytest --log-cli-level=WARNING -vv $1"
+                "test-setup": "echo 'Starting redis server in the background...' && redis-server --daemonize yes && redis-cli FLUSHDB",
+                "test": "echo 'Running tests...' && pytest --log-cli-level=WARNING -vv"
             },
             "env": {
+                "ASYNC_SQLALCHEMY_DATABASE_URI": "$DATABASE_URL",
+                "BUSINESS_OPENS_AT": "09:00",
+                "BUSINESS_CLOSES_AT": "16:00",
+                "CELERY_BROKER": "$REDIS_URL",
+                "CELERY_RESULT_BACKEND": "$REDIS_URL",
                 "HOST_PINNACLE_SENDER_ID": "sender_id",
                 "HOST_PINNACLE_PASSWORD": "random_pass",
                 "HOST_PINNACLE_USER_ID": "random_user_id",
@@ -24,8 +29,7 @@
                 "POSTGRES_PASSWORD": "random_pass",
                 "POSTGRES_DB": "random_db",
                 "TOTP_EXPIRY_TIME": 300,
-                "BUSINESS_OPENS_AT": "09:00",
-                "BUSINESS_CLOSES_AT": "16:00"
+                "SQLALCHEMY_DATABASE_URI": "$DATABASE_URL"
             }
         }
     }
