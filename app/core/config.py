@@ -1,6 +1,6 @@
 from functools import lru_cache
-from pydantic import BaseSettings, validator
-from typing import cast, Optional, Dict, Any
+from pydantic import BaseSettings
+from typing import cast
 from redis import Redis
 from fastapi.templating import Jinja2Templates
 
@@ -36,27 +36,12 @@ class Settings(BaseSettings):
     POSTGRES_DB: str | None
 
     # If values are not set, default to HEROKU env variables
-    SQLALCHEMY_DATABASE_URI: str
-
-    @validator("SQLALCHEMY_DATABASE_URI")
-    def assemble_db_connection(cls, v: Optional[str], values: Dict[str, Any]) -> str:
-        """Used to load DATABASE_URL in Heroku tests"""
-        if not isinstance(v, str):
-            v = os.environ["DATABASE_URL"]
-            v = v.replace("postgres://", "postgresql://", 1)
-        return v
-
-    ASYNC_SQLALCHEMY_DATABASE_URI: str
-
-    @validator("ASYNC_SQLALCHEMY_DATABASE_URI")
-    def assemble_async_db_connection(
-        cls, v: Optional[str], values: Dict[str, Any]
-    ) -> str:
-        """Used to load ASYNC DATABASE_URL in Heroku tests"""
-        if not isinstance(v, str):
-            v = os.environ["DATABASE_URL"]
-            v = v.replace("postgres://", "postgresql://", 1)
-        return v
+    SQLALCHEMY_DATABASE_URI: str = os.environ.get(
+        "SQLALCHEMY_DATABASE_URI", "DATABASE_URL"
+    )
+    ASYNC_SQLALCHEMY_DATABASE_URI: str = os.environ.get(
+        "ASYNC_SQLALCHEMY_DATABASE_URI", "DATABASE_URL"
+    )
 
     HOST_PINNACLE_SENDER_ID: str
     HOST_PINNACLE_PASSWORD: str
@@ -144,25 +129,8 @@ class Settings(BaseSettings):
     WITHDRAWAL_BUFFER_PERIOD: int = 120  # Once every 2 minutes
 
     # If values are not set, default to HEROKU env variables
-    CELERY_BROKER: str
-
-    @validator("CELERY_BROKER", pre=True)
-    def assemble_celery_broker(cls, v: Optional[str], values: Dict[str, Any]) -> Any:
-        """Used to assemble CELERY_BROKER in Heroku tests"""
-        if not isinstance(v, str):
-            v = os.environ["CELERY_BROKER"]
-        return v
-
-    CELERY_RESULT_BACKEND: str
-
-    @validator("CELERY_RESULT_BACKEND", pre=True)
-    def assemble_celery_result_backed(
-        cls, v: Optional[str], values: Dict[str, Any]
-    ) -> Any:
-        """Used to assemble CELERY_RESULT_BACKEND in Heroku tests"""
-        if not isinstance(v, str):
-            v = os.environ["CELERY_BROKER"]
-        return v
+    CELERY_BROKER: str = os.environ.get("CELERY_BROKER", "REDIS_URL")
+    CELERY_RESULT_BACKEND: str = os.environ.get("CELERY_RESULT_BACKEND", "REDIS_URL")
 
     CELERY_SCHEDULER_QUEUE: str = "scheduler-queue"
 
