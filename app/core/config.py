@@ -1,7 +1,7 @@
 import os
 import app
 
-from redis import Redis
+from redis import Redis, from_url
 from os.path import dirname
 from functools import lru_cache
 
@@ -188,7 +188,7 @@ settings = cast(Settings, get_app_settings())
 @lru_cache
 def get_redis() -> Redis:
     if settings.REDIS_URL != "":  # If the Redis url is set
-        return Redis(settings.REDIS_URL, port=settings.REDIS_PORT)
+        return from_url(settings.REDIS_URL)
 
     return Redis(
         host=settings.REDIS_HOST or "localhost",
