@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 # Custom
 from app.db.base import Base
-from app.core.config import SQLALCHEMY_DATABASE_URI
+from app.core.config import settings
 
 from alembic import context
 
@@ -29,7 +29,7 @@ target_metadata = Base.metadata
 config = context.config
 
 # Making a connection
-config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URI)
+config.set_main_option("sqlalchemy.url", settings.SQLALCHEMY_DATABASE_URI)
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
