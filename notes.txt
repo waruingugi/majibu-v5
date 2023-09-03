@@ -1,4 +1,3 @@
-# Celery
 # Query B2C pending transactions or use retry feature
 # Pagination
 # Host on heroku, buy domain
