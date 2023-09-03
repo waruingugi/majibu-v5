@@ -4,6 +4,7 @@
 # Host on heroku, buy domain
 # Browser icon, logo
 # Set server time to EAT
+# remove heroku test
 # Add questions
 # put date in timer
 
