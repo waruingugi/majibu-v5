@@ -62,6 +62,7 @@ def get_mpesa_access_token(
     )
 
     if not access_token:
+        logger.info("Mpesa access token does not exist. Fetching from API...")
         url = settings.MPESA_TOKEN_URL
         auth = requests.auth.HTTPBasicAuth(MPESA_CONSUMER_KEY, MPESA_SECRET)
 
@@ -124,6 +125,7 @@ def initiate_mpesa_stkpush_payment(
             "AccountReference": reference,
             "TransactionDesc": description,
         }
+        logger.info(f"Sending M-Pesa STKPush for Ksh {amount} to {phone_number}")
         response = requests.post(api_url, json=data, headers=headers, verify=True)
         response_data = response.json()
         logger.info(f"Received M-Pesa STKPush response: {response_data}")
@@ -163,6 +165,9 @@ def trigger_mpesa_stkpush_payment(amount: int, phone_number: str) -> Optional[Di
 
         # Save the checkout response to db for future reference
         if data is not None:
+            logger.info(
+                f"Saving the checkout response {data['MerchantRequestID']} for {phone_number}"
+            )
             with SessionLocal() as db:
                 mpesa_payment_dao.create(
                     db,
