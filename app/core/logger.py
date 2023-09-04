@@ -1,12 +1,10 @@
-# from typing import Callable
+from typing import Callable
 
 from fastapi.routing import APIRoute
+from fastapi import Request, Response
+from fastapi import BackgroundTasks
 
-from fastapi import Request
-
-# from fastapi import BackgroundTasks
-
-# from app.core.raw_logger import logger
+from app.core.raw_logger import logger
 
 
 RESTRICTED_PAYLOAD_URLS = []
@@ -22,55 +20,53 @@ UNPREFERRED_REDIRECT_URLS = [
 class LoggingRoute(APIRoute):
     """Log every request and response from the API"""
 
-    pass
+    def get_route_handler(self) -> Callable:
+        original_route_handler = super().get_route_handler()
 
-    # def get_route_handler(self) -> Callable:
-    #     original_route_handler = super().get_route_handler()
+        async def custom_route_handler(request: Request) -> Response:
+            request_log_data = await prepare_request_logging_data(request)
+            response: Response = await original_route_handler(request)
 
-    #     async def custom_route_handler(request: Request) -> Response:
-    #         request_log_data = await prepare_request_logging_data(request)
-    #         response: Response = await original_route_handler(request)
+            if not response.background:
+                response.background = BackgroundTasks()
 
-    # if not response.background:
-    #     response.background = BackgroundTasks()
+            if should_set_preferred_redirect_url_cookie(request):
+                # Set the url to redirect to after login
+                # It is set for each page request except for those in UNPREFERRED_REDIRECT_URLS
+                response.set_cookie(
+                    key="preferred_redirect_to", value=request.headers["referer"]
+                )
 
-    # if should_set_preferred_redirect_url_cookie(request):
-    #     # Set the url to redirect to after login
-    #     # It is set for each page request except for those in UNPREFERRED_REDIRECT_URLS
-    #     response.set_cookie(
-    #         key="preferred_redirect_to", value=request.headers["referer"]
-    #     )
+            response_log_data = dict(
+                status_code=response.status_code,
+                response_id=request.headers.get("x-request-id", None),
+                user_id=request._headers.get("x-user-id", None),
+            )
 
-    # response_log_data = dict(
-    #     status_code=response.status_code,
-    #     response_id=request.headers.get("x-request-id", None),
-    #     user_id=request._headers.get("x-user-id", None),
-    # )
+            request_identifier = f"by {response_log_data['user_id']}"
 
-    # request_identifier = f"by {response_log_data['user_id']}"
+            # Pop cookie from logs because it contains access token
+            headers: dict = request_log_data.pop("headers", {})
+            headers.pop("cookie", None)
+            request_log_data["headers"] = headers
 
-    # # Pop cookie from logs because it contains access token
-    # headers: dict = request_log_data.pop("headers", {})
-    # headers.pop("cookie", None)
-    # request_log_data["headers"] = headers
+            # Identify request by user_id or request_id/response_id
+            request_identifier = (
+                f"User {response_log_data['user_id']}"
+                if response_log_data["user_id"]
+                else f"ID {response_log_data['response_id']}"
+            )
 
-    # # Identify request by user_id or request_id/response_id
-    # request_identifier = (
-    #     f"User {response_log_data['user_id']}"
-    #     if response_log_data["user_id"]
-    #     else f"ID {response_log_data['response_id']}"
-    # )
+            response.background.add_task(  # type: ignore [attr-defined]
+                logger.info, f"Request {request_identifier}: {request_log_data}"
+            )
+            response.background.add_task(  # type: ignore [attr-defined]
+                logger.info, f"Response {request_identifier}: {response_log_data}"
+            )
 
-    # response.background.add_task(  # type: ignore [attr-defined]
-    #     logger.info, f"Request {request_identifier}: {request_log_data}"
-    # )
-    # response.background.add_task(  # type: ignore [attr-defined]
-    #     logger.info, f"Response {request_identifier}: {response_log_data}"
-    # )
+            return response
 
-    # return response
-
-    # return custom_route_handler
+        return custom_route_handler
 
 
 def should_set_preferred_redirect_url_cookie(request: Request) -> bool:

@@ -3,6 +3,7 @@
 # Host on heroku, buy domain
 # Browser icon, logo
 # Set server time to EAT
+# On C2B STKPush failure, delete access token
 # Mpesa stkpush call back does not support receiving errors
 # M-PESA fails
 # Majibu PROD app heroku
