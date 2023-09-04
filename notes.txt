@@ -3,7 +3,11 @@
 # Host on heroku, buy domain
 # Browser icon, logo
 # Set server time to EAT
-# remove heroku test
+# Access token fails
+# M-PESA fails
+# Majibu PROD app heroku
+# Set logging on heroku alerts
+# Set DB backup
 # Add questions
 # put date in timer
 

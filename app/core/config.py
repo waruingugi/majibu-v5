@@ -188,7 +188,7 @@ settings = cast(Settings, get_app_settings())
 @lru_cache
 def get_redis() -> Redis:
     if settings.REDIS_URL != "":  # If the Redis url is set
-        return from_url(settings.REDIS_URL)
+        return from_url(settings.REDIS_URL, decode_responses=True)
 
     return Redis(
         host=settings.REDIS_HOST or "localhost",

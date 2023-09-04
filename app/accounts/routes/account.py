@@ -23,10 +23,11 @@ from app.accounts.serializers.mpesa import (
 )
 from app.accounts.constants import MPESA_WHITE_LISTED_IPS
 
-from app.core.logger import LoggingRoute
-from app.core.config import templates, settings, redis
-from app.core.ratelimiter import limiter
 from app.core.helpers import md5_hash
+from app.core.raw_logger import logger
+from app.core.logger import LoggingRoute
+from app.core.ratelimiter import limiter
+from app.core.config import templates, settings, redis
 from app.core.deps import get_current_active_user, get_db
 
 router = APIRouter(route_class=LoggingRoute)
@@ -193,6 +194,7 @@ async def post_callback(
     db: Session = Depends(get_db),
 ):
     """CallBack URL is used to receive responses for STKPush from M-Pesa"""
+    logger.info(f"Received STKPush callback request from {request.client.host}")
     if request.client.host not in MPESA_WHITE_LISTED_IPS:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
@@ -207,6 +209,9 @@ async def post_confirmation(
     db: Session = Depends(get_db),
 ):
     """Confirmation URL is used to receive responses for direct paybill payments from M-Pesa"""
+    logger.info(
+        f"Received Paybill payment confirmation request from {request.client.host}"
+    )
     if request.client.host not in MPESA_WHITE_LISTED_IPS:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
