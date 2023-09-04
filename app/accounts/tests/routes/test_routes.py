@@ -75,10 +75,6 @@ def test_post_callback_accepts_white_listed_ips(
         ),
     )
     response = client.post("/accounts/payments/callback/", json=mock_stk_push_result)
-    import pdb
-
-    pdb.set_trace()
-
     assert hasattr(response, "context") is False
 
 
