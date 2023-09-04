@@ -8,7 +8,6 @@
 # Majibu PROD app heroku
 # Set logging on heroku alerts
 # Set DB backup
-# SET HOST_PINNACLE_PASSWORD
 # Add questions
 # put date in timer
 

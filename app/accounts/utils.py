@@ -72,9 +72,13 @@ def get_mpesa_access_token(
 
         # Store the token in the cache for future requests
         (
-            redis.set("mpesa_b2c_access_token", access_token, ex=timeout)
+            redis.set(
+                "mpesa_b2c_access_token", access_token.encode("utf-8"), ex=timeout
+            )
             if IS_B2C
-            else redis.set("mpesa_access_token", access_token, ex=timeout)
+            else redis.set(
+                "mpesa_access_token", access_token.encode("utf-8"), ex=timeout
+            )
         )
 
     return access_token
