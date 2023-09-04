@@ -4,6 +4,7 @@ from base64 import b64encode
 from typing import Optional, Dict
 from datetime import datetime
 from sqlalchemy.orm import Session
+from app.db.session import SessionLocal
 import os
 
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -27,6 +28,7 @@ from app.accounts.constants import (
 )
 from app.accounts.serializers.mpesa import (
     MpesaPaymentResultStkCallbackSerializer,
+    MpesaPaymentCreateSerializer,
     MpesaDirectPaymentSerializer,
     WithdrawalCreateSerializer,
     WithdrawalResultBodySerializer,
@@ -158,6 +160,21 @@ def trigger_mpesa_stkpush_payment(amount: int, phone_number: str) -> Optional[Di
             description=transaction_description,
             reference=account_reference,
         )
+
+        # Save the checkout response to db for future reference
+        if data is not None:
+            with SessionLocal() as db:
+                mpesa_payment_dao.create(
+                    db,
+                    obj_in=MpesaPaymentCreateSerializer(
+                        phone_number=phone_number,
+                        merchant_request_id=data["MerchantRequestID"],
+                        checkout_request_id=data["CheckoutRequestID"],
+                        response_code=data["ResponseCode"],
+                        response_description=data["ResponseDescription"],
+                        customer_message=data["CustomerMessage"],
+                    ),
+                )
 
         return data
 

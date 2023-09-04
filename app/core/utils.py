@@ -202,6 +202,9 @@ class PairUsers:
         scores = [
             node.score for node in self.results_queue if node.category == category
         ]
+
+        if not scores:
+            return None  # Return None if category has no nodes
         total_score = sum(scores)
 
         average_score = total_score / len(scores)

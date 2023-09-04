@@ -4,6 +4,7 @@
 # Browser icon, logo
 # Set server time to EAT
 # Access token fails
+# Retrieving mpesa token takes too long
 # M-PESA fails
 # Majibu PROD app heroku
 # Set logging on heroku alerts

@@ -22,7 +22,7 @@ def test_post_deposit_creates_model_instance(
     db: Session, client: TestClient, mocker: MockerFixture
 ) -> None:
     mocker.patch(
-        "app.accounts.routes.account.trigger_mpesa_stkpush_payment",
+        "app.accounts.utils.initiate_mpesa_stkpush_payment",
         return_value=mock_stk_push_response,
     )
 

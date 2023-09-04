@@ -239,6 +239,19 @@ def test_calculate_average_score_returns_correct_value(
     )
 
 
+def test_calculate_average_score_returns_none_if_category_has_no_nodes(
+    mocker: MockerFixture,
+) -> None:
+    """Assert that the fuction returns None(instead of Zero Division error) when
+    results_queue does not have nodes with that category"""
+    mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
+    new_result_nodes = copy.deepcopy(four_result_nodes)
+
+    pair_users = PairUsers()
+    pair_users.results_queue = new_result_nodes
+    assert pair_users.calculate_average_score(Categories.FOOTBALL.value) is None
+
+
 def test_calculate_exp_weighted_moving_average_returns_mean_pairwise_diff(
     db: Session,
     mocker: MockerFixture,
