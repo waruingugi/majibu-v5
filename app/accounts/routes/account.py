@@ -197,7 +197,7 @@ async def post_callback(
     db: Session = Depends(get_db),
 ):
     """CallBack URL is used to receive responses for STKPush from M-Pesa"""
-    logger.info(f"Received STKPush callback request from {request.client.host}")
+    logger.info(f"Received STKPush callback request from {request.headers}")
     if request.client.host not in MPESA_WHITE_LISTED_IPS:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
@@ -212,9 +212,7 @@ async def post_confirmation(
     db: Session = Depends(get_db),
 ):
     """Confirmation URL is used to receive responses for direct paybill payments from M-Pesa"""
-    logger.info(
-        f"Received Paybill payment confirmation request from {request.client.host}"
-    )
+    logger.info(f"Received Paybill payment confirmation request from {request.headers}")
     if request.client.host not in MPESA_WHITE_LISTED_IPS:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
