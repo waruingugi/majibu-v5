@@ -10,6 +10,7 @@ from app.errors.custom import ErrorCodes
 from app.core.raw_logger import logger
 from app.core.config import settings
 
+import ipaddress
 from http import HTTPStatus
 from phonenumbers import parse as parse_phone_number
 from phonenumbers import (
@@ -184,3 +185,32 @@ def mask_phone_number(phone_number: str) -> str:
     """Mask a phone number. Example result: +254703xxx675"""
     masked_number = phone_number[:7] + "xxx" + phone_number[10:]
     return masked_number
+
+
+def get_mpesa_client_ip_address(host_ip: str, x_forwarded_for: str | None):
+    """
+    Selects the first valid and non-private IP address from the leftmost in
+    the X-Forwarded-For header based on this approach:
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For#selecting_an_ip_address
+
+    Function is required because M-Pesa sometimes uses a proxy and we need the
+    original IP address
+    """
+    logger.info("Fetching valid M-Pesa IP address...")
+
+    # If no x_forwarded_for header, revert to the host IP address
+    if x_forwarded_for is not None:
+        ip_address_list = [ip.strip() for ip in x_forwarded_for.split(",")]
+
+        # Iterate through the IPs from left to right
+        for ip in ip_address_list:
+            try:
+                # Parse the IP address and check if it's private
+                ip = ipaddress.ip_address(ip)
+                if not ip.is_private:
+                    return str(ip)
+            except ValueError:
+                # Invalid IP address, continue to the next one
+                continue
+
+    return host_ip
