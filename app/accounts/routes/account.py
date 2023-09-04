@@ -8,14 +8,14 @@ from app.errors.custom import ErrorCodes
 from app.accounts.serializers.account import DepositSerializer, WithdrawSerializer
 from app.accounts.utils import (
     trigger_mpesa_stkpush_payment,
-    # process_mpesa_stk,
+    process_mpesa_stk,
     process_mpesa_paybill_payment,
     process_b2c_payment,
     process_b2c_payment_result,
 )
 from app.accounts.daos.account import transaction_dao
 from app.accounts.serializers.mpesa import (
-    # MpesaPaymentResultSerializer,
+    MpesaPaymentResultSerializer,
     MpesaDirectPaymentSerializer,
     WithdrawalResultSerializer,
 )
@@ -188,26 +188,20 @@ async def get_withdraw_success(
     )
 
 
-# @router.post("/payments/callback/")
-# async def post_callback(
-#     request: Request,
-#     *,
-#     mpesa_response_in: MpesaPaymentResultSerializer,
-#     background_tasks: BackgroundTasks,
-#     db: Session = Depends(get_db),
-# ):
-#     """CallBack URL is used to receive responses for STKPush from M-Pesa"""
-#     logger.info(f"Received STKPush callback request from {request.client.host}")
-#     if request.client.host not in MPESA_WHITE_LISTED_IPS:
-#         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
-
-#     background_tasks.add_task(process_mpesa_stk, db, mpesa_response_in.Body.stkCallback)
-
-
 @router.post("/payments/callback/")
-async def post_callback(request: Request, data: dict):
-    logger.info(f"The headers: {request.headers}")
-    logger.info(f"The data {data}")
+async def post_callback(
+    request: Request,
+    *,
+    mpesa_response_in: MpesaPaymentResultSerializer,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    """CallBack URL is used to receive responses for STKPush from M-Pesa"""
+    logger.info(f"Received STKPush callback request from {request.client.host}")
+    if request.client.host not in MPESA_WHITE_LISTED_IPS:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
+    background_tasks.add_task(process_mpesa_stk, db, mpesa_response_in.Body.stkCallback)
 
 
 @router.post("/payments/confirmation/")
