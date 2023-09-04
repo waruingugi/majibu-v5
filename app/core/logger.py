@@ -7,7 +7,7 @@ from fastapi import BackgroundTasks
 from app.core.raw_logger import logger
 
 
-RESTRICTED_PAYLOAD_URLS = []
+RESTRICTED_PAYLOAD_URLS = ["/payments/callback/"]
 
 UNPREFERRED_REDIRECT_URLS = [
     "auth/validate-phone/",
