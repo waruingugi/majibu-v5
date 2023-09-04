@@ -199,10 +199,8 @@ async def post_callback(
     """CallBack URL is used to receive responses for STKPush from M-Pesa"""
     logger.info(f"Received STKPush callback request from {request.client.host}")
     if request.client.host not in MPESA_WHITE_LISTED_IPS:
-        logger.warning("Redirecting invalid M-Pesa call back response...")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
-    logger.info("Received a valid M-Pesa call back response...")
     background_tasks.add_task(process_mpesa_stk, db, mpesa_response_in.Body.stkCallback)
 
 
