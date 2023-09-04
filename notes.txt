@@ -3,7 +3,7 @@
 # Host on heroku, buy domain
 # Browser icon, logo
 # Set server time to EAT
-# Access token fails
+# Mpesa stkpush call back does not support receiving errors
 # M-PESA fails
 # Majibu PROD app heroku
 # Set logging on heroku alerts

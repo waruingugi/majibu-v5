@@ -4,6 +4,7 @@ from base64 import b64encode
 from typing import Optional, Dict
 from datetime import datetime
 from sqlalchemy.orm import Session
+from app.db.session import SessionLocal
 import os
 
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -27,6 +28,7 @@ from app.accounts.constants import (
 )
 from app.accounts.serializers.mpesa import (
     MpesaPaymentResultStkCallbackSerializer,
+    MpesaPaymentCreateSerializer,
     MpesaDirectPaymentSerializer,
     WithdrawalCreateSerializer,
     WithdrawalResultBodySerializer,
@@ -60,6 +62,7 @@ def get_mpesa_access_token(
     )
 
     if not access_token:
+        logger.info("Mpesa access token does not exist. Fetching from API...")
         url = settings.MPESA_TOKEN_URL
         auth = requests.auth.HTTPBasicAuth(MPESA_CONSUMER_KEY, MPESA_SECRET)
 
@@ -122,6 +125,7 @@ def initiate_mpesa_stkpush_payment(
             "AccountReference": reference,
             "TransactionDesc": description,
         }
+        logger.info(f"Sending M-Pesa STKPush for Ksh {amount} to {phone_number}")
         response = requests.post(api_url, json=data, headers=headers, verify=True)
         response_data = response.json()
         logger.info(f"Received M-Pesa STKPush response: {response_data}")
@@ -159,6 +163,24 @@ def trigger_mpesa_stkpush_payment(amount: int, phone_number: str) -> Optional[Di
             reference=account_reference,
         )
 
+        # Save the checkout response to db for future reference
+        if data is not None:
+            logger.info(
+                f"Saving the checkout response {data['MerchantRequestID']} for {phone_number}"
+            )
+            with SessionLocal() as db:
+                mpesa_payment_dao.create(
+                    db,
+                    obj_in=MpesaPaymentCreateSerializer(
+                        phone_number=phone_number,
+                        merchant_request_id=data["MerchantRequestID"],
+                        checkout_request_id=data["CheckoutRequestID"],
+                        response_code=data["ResponseCode"],
+                        response_description=data["ResponseDescription"],
+                        customer_message=data["CustomerMessage"],
+                    ),
+                )
+
         return data
 
     except STKPushFailed as e:
@@ -172,6 +194,7 @@ def process_mpesa_stk(
     """
     Process Mpesa STK payment from Callback or From Queue
     """
+    logger.info("Initiating process_mpesa_stk task...")
     checkout_request_id = mpesa_response_in.CheckoutRequestID
 
     mpesa_payment = mpesa_payment_dao.get_or_none(

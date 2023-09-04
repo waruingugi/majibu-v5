@@ -22,7 +22,7 @@ def test_post_deposit_creates_model_instance(
     db: Session, client: TestClient, mocker: MockerFixture
 ) -> None:
     mocker.patch(
-        "app.accounts.routes.account.trigger_mpesa_stkpush_payment",
+        "app.accounts.utils.initiate_mpesa_stkpush_payment",
         return_value=mock_stk_push_response,
     )
 
@@ -75,7 +75,6 @@ def test_post_callback_accepts_white_listed_ips(
         ),
     )
     response = client.post("/accounts/payments/callback/", json=mock_stk_push_result)
-
     assert hasattr(response, "context") is False
 
 

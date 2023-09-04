@@ -13,10 +13,8 @@ from app.accounts.utils import (
     process_b2c_payment,
     process_b2c_payment_result,
 )
-from app.accounts.daos.mpesa import mpesa_payment_dao
 from app.accounts.daos.account import transaction_dao
 from app.accounts.serializers.mpesa import (
-    MpesaPaymentCreateSerializer,
     MpesaPaymentResultSerializer,
     MpesaDirectPaymentSerializer,
     WithdrawalResultSerializer,
@@ -83,26 +81,31 @@ async def get_deposit(
 @limiter.limit("5/minute")
 async def post_deposit(
     request: Request,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
     deposit: DepositSerializer = Depends(),
 ):
-    """Post deposit amount page"""
-    data = trigger_mpesa_stkpush_payment(amount=deposit.amount, phone_number=user.phone)
+    """Post deposit amount page: User makes this post to receive an STKPush on their device"""
+    background_tasks.add_task(
+        trigger_mpesa_stkpush_payment, amount=deposit.amount, phone_number=user.phone
+    )
 
-    if data is not None:
-        # Save the checkout response to db for future reference
-        mpesa_payment_dao.create(
-            db,
-            obj_in=MpesaPaymentCreateSerializer(
-                phone_number=user.phone,
-                merchant_request_id=data["MerchantRequestID"],
-                checkout_request_id=data["CheckoutRequestID"],
-                response_code=data["ResponseCode"],
-                response_description=data["ResponseDescription"],
-                customer_message=data["CustomerMessage"],
-            ),
-        )
+    # data = trigger_mpesa_stkpush_payment(amount=deposit.amount, phone_number=user.phone)
+
+    # if data is not None:
+    #     # Save the checkout response to db for future reference
+    #     mpesa_payment_dao.create(
+    #         db,
+    #         obj_in=MpesaPaymentCreateSerializer(
+    #             phone_number=user.phone,
+    #             merchant_request_id=data["MerchantRequestID"],
+    #             checkout_request_id=data["CheckoutRequestID"],
+    #             response_code=data["ResponseCode"],
+    #             response_description=data["ResponseDescription"],
+    #             customer_message=data["CustomerMessage"],
+    #         ),
+    #     )
 
     redirect_url = request.url_for("get_stkpush")
     return RedirectResponse(redirect_url, status_code=302)
