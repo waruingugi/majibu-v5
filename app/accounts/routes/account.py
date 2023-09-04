@@ -209,6 +209,8 @@ async def post_callback(request: Request, data: dict):
     logger.info(f"The headers: {request.headers}")
     logger.info(f"The data {data}")
 
+    return {"ok"}
+
 
 @router.post("/payments/confirmation/")
 async def post_confirmation(
