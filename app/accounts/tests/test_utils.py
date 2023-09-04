@@ -78,8 +78,9 @@ class TestMpesaSTKPush(unittest.TestCase):
         mock_requests.get.return_value = self.mock_response
 
         get_mpesa_access_token()  # Call first time
-        get_mpesa_access_token()  # Second call
+        access_token = get_mpesa_access_token()  # Second call
 
+        assert access_token == expected_access_token
         assert mock_requests.get.call_count == 1
 
     @patch("app.accounts.utils.get_mpesa_access_token")
