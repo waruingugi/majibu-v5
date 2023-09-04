@@ -194,6 +194,7 @@ def process_mpesa_stk(
     """
     Process Mpesa STK payment from Callback or From Queue
     """
+    logger.info("Initiating process_mpesa_stk task...")
     checkout_request_id = mpesa_response_in.CheckoutRequestID
 
     mpesa_payment = mpesa_payment_dao.get_or_none(
