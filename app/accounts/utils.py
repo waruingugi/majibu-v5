@@ -336,7 +336,7 @@ def initiate_b2c_payment(
 
 def process_b2c_payment(db: Session, *, user: User, amount: int):
     """Process an M-Pesa B2C payment request"""
-    logger.info("Processiong B2C payment")
+    logger.info("Processing B2C payment")
 
     try:
         # Save hashed value that expires every 2 minutes.
@@ -351,6 +351,9 @@ def process_b2c_payment(db: Session, *, user: User, amount: int):
         data = initiate_b2c_payment(amount=amount, party_b=phone)
 
         if data is not None:
+            logger.info(
+                f"Saving B2C response conversation Id: {data['ConversationID']}"
+            )
             withdrawal_data = WithdrawalCreateSerializer(
                 conversation_id=data["ConversationID"],
                 originator_conversation_id=data["OriginatorConversationID"],

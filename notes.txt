@@ -2,9 +2,11 @@
 # Pagination
 # Host on heroku, buy domain
 # Browser icon, logo
-# Set server time to EAT
+# Celery dynos are working?
+# B"C not deducting wallet if no response received
+# Messages on withdraw and deposit reformattting
+# Should not withdraw less than 10kes
 # Mpesa stkpush call back does not support receiving errors
-# M-PESA fails
 # Majibu PROD app heroku
 # Set logging on heroku alerts
 # Set DB backup

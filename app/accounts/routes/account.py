@@ -21,7 +21,7 @@ from app.accounts.serializers.mpesa import (
 )
 from app.accounts.constants import MPESA_WHITE_LISTED_IPS
 
-from app.core.helpers import md5_hash
+from app.core.helpers import md5_hash, get_mpesa_client_ip_address
 from app.core.raw_logger import logger
 from app.core.logger import LoggingRoute
 from app.core.ratelimiter import limiter
@@ -197,8 +197,12 @@ async def post_callback(
     db: Session = Depends(get_db),
 ):
     """CallBack URL is used to receive responses for STKPush from M-Pesa"""
-    logger.info(f"Received STKPush callback request from {request.client.host}")
-    if request.client.host not in MPESA_WHITE_LISTED_IPS:
+    logger.info(f"Received STKPush callback request from {request.headers}")
+    client_host = get_mpesa_client_ip_address(
+        request.client.host, request.headers.get("x-forwarded-for", None)
+    )
+
+    if client_host not in MPESA_WHITE_LISTED_IPS:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
     background_tasks.add_task(process_mpesa_stk, db, mpesa_response_in.Body.stkCallback)
@@ -212,10 +216,12 @@ async def post_confirmation(
     db: Session = Depends(get_db),
 ):
     """Confirmation URL is used to receive responses for direct paybill payments from M-Pesa"""
-    logger.info(
-        f"Received Paybill payment confirmation request from {request.client.host}"
+    logger.info(f"Received Paybill payment confirmation request from {request.headers}")
+    client_host = get_mpesa_client_ip_address(
+        request.client.host, request.headers.get("x-forwarded-for", None)
     )
-    if request.client.host not in MPESA_WHITE_LISTED_IPS:
+
+    if client_host not in MPESA_WHITE_LISTED_IPS:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
     background_tasks.add_task(process_mpesa_paybill_payment, db, paybill_response_in)
@@ -229,7 +235,11 @@ async def post_withdrawal_result(
     db: Session = Depends(get_db),
 ):
     """Callback URL to receive response after posting withdrawal request to M-Pesa"""
-    if request.client.host not in MPESA_WHITE_LISTED_IPS:
+    logger.info(f"Received withdrawal confirmation request from {request.headers}")
+    client_host = get_mpesa_client_ip_address(
+        request.client.host, request.headers.get("x-forwarded-for", None)
+    )
+    if client_host not in MPESA_WHITE_LISTED_IPS:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
     background_tasks.add_task(
