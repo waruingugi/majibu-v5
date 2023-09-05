@@ -53,12 +53,7 @@ class TransactionDao(
         values["initial_balance"] = initial_final_balance  # Original balance
         values["charge"] = charge
 
-    def on_post_create(
-        self,
-        db: Session,
-        db_obj: Transactions,
-        background_tasks: BackgroundTasks = BackgroundTasks(),
-    ) -> None:
+    def on_post_create(self, db: Session, db_obj: Transactions) -> None:
         """Send notifications on new transactions to their wallet"""
         logger.info("Creating SMS message values..")
         channel = NotificationChannels.SMS.value
@@ -98,6 +93,7 @@ class TransactionDao(
         # entered one of the if statements above
         if message is not None:
             logger.info(f"Sending message as a background task to {phone}...")
+            background_tasks = BackgroundTasks()
             background_tasks.add_task(
                 notifications_dao.send_notification,
                 db,
