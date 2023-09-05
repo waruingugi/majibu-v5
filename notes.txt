@@ -4,7 +4,7 @@
 # Browser icon, logo
 # Celery dynos are working?
 # B"C not deducting wallet if no response received
-# Messages are not sent
+# Messages on withdraw and deposit reformattting
 # Should not withdraw less than 10kes
 # Mpesa stkpush call back does not support receiving errors
 # Majibu PROD app heroku
