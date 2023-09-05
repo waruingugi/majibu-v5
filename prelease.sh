@@ -9,7 +9,3 @@ export PYTHONPATH=$PWD
 alembic upgrade head
 
 python app/backend_pre_start.py
-
-# Sometime M-Pesa fails to send requests after a release
-# Restarting a web dyno seems to fix it
-heroku ps:restart web
