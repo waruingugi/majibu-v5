@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from app.db.dao import CRUDDao
+
+from app.core.logger import logger
 from app.notifications.models import Notification
 from app.notifications.serializers.notifications import (
     CreateNotificationSerializer,
@@ -30,15 +32,18 @@ class NotificationsDao(
     def send_notification(
         self, db: Session, *, obj_in: CreateNotificationSerializer
     ) -> Notification:
+        logger.info("Initiating send_notification function...")
         db_obj = self.create(db, obj_in=obj_in)
 
         if obj_in.channel == NotificationChannels.SMS.value:
             # Handle HostPinnacle sms notifications
             if obj_in.provider == NotificationProviders.HOST_PINNACLE.value:
+                logger.info("Sending message via HPK SMS")
                 self.send_hpk_sms(db, db_obj=db_obj)
 
             # Handle MobiTech sms notifications
             if obj_in.provider == NotificationProviders.MOBI_TECH.value:
+                logger.info("Sending message via MOBITECH SMS.")
                 self.send_mobitech_sms(db, db_obj=db_obj)
 
         return db_obj

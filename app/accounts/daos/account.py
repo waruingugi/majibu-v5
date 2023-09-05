@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import BackgroundTasks
 
 from app.db.dao import CRUDDao
+from app.core.logger import logger
 from app.accounts.models import Transactions
 from app.accounts.serializers.account import (
     TransactionCreateSerializer,
@@ -26,6 +27,7 @@ class TransactionDao(
         self, db: Session, id: str, values: dict, orig_values: dict
     ) -> None:
         """Calculate total charge before creating transaction instance"""
+        logger.info("Creating a transaction instance...")
         latest_transactions = self.search(
             db, {"order_by": ["-created_at"], "account": values["account"]}
         )
@@ -58,6 +60,7 @@ class TransactionDao(
         background_tasks: BackgroundTasks = BackgroundTasks(),
     ) -> None:
         """Send notifications on new transactions to their wallet"""
+        logger.info("Creating SMS message values..")
         channel = NotificationChannels.SMS.value
         phone = db_obj.account
         message = None
@@ -94,6 +97,7 @@ class TransactionDao(
         # That's why we use if statements. A message will be sent if the logic
         # entered one of the if statements above
         if message is not None:
+            logger.info(f"Sending message as a background task to {phone}...")
             background_tasks.add_task(
                 notifications_dao.send_notification,
                 db,
