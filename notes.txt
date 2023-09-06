@@ -2,7 +2,7 @@
 # Pagination
 # Host on heroku, buy domain
 # Browser icon, logo
-# Celery dynos are working?
+# Something seems to be broken 404 page
 # B"C not deducting wallet if no response received
 # Messages on withdraw and deposit reformattting
 # Should not withdraw less than 10kes
