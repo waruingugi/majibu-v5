@@ -232,7 +232,7 @@ def process_mpesa_stk(
         logger.info(f"Received mpesa payment: {updated_mpesa_payment}")
 
     else:
-        logger.warning("Received an unknown STKPush response: {mpesa_response_in}")
+        logger.warning(f"Received an unknown STKPush response: {mpesa_response_in}")
 
 
 def process_mpesa_paybill_payment(

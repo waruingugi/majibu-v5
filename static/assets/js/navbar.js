@@ -1,8 +1,8 @@
 
 // Function to check login status and return true or false
 function checkLoginStatus() {
-    var userToken = getCookie("access_token");
-    return !!userToken; // Return true if userToken exists, false if it doesn't
+    var isUserLoggedIn = getCookie("is_logged_in");
+    return !!isUserLoggedIn; // Return true if is_logged_in exists, false if it doesn't
 }
 
 // Function to get a cookie by name (you can keep this as it is)
