@@ -146,7 +146,6 @@ async def get_questions(
 async def post_answers(
     request: Request,
     result_id: str,
-    db: Session = Depends(get_db),
     user: User = Depends(get_current_active_user),
     calculate_score=Depends(CalculateScore),
 ):
