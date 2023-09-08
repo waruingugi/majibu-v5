@@ -99,9 +99,13 @@ async def post_otp_verification(
             "preferred_redirect_to", request.url_for("get_home")
         )
 
-        return RedirectResponse(
+        response = RedirectResponse(
             redirect_url, status_code=302, headers={"Set-Cookie": cookie}
         )
+
+        # Additional in-secure cookie to check that user is logged in
+        response.set_cookie(key="is_logged_in", value="True", httponly=False)
+        return response
     else:
         otp_in.field_errors.append(ErrorCodes.INVALID_OTP.value)
 
@@ -129,4 +133,6 @@ async def logout(
         {"request": request, "title": "Login"},
     )
     response.delete_cookie("access_token")
+    response.delete_cookie("is_logged_in")
+
     return response

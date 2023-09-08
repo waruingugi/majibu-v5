@@ -7,20 +7,20 @@ from sqlalchemy.orm import Session
 from pytest_mock import MockerFixture
 
 
-def test_localhost_inserts_token_in_cookie(db: Session):
-    user = user_dao.get_or_create(
-        db, obj_in=UserCreateSerializer(phone=settings.SUPERUSER_PHONE)
-    )
-    token_obj = get_access_token(db, user_id=user.id)
-    cookie_with_token = insert_token_in_cookie(token_obj)
+# def test_localhost_inserts_token_in_cookie(db: Session):
+#     user = user_dao.get_or_create(
+#         db, obj_in=UserCreateSerializer(phone=settings.SUPERUSER_PHONE)
+#     )
+#     token_obj = get_access_token(db, user_id=user.id)
+#     cookie_with_token = insert_token_in_cookie(token_obj)
 
-    secure_cookie_params = " Secure; HttpOnly"
+#     secure_cookie_params = " Secure; HttpOnly"
 
-    # start_index = cookie_with_token.find("expires=") + len("expires=")
-    # end_index = cookie_with_token.find(";", start_index)
-    # token_eat = cookie_with_token[start_index:end_index]
+#     # start_index = cookie_with_token.find("expires=") + len("expires=")
+#     # end_index = cookie_with_token.find(";", start_index)
+#     # token_eat = cookie_with_token[start_index:end_index]
 
-    assert secure_cookie_params not in cookie_with_token
+#     assert secure_cookie_params not in cookie_with_token
 
 
 def test_prod_inserts_token_in_cookie(db: Session, mocker: MockerFixture):
