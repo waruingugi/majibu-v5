@@ -8,7 +8,7 @@ from app.core.logger import logger
 #     pass
 
 
-@celery.task(name=__name__ + ".pair_users_task")
+@celery.task(name=__name__ + ".pair_users_task", max_retries=0, acks_late=True)
 def pair_users_task():
     """Periodically run the task of pairing users"""
     logger.info("Initiating pair users celery task")

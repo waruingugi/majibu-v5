@@ -155,7 +155,7 @@ class DuoSessionDao(
         self,
         db: Session,
         db_obj: DuoSession,
-        background_tasks: BackgroundTasks = BackgroundTasks(),
+        background_tasks: BackgroundTasks,
     ) -> None:
         """Update user wallets and send notifications"""
 

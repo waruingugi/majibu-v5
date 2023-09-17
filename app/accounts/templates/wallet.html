@@ -13,7 +13,7 @@
                             <h4 class="text-center">Wallet</h4>
                             <hr class="mt-0">
                             <div class="text-center">
-                                <h1 class="text-center text-success mb-0" style="line-height: 22px;"><strong>${{current_balance}}</strong></h1>
+                                <h1 class="text-center text-success mb-0" style="line-height: 22px;"><strong>${{current_balance | round(2)}}</strong></h1>
                                 <span class="font-monospace text-muted" style="font-size: small;">
                                     <a href="{{ url_for('get_wallet') }}"><strong>Refresh Current Balance</strong></a>
                                 </span>

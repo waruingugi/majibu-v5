@@ -397,6 +397,7 @@ class PairUsers:
 
         for node in self.results_queue:
             """If node is x seconds close to expiry, then it's eligible to be paired"""
+            logger.info(f"Node id: {node.id} expires at {node.expires_at}")
             time_to_expiry = node.expires_at - timedelta(
                 seconds=settings.RESULT_EXPIRES_AT_BUFFER_TIME
             )
