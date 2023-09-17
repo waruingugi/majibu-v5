@@ -38,6 +38,30 @@
                                             </div>
                                         </div>
                                     
+                                    {% elif session['status'] == 'PENDING' %}
+                                    
+                                        <div class="border-start rounded-start border-2 border-warning my-2">
+                                            <div class="table-responsive px-2 my-3 bg-light score-history-table">
+                                                <table class="table table-sm table-borderless">
+                                                    <thead class="text-muted">
+                                                        <tr class="score-basic-info">
+                                                            <th class="text-left pt-2 pb-0 score-basic-info" colspan="2" style="text-align: left;">{{ session['created_at'].strftime("%H:%M, %d %b") }} - {{ session['category'] }}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="fw-bold">
+                                                            <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["score"] }}%</td>
+                                                            <td class="py-0 border-start w-50" colspan="1">...</td>
+                                                        </tr>
+                                                        <tr class="partner-details">
+                                                            <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["phone"] }} (You)</td>
+                                                            <td class="py-0 border-start w-50" colspan="1"></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                
                                     {% elif session['status'] == 'PARTIALLY_REFUNDED' %}
                                         
                                         <div class="border-start rounded-start border-2 border-danger my-2">
@@ -62,53 +86,53 @@
                                             </div>
                                         </div>
                                         
-                                        {% elif session['status'] == 'WON' %}
-                                        
-                                            <div class="border-start rounded-start border-2 border-success my-2">
-                                                <div class="table-responsive px-2 my-3 bg-light score-history-table">
-                                                    <table class="table table-sm table-borderless">
-                                                        <thead class="text-muted">
-                                                            <tr class="score-basic-info">
-                                                                <th class="text-left pt-2 pb-0 score-basic-info" colspan="2" style="text-align: left;">{{ session['created_at'].strftime("%H:%M, %d %b") }} - {{ session['category'] }}</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr class="fw-bold">
-                                                                <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["score"] }}%</td>
-                                                                <td style="cursor: pointer;" class="py-0 border-start w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_b"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_b"]["score"] }}%</td>
-                                                            </tr>
-                                                            <tr class="partner-details">
-                                                                <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["phone"] }} (You)</td>
-                                                                <td style="cursor: pointer;" class="py-0 border-start w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_b"]["id"], session_id=session["session_id"]) }}&#39;)'> {{ session["party_b"]["phone"] }} </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div> 
+                                    {% elif session['status'] == 'WON' %}
+                                    
+                                        <div class="border-start rounded-start border-2 border-success my-2">
+                                            <div class="table-responsive px-2 my-3 bg-light score-history-table">
+                                                <table class="table table-sm table-borderless">
+                                                    <thead class="text-muted">
+                                                        <tr class="score-basic-info">
+                                                            <th class="text-left pt-2 pb-0 score-basic-info" colspan="2" style="text-align: left;">{{ session['created_at'].strftime("%H:%M, %d %b") }} - {{ session['category'] }}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="fw-bold">
+                                                            <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["score"] }}%</td>
+                                                            <td style="cursor: pointer;" class="py-0 border-start w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_b"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_b"]["score"] }}%</td>
+                                                        </tr>
+                                                        <tr class="partner-details">
+                                                            <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["phone"] }} (You)</td>
+                                                            <td style="cursor: pointer;" class="py-0 border-start w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_b"]["id"], session_id=session["session_id"]) }}&#39;)'> {{ session["party_b"]["phone"] }} </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div> 
 
-                                        {% elif session['status'] == 'LOST' %}
-                                        
-                                            <div class="border-start rounded-start border-2 border-danger my-2">
-                                                <div class="table-responsive px-2 my-3 bg-light score-history-table">
-                                                    <table class="table table-sm table-borderless">
-                                                        <thead class="text-muted">
-                                                            <tr class="score-basic-info">
-                                                                <th class="text-left pt-2 pb-0 score-basic-info" colspan="2" style="text-align: left;">{{ session['created_at'].strftime("%H:%M, %d %b") }} - {{ session['category'] }}</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr class="fw-bold">
-                                                                <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["score"] }}%</td>
-                                                                <td style="cursor: pointer;" class="py-0 border-start w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_b"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_b"]["score"] }}%</td>
-                                                            </tr>
-                                                            <tr class="partner-details">
-                                                                <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["phone"] }} (You)</td>
-                                                                <td style="cursor: pointer;" class="py-0 border-start w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_b"]["id"], session_id=session["session_id"]) }}&#39;)'> {{ session["party_b"]["phone"] }} </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div> 
+                                    {% elif session['status'] == 'LOST' %}
+                                    
+                                        <div class="border-start rounded-start border-2 border-danger my-2">
+                                            <div class="table-responsive px-2 my-3 bg-light score-history-table">
+                                                <table class="table table-sm table-borderless">
+                                                    <thead class="text-muted">
+                                                        <tr class="score-basic-info">
+                                                            <th class="text-left pt-2 pb-0 score-basic-info" colspan="2" style="text-align: left;">{{ session['created_at'].strftime("%H:%M, %d %b") }} - {{ session['category'] }}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr class="fw-bold">
+                                                            <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["score"] }}%</td>
+                                                            <td style="cursor: pointer;" class="py-0 border-start w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_b"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_b"]["score"] }}%</td>
+                                                        </tr>
+                                                        <tr class="partner-details">
+                                                            <td style="cursor: pointer;" class="py-0 border-end w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_a"]["id"], session_id=session["session_id"]) }}&#39;)'>{{ session["party_a"]["phone"] }} (You)</td>
+                                                            <td style="cursor: pointer;" class="py-0 border-start w-50" colspan="1" onclick='redirectToLink(&#39;{{ url_for("get_session_results", user_id=session["party_b"]["id"], session_id=session["session_id"]) }}&#39;)'> {{ session["party_b"]["phone"] }} </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div> 
                                     {% endif %}
 
                                 {% endfor %}
