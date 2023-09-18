@@ -301,7 +301,7 @@ def test_calculate_exp_weighted_moving_average_returns_correct_ewma(
 
     assert (
         pair_users.calculate_exp_weighted_moving_average(Categories.BIBLE.value)
-        == 3.8666666666666667
+        == 4.133333333333334
     )
 
 

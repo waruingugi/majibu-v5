@@ -323,11 +323,13 @@ class PairUsers:
             score_diff = abs(target_node.score - node_score)
 
             if score_diff < closest_score_diff:
+                logger.info(f"Score difference between sibling nodes is: {score_diff}")
                 closest_node = node
                 closest_score_diff = score_diff
                 same_score_nodes = [node]
 
             elif score_diff == closest_score_diff:
+                logger.info("Nodes have the same score")
                 same_score_nodes.append(node)
 
         """If both nodes have same score, choose a random node and return it"""
@@ -346,6 +348,10 @@ class PairUsers:
         winner = None
 
         score_diff = abs(party_a.score - party_b.score)
+        logger.info(
+            f"Party_a id: {party_a.id} score: {party_a.score} | "
+            "Party_b id: {party_b.id} score: {party_b.score}"
+        )
 
         category_stats = self.statistics[party_a.category]
         category_pairing_range = category_stats["pairing_range"]
@@ -427,6 +433,7 @@ class PairUsers:
                     """
                     The user attempted atleast one question, so try to find a partner to pair with the user.
                     """
+                    logger.info(f"{party_a.id} attempted atleast one question...")
                     closest_nodes = self.get_closest_nodes(node)
                     party_b = self.get_pair_partner(node, closest_nodes)
 
@@ -435,7 +442,10 @@ class PairUsers:
 
                     if party_b is not None:
                         """If a pairing partner was found, get the winner between party_a and party_b"""
-                        logger.info(f"Pairing partner found for node id: {party_a.id}")
+                        logger.info(
+                            f"Pairing partner found for node id: {party_a.id}. "
+                            "Party_b node id is: {party_b.id}"
+                        )
 
                         winner = self.get_winner(
                             PairPartnersSerializer(party_a=party_a, party_b=party_b)
