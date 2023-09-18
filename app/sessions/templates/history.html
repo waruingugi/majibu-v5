@@ -66,12 +66,12 @@
                 
                                     {% elif session['status'] == 'PARTIALLY_REFUNDED' %}
                                         
-                                        <div class="border-start rounded-start border-2 border-danger my-2">
+                                        <div class="border-start rounded-start border-2 border-success my-2">
                                             <div class="table-responsive px-2 my-3 bg-light score-history-table">
                                                 <table class="table table-sm table-borderless">
                                                     <thead class="text-muted">
                                                         <tr class="score-basic-info">
-                                                            <th class="text-left pt-2 pb-0 score-basic-info" colspan="2" style="text-align: left;">{{ session['created_at'].strftime("%H:%M, %d %b") }} - {{ session['category'] }}</th>
+                                                            <th class="text-left pt-2 pb-0 score-basic-info" colspan="1" style="text-align: left;">{{ session['created_at'].strftime("%H:%M, %d %b") }} - {{ session['category'] }}</th>
                                                             <th class="text-right pt-2 pb-0 score-basic-info" colspan="1" style="text-align: right;">{{ session['status'] }}</th>
                                                         </tr>
                                                     </thead>
