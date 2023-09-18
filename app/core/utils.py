@@ -415,7 +415,7 @@ class PairUsers:
                 winner, party_b = None, None
                 duo_session_status = None
 
-                if node.score == 0.0:
+                if float(node.score) == settings.MODERATED_LOWEST_SCORE:
                     """The user played a session, but did not answer at least one question.
                     So we do a partial refund. To receive a full refund, attempt to answer atleast
                     one question"""
