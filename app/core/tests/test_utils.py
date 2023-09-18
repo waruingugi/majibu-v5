@@ -678,6 +678,10 @@ def test_create_duo_session_saves_model_instance(
     delete_duo_session_model_instances: Callable,
 ) -> None:
     """Assert ´create_duo_session´ creates model instances"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     mocker.patch("app.core.utils.PairUsers.create_nodes", return_value=None)
 
     sessions = session_dao.get_all(db)
@@ -802,10 +806,15 @@ def test_match_players_creates_a_partially_refunded_session(
     create_result_instances_to_be_paired: Callable,
 ) -> None:
     """Assert function partially refunds users who did not attempt atleast one question"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
         minutes=settings.SESSION_DURATION
     )
+
     pair_users = PairUsers()
     result_node = pair_users.results_queue[0]
 
@@ -828,6 +837,10 @@ def test_match_players_creates_a_refunded_session(
     create_result_instances_to_be_paired: Callable,
 ) -> None:
     """Assert function refunds users when no close partner was found"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
         minutes=settings.SESSION_DURATION
@@ -855,6 +868,10 @@ def test_match_players_creates_a_paired_session(
     create_result_instances_to_be_paired: Callable,
 ) -> None:
     """Assert function creates a paired DuoSession for users who have very close scores"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
         minutes=settings.SESSION_DURATION

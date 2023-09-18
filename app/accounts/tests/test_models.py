@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from pytest_mock import MockerFixture
 import json
 from typing import Callable
 
@@ -21,9 +22,13 @@ from app.core.config import settings
 
 
 def test_create_positive_transaction_instance_succesfully(
-    db: Session, delete_transcation_model_instances: Callable
+    db: Session, mocker: MockerFixture, delete_transcation_model_instances: Callable
 ) -> None:
     """Test created transaction instance has correct default values"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     obj_in = TransactionCreateSerializer(**sample_positive_transaction_instance_info)
     db_obj = transaction_dao.create(db, obj_in=obj_in)
 
@@ -34,9 +39,13 @@ def test_create_positive_transaction_instance_succesfully(
 
 
 def test_create_negative_transaction_instance_succesfully(
-    db: Session, delete_transcation_model_instances: Callable
+    db: Session, mocker: MockerFixture, delete_transcation_model_instances: Callable
 ) -> None:
     """Test created withdrawal transaction instance has correct default values"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     data = sample_positive_transaction_instance_info.copy()
     data["amount"] = 100
     obj_in = TransactionCreateSerializer(**data)
@@ -52,8 +61,12 @@ def test_create_negative_transaction_instance_succesfully(
 
 
 def test_new_transaction_shows_correct_final_balance(
-    db: Session, delete_transcation_model_instances: Callable
+    db: Session, mocker: MockerFixture, delete_transcation_model_instances: Callable
 ) -> None:
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     obj_in = TransactionCreateSerializer(**sample_positive_transaction_instance_info)
     transaction_dao.create(db, obj_in=obj_in)
 
@@ -69,8 +82,12 @@ def test_new_transaction_shows_correct_final_balance(
 
 
 def test_transaction_dao_shows_correct_user_balance(
-    db: Session, delete_transcation_model_instances: Callable
+    db: Session, mocker: MockerFixture, delete_transcation_model_instances: Callable
 ) -> None:
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     sample_positive_transaction_instance_info["amount"] = 9.55
 
     transaction_dao.create(

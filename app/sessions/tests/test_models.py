@@ -1,3 +1,4 @@
+from pytest_mock import MockerFixture
 from sqlalchemy.orm import Session
 from typing import Callable
 import pytest
@@ -165,10 +166,15 @@ def test_session_has_required_no_of_questions(db: Session) -> None:
 
 def test_create_duo_session_instance(
     db: Session,
+    mocker: MockerFixture,
     create_session_instance: Callable,
     create_super_user_instance: Callable,
 ) -> None:
     """Test DuoSession can be created in model"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     session = session_dao.get_not_none(db)
     user = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
     data_in = DuoSessionCreateSerializer(
@@ -188,11 +194,16 @@ def test_create_duo_session_instance(
 
 def test_create_duo_session_instance_fails_if_already_exists(
     db: Session,
+    mocker: MockerFixture,
     create_session_instance: Callable,
     create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
 ) -> None:
     """Test duplicate DuoSessions can not be created in model"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
 
@@ -233,11 +244,16 @@ def test_create_duo_session_instance_fails_if_already_exists(
 
 def test_create_duo_session_instance_fails_if_party_a_and_party_b_are_same(
     db: Session,
+    mocker: MockerFixture,
     create_session_instance: Callable,
     create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
 ) -> None:
     """Test DuoSessions can not be created in model with the same party_a and party_b"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
 
@@ -254,11 +270,16 @@ def test_create_duo_session_instance_fails_if_party_a_and_party_b_are_same(
 
 def test_create_duo_session_instance_fails_if_party_b_exists_in_partial_refunds(
     db: Session,
+    mocker: MockerFixture,
     create_session_instance: Callable,
     create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
 ) -> None:
     """Test DuoSessions can not be created in model for partial refunds with party_b"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
     party_b = user_dao.get_or_create(
@@ -278,11 +299,16 @@ def test_create_duo_session_instance_fails_if_party_b_exists_in_partial_refunds(
 
 def test_create_duo_session_instance_fails_if_party_b_exists_in_refunds(
     db: Session,
+    mocker: MockerFixture,
     create_session_instance: Callable,
     create_super_user_instance: Callable,
     delete_duo_session_model_instances: Callable,
 ) -> None:
     """Test DuoSessions can not be created in model for refunds with party_b"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db, phone=settings.SUPERUSER_PHONE)
     party_b = user_dao.get_or_create(
@@ -302,12 +328,17 @@ def test_create_duo_session_instance_fails_if_party_b_exists_in_refunds(
 
 def test_duo_session_creates_transaction_instance_on_paired_state(
     db: Session,
+    mocker: MockerFixture,
     create_session_instance: Callable,
     create_user_model_instances: Callable,
     delete_duo_session_model_instances: Callable,
     delete_transcation_model_instances: Callable,
 ) -> None:
     """Test that DuoSession creates a transaction after pairing two users"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     session = session_dao.get_not_none(db)
     users = user_dao.get_all(db)
 
@@ -335,12 +366,17 @@ def test_duo_session_creates_transaction_instance_on_paired_state(
 
 def test_duo_session_creates_transaction_instance_on_refunded_state(
     db: Session,
+    mocker: MockerFixture,
     create_session_instance: Callable,
     create_user_model_instances: Callable,
     delete_duo_session_model_instances: Callable,
     delete_transcation_model_instances: Callable,
 ) -> None:
     """Test that DuoSession creates a transaction after refunding user"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db)
 
@@ -360,12 +396,17 @@ def test_duo_session_creates_transaction_instance_on_refunded_state(
 
 def test_duo_session_creates_transaction_instance_on_partially_refunded_state(
     db: Session,
+    mocker: MockerFixture,
     create_session_instance: Callable,
     create_user_model_instances: Callable,
     delete_duo_session_model_instances: Callable,
     delete_transcation_model_instances: Callable,
 ) -> None:
     """Test that DuoSession creates a transaction after partially refunding user"""
+    mocker.patch(  # Mock send_notification so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     session = session_dao.get_not_none(db)
     party_a = user_dao.get_not_none(db)
 

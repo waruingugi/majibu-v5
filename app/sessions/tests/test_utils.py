@@ -270,6 +270,10 @@ def test_view_session_history_returns_correct_value_for_a_partially_refunded_ses
     create_result_instances_to_be_paired: Callable,
 ) -> None:
     """Assert function returns correct value for a partially refunded session"""
+    mocker.patch(  # Mock this function so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
         minutes=settings.SESSION_DURATION
@@ -299,6 +303,10 @@ def test_view_session_history_returns_correct_value_for_a_refunded_session(
     create_result_instances_to_be_paired: Callable,
 ) -> None:
     """Assert function returns correct value for a refunded session"""
+    mocker.patch(  # Mock this function so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
         minutes=settings.SESSION_DURATION
@@ -330,6 +338,10 @@ def test_view_session_history_returns_correct_value_for_a_paired_session(
     create_result_instances_to_be_paired: Callable,
 ) -> None:
     """Assert function returns correct values for paired results"""
+    mocker.patch(  # Mock this function so that we don't have to wait for it
+        "app.sessions.daos.session.notifications_dao.send_notification",
+        return_value=None,
+    )
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
         minutes=settings.SESSION_DURATION
