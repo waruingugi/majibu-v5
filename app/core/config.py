@@ -126,8 +126,8 @@ class Settings(BaseSettings):
     SESSION_CORRECT_ANSWERED_WEIGHT = 0.8
     SESSION_TOTAL_ANSWERED_WEIGHT = 0.2
 
-    PAIRING_THRESHOLD = 0.85
-    EWMA_MIXING_PARAMETER = 0.7
+    PAIRING_THRESHOLD = 0.9
+    EWMA_MIXING_PARAMETER = 0.8
 
     SESSION_RESULT_DECIMAL_PLACES: int = 7  # High accuracy to pevent draws
     SESSION_DURATION: int = 15  # How long the session lasts

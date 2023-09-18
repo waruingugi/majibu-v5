@@ -16,4 +16,4 @@
 
 # If withdraw balance bank is below, fail transactions
 # Add link to view account on duosession pair,refund or partial refund
-# Go through dev variables in Heroku
+# EWMA_MIXING_PARAMETER and PAIRING_THRESHOLD
