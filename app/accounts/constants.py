@@ -46,14 +46,14 @@ SESSION_LOSS_MESSAGE = (
 
 # SMS message sent to user on refund
 SESSION_REFUND_MESSAGE = (
-    f"You've received a {settings.SESSION_REFUND_RATIO * 100}% refund of "
+    f"You've received a {int(settings.SESSION_REFUND_RATIO * 100)}% refund of "
     "KES {} for your {} session. "
     "Thank you for choosing Majibu and best of luck on your next session!"
 )
 
 # SMS message sent to user on partial refund
 SESSION_PARTIAL_REFUND_MESSAGE = (
-    f"You've received a {settings.SESSION_PARTIAL_REFUND_RATIO * 100}% partial refund of "
+    f"You've received a {int(settings.SESSION_PARTIAL_REFUND_RATIO * 100)}% partial refund of "
     "KES {} for your {} session. "
     "Please attempt atleast one question to be paired or to receive a full refund on Majibu"
 )

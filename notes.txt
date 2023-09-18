@@ -16,5 +16,4 @@
 
 # If withdraw balance bank is below, fail transactions
 # Add link to view account on duosession pair,refund or partial refund
-# Add try catch block on sending message and patch on tests
 # Update expiry time

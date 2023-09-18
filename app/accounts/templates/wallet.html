@@ -45,13 +45,13 @@
                                                     <thead class="text-muted">
                                                         <tr>
                                                             <th class="text-sm-start pt-2 pb-0 wallet-date font-monospace" colspan="1">{{ transaction.created_at.strftime('%H:%M, %d %b') }}</th>
-                                                            <th class="text-end pt-2 pb-0 wallet-date" colspan="1">${{ transaction.final_balance | commafy }}</th>
+                                                            <th class="text-end pt-2 pb-0 wallet-date" colspan="1">${{ transaction.final_balance | round(1) | commafy }}</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         <tr>
                                                             <td class="py-0" colspan="1">{{ transaction.type | capitalize }}</td>
-                                                            <td class="py-0 text-end font-monospace" colspan="2">+{{ transaction.charge | commafy }}</td>
+                                                            <td class="py-0 text-end font-monospace" colspan="2">+{{ transaction.charge | round(1) | commafy }}</td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
@@ -66,13 +66,13 @@
                                                     <thead class="text-muted">
                                                         <tr>
                                                             <th class="text-sm-start pt-2 pb-0 wallet-date font-monospace" colspan="1">{{ transaction.created_at.strftime('%H:%M, %d %b') }}</th>
-                                                            <th class="text-end pt-2 pb-0 wallet-date" colspan="1">${{ transaction.final_balance | commafy }}</th>
+                                                            <th class="text-end pt-2 pb-0 wallet-date" colspan="1">${{ transaction.final_balance | round(1) | commafy }}</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
                                                         <tr>
                                                             <td class="py-0" colspan="1">{{ transaction.type | capitalize }}</td>
-                                                            <td class="py-0 text-end font-monospace" colspan="2">-{{ transaction.charge | commafy }}</td>
+                                                            <td class="py-0 text-end font-monospace" colspan="2">-{{ transaction.charge | round(1) | commafy }}</td>
                                                         </tr>
                                                     </tbody>
                                                 </table>
