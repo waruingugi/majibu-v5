@@ -134,7 +134,7 @@ class Settings(BaseSettings):
     SESSION_BUFFER_TIME = 3  # Buffer time = SESSION DURATION + SESSION_BUFFER_TIME
 
     LOAD_SESSION_INTO_QUEUE_AFTER_SECONDS: int = 180  # 3 minutes
-    RESULT_EXPIRES_AT_BUFFER_TIME: int = 300  # 5 minutes
+    RESULT_PAIRS_AFTER_SECONDS: int = 1620  # 27 minutes
 
     MODERATED_LOWEST_SCORE: float = 70.0
     MODERATED_HIGHEST_SCORE: float = 85.0

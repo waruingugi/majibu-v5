@@ -13,5 +13,5 @@ echo "Running tests $1"
 pytest --log-cli-level=WARNING -vv $1
 
 # Use this later
-# celery -A app.worker worker -Q scheduler-queue -l info
+# celery -A app.worker worker -Q scheduler-queue -l info --concurrency=1
 # celery -A app.worker beat

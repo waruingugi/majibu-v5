@@ -83,7 +83,6 @@ async def post_deposit(
     request: Request,
     background_tasks: BackgroundTasks,
     user: User = Depends(get_current_active_user),
-    db: Session = Depends(get_db),
     deposit: DepositSerializer = Depends(),
 ):
     """Post deposit amount page: User makes this post to receive an STKPush on their device"""

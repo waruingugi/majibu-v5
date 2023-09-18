@@ -18,6 +18,7 @@ __pycache__/
 *.pyc
 
 # celery
+celerybeat-schedule.db
 celerybeat-schedule
 celerybeat.pid
 

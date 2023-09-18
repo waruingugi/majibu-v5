@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from fastapi import BackgroundTasks
 
 from app.db.dao import CRUDDao
 from app.core.config import settings
@@ -10,6 +9,7 @@ from app.accounts.daos.account import transaction_dao
 from app.accounts.constants import (
     TransactionTypes,
     TransactionCashFlow,
+    TransactionStatuses,
     TransactionServices,
     SESSION_LOSS_MESSAGE,
     SESSION_REFUND_MESSAGE,
@@ -155,7 +155,6 @@ class DuoSessionDao(
         self,
         db: Session,
         db_obj: DuoSession,
-        background_tasks: BackgroundTasks = BackgroundTasks(),
     ) -> None:
         """Update user wallets and send notifications"""
 
@@ -164,16 +163,20 @@ class DuoSessionDao(
             channel = NotificationChannels.SMS.value
             type = NotificationTypes.SESSION.value
 
-            background_tasks.add_task(
-                notifications_dao.send_notification,
-                db,
-                obj_in=CreateNotificationSerializer(
-                    channel=channel,
-                    phone=phone,
-                    message=message,
-                    type=type,
-                ),
-            )
+            # Task: in future, ensure this task runs in the background
+            # and exceptions are handled correctly
+            try:
+                notifications_dao.send_notification(
+                    db,
+                    obj_in=CreateNotificationSerializer(
+                        channel=channel,
+                        phone=phone,
+                        message=message,
+                        type=type,
+                    ),
+                )
+            except Exception:
+                pass
 
         """Updates the winner's wallet to reflect the new amount"""
         if db_obj.status == DuoSessionStatuses.PAIRED:
@@ -190,6 +193,7 @@ class DuoSessionDao(
                     external_transaction_id=generate_transaction_code(),
                     cash_flow=TransactionCashFlow.INWARD.value,
                     type=TransactionTypes.DEPOSIT.value,
+                    status=TransactionStatuses.SUCCESSFUL.value,
                     service=TransactionServices.SESSION.value,
                     description=description,
                     amount=amount_won,
@@ -227,6 +231,7 @@ class DuoSessionDao(
                     external_transaction_id=generate_transaction_code(),
                     cash_flow=TransactionCashFlow.INWARD.value,
                     type=TransactionTypes.REFUND.value,
+                    status=TransactionStatuses.SUCCESSFUL.value,
                     service=TransactionServices.SESSION.value,
                     description=description,
                     amount=refund_amount,
@@ -257,6 +262,7 @@ class DuoSessionDao(
                     external_transaction_id=generate_transaction_code(),
                     cash_flow=TransactionCashFlow.INWARD.value,
                     type=TransactionTypes.REFUND.value,
+                    status=TransactionStatuses.SUCCESSFUL.value,
                     service=TransactionServices.SESSION.value,
                     description=description,
                     amount=partial_refund_amount,

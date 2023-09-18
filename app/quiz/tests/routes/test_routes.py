@@ -34,7 +34,7 @@ def test_get_result_score_returns_correct_data(
     response = client.get("/quiz/score/" + result.id)
 
     assert "score" in response.context
-    assert "expires_at" in response.context
+    assert "paired_by_time" in response.context
 
     assert "category" in response.context
     assert response.template.name == "quiz/templates/score.html"

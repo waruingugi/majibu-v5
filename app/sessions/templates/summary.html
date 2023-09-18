@@ -10,7 +10,7 @@
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-md-5">
-                    <form role="form" method="POST">
+                    <form role="form" action="{{ url_for('post_session') }}" method="POST">
                         <div class="card mt-5" id="content-card">
                             <div>
                                 <h4 class="card-header bg-white border-0"><strong>Session</strong></h4>
@@ -23,7 +23,7 @@
                                             {% for category in categories %}
                                                 
                                             <div class="d-flex align-items-center px-3 rounded bg-white my-2" id="session-select-radio" onclick="selectRadioButton(this)">
-                                                <input type="radio" name="session" value="{{ category }}" required>
+                                                <input type="radio" name="category" value="{{ category }}" required>
                                                 <span class="ms-2">{{ category }}</span>
                                             </div>
                 
@@ -39,7 +39,7 @@
                                         <ul class="list-unstyled small">
                                             <li class="text-black-50 d-flex flex-row justify-content-between"><span>Time</span><span class="font-monospace">{{ session_duration }} seconds</span></li>
                                             <li class="d-flex flex-row justify-content-between"><span>Amount</span><span class="font-monospace">Ksh {{ session_amount }}</span></li>
-                                            <li class="d-flex flex-row justify-content-between"><span><strong>Possible payout</strong></span><span class="font-monospace"><small><strong>Ksh&nbsp;</strong></small><strong>{{ (session_amount * 2) - session_fee}}</strong></span></li>
+                                            <li class="d-flex flex-row justify-content-between"><span><strong>Possible payout</strong></span><span class="font-monospace"><small><strong>Ksh&nbsp;</strong></small><strong>{{ ((session_amount * 2) - session_fee) |round(2) }}</strong></span></li>
                                         </ul>
                                     </div>
                                 </div>

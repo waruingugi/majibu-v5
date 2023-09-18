@@ -1,12 +1,13 @@
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi import Request, APIRouter, Depends
+from datetime import timedelta
 from sqlalchemy.orm import Session
 from http import HTTPStatus
 
 from app.users.models import User
 from app.quiz.utils import get_user_answer_results, CalculateScore, GetSessionQuestions
 from app.quiz.daos.quiz import result_dao
-from app.core.config import templates
+from app.core.config import templates, settings
 from app.core.deps import (
     get_current_active_user,
     get_db,
@@ -146,7 +147,6 @@ async def get_questions(
 async def post_answers(
     request: Request,
     result_id: str,
-    db: Session = Depends(get_db),
     user: User = Depends(get_current_active_user),
     calculate_score=Depends(CalculateScore),
 ):
@@ -176,6 +176,9 @@ async def get_result_score(
     """Page is shown immediately after playing a session"""
     # The following line ensures a user can only see their own score
     result = result_dao.get_not_none(db, user_id=user.id, id=result_id)
+    paired_by_time = result.expires_at + timedelta(
+        seconds=settings.RESULT_PAIRS_AFTER_SECONDS  # Should be around 25 minutes or so
+    )
 
     return templates.TemplateResponse(
         f"{template_prefix}score.html",
@@ -183,7 +186,7 @@ async def get_result_score(
             "request": request,
             "title": "Your Score",
             "score": float(result.score),
-            "expires_at": result.expires_at,
+            "paired_by_time": paired_by_time,
             "category": result.category,
         },
     )
