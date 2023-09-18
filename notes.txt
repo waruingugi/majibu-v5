@@ -16,4 +16,4 @@
 
 # If withdraw balance bank is below, fail transactions
 # Add link to view account on duosession pair,refund or partial refund
-# Update expiry time
+# Go through dev variables in Heroku

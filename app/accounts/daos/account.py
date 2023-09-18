@@ -72,7 +72,7 @@ class TransactionDao(
             and db_obj.service == TransactionServices.MPESA.value
         ):  # Means if the transaction is an M-Pesa Deposit
             message = MPESA_PAYMENT_DEPOSIT.format(
-                db_obj.amount, db_obj.account, db_obj.final_balance
+                db_obj.amount, db_obj.account, int(db_obj.final_balance)
             )
             type = NotificationTypes.DEPOSIT.value
 
@@ -81,7 +81,7 @@ class TransactionDao(
             and db_obj.service == TransactionServices.MPESA.value
         ):  # Means if the transaction is an M-Pesa Withdrawal
             message = MPESA_PAYMENT_WITHDRAW.format(
-                db_obj.amount, db_obj.account, db_obj.final_balance
+                db_obj.amount, db_obj.account, int(db_obj.final_balance)
             )
             type = NotificationTypes.WITHDRAW.value
 
@@ -90,7 +90,7 @@ class TransactionDao(
             and db_obj.service == TransactionServices.SESSION.value
         ):  # Means if the transaction was a withdrawal for a session
             message = WALLET_DEDUCTION_FOR_SESSION.format(
-                db_obj.transaction_id, db_obj.account, db_obj.final_balance
+                db_obj.transaction_id, db_obj.account, int(db_obj.final_balance)
             )
             type = NotificationTypes.SESSION.value
 
