@@ -812,7 +812,7 @@ def test_match_players_creates_a_partially_refunded_session(
     )
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
-        minutes=settings.SESSION_DURATION
+        seconds=settings.RESULT_PAIRS_AFTER_SECONDS + 60
     )
 
     pair_users = PairUsers()
@@ -843,7 +843,7 @@ def test_match_players_creates_a_refunded_session(
     )
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
-        minutes=settings.SESSION_DURATION
+        seconds=settings.RESULT_PAIRS_AFTER_SECONDS + 60
     )
 
     result_objs = result_dao.get_all(db)
@@ -874,7 +874,7 @@ def test_match_players_creates_a_paired_session(
     )
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
-        minutes=settings.SESSION_DURATION
+        seconds=settings.RESULT_PAIRS_AFTER_SECONDS + 60
     )
 
     # Get two users and modify their scores to be super close

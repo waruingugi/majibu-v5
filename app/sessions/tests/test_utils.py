@@ -276,7 +276,7 @@ def test_view_session_history_returns_correct_value_for_a_partially_refunded_ses
     )
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
-        minutes=settings.SESSION_DURATION
+        seconds=settings.RESULT_PAIRS_AFTER_SECONDS + 60
     )
     pair_users = PairUsers()
     result_node = pair_users.results_queue[0]
@@ -309,7 +309,7 @@ def test_view_session_history_returns_correct_value_for_a_refunded_session(
     )
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
-        minutes=settings.SESSION_DURATION
+        seconds=settings.RESULT_PAIRS_AFTER_SECONDS + 60
     )
 
     result_objs = result_dao.get_all(db)
@@ -344,7 +344,7 @@ def test_view_session_history_returns_correct_value_for_a_paired_session(
     )
     mock_datetime = mocker.patch("app.core.utils.datetime")
     mock_datetime.now.return_value = datetime.now() + timedelta(
-        minutes=settings.SESSION_DURATION
+        seconds=settings.RESULT_PAIRS_AFTER_SECONDS + 60
     )
 
     # Get two users and modify their scores to be super close
