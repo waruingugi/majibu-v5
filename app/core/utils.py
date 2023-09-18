@@ -397,10 +397,16 @@ class PairUsers:
 
         for node in self.results_queue:
             """If node is x seconds close to expiry, then it's eligible to be paired"""
-            logger.info(f"Node id: {node.id} expires at {node.expires_at}")
             time_to_expiry = node.expires_at - timedelta(
                 seconds=settings.RESULT_EXPIRES_AT_BUFFER_TIME
             )
+
+            # All sessions are paired or refunded before x time, say 30 mins.
+            # So the pairing process should happen x - y time, where x + y = 30 mins,
+            # That's why the x time is always slightly less.
+            # time_to_expiry = node.expires_at + timedelta(
+            #     seconds=settings.RESULT_EXPIRES_AT_BUFFER_TIME # Should be around 25 minutes or so
+            # )
 
             if node.is_active is True and datetime.now() > time_to_expiry:
                 logger.info(f"Matching node id: {node.id}")
