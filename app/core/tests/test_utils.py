@@ -819,7 +819,7 @@ def test_match_players_creates_a_partially_refunded_session(
     result_node = pair_users.results_queue[0]
 
     # Set result_node score to 0.0 so that it's partially refunded
-    result_node.score = 0.0
+    result_node.score = settings.MODERATED_LOWEST_SCORE
 
     pair_users.match_players()
 

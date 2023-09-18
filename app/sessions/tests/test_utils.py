@@ -281,8 +281,8 @@ def test_view_session_history_returns_correct_value_for_a_partially_refunded_ses
     pair_users = PairUsers()
     result_node = pair_users.results_queue[0]
 
-    # Set result_node score to 0.0 so that it's partially refunded
-    result_node.score = 0.0
+    # Set result_node score to lowest moderated score so that it's partially refunded
+    result_node.score = settings.MODERATED_LOWEST_SCORE
     pair_users.match_players()
 
     user = user_dao.get_not_none(db, id=result_node.user_id)
