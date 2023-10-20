@@ -16,6 +16,23 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@6.6.6/css/flag-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', path='assets/favicon/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', path='assets/favicon/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', path='assets/favicon/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', path='assets/favicon//site.webmanifest') }}">
+    <link rel="mask-icon" href="{{ url_for('static', path='assets/favicon/safari-pinned-tab.svg') }}" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+
+    <script type='text/javascript'>
+        window.smartlook||(function(d) {
+          var o=smartlook=function(){ o.api.push(arguments)},h=d.getElementsByTagName('head')[0];
+          var c=d.createElement('script');o.api=new Array();c.async=true;c.type='text/javascript';
+          c.charset='utf-8';c.src='https://web-sdk.smartlook.com/recorder.js';h.appendChild(c);
+          })(document);
+          smartlook('init', '6ce15f65971b55fe26a92f6b8b353e9461028933', { region: 'eu' });
+    </script>
 </head>
 
 <body>
@@ -32,6 +49,11 @@
     <script src="{{ url_for('static', path='assets/js/bs-init.js') }}"> </script>
     <script src="{{ url_for('static', path='assets/js/numberinput.js') }}"> </script>
     <script src="{{ url_for('static', path='assets/js/navbar.js') }}"> </script>
+    <!-- Start of Async ProveSource Code -->
+    <script>
+        !function(o,i){window.provesrc&&window.console&&console.error&&console.error("ProveSource is included twice in this page."),provesrc=window.provesrc={dq:[],display:function(){this.dq.push(arguments)}},o._provesrcAsyncInit=function(){provesrc.init({apiKey:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50SWQiOiI2MWQ1NDBkMmRjY2FhNTJhMjdmMGQxYmYiLCJpYXQiOjE2NDEzNjU3MTR9.hxImJQI1rZUrwPLuY0RWxKcGWgKcccBMFmG0lcwyA7c",v:"0.0.4"})};var r=i.createElement("script");r.type="text/javascript",r.async=!0,r["ch"+"ar"+"set"]="UTF-8",r.src="https://cdn.provesrc.com/provesrc.js";var e=i.getElementsByTagName("script")[0];e.parentNode.insertBefore(r,e)}(window,document);
+
+    </script><!-- End of Async ProveSource Code -->
 
 </body>
 
