@@ -44,7 +44,7 @@ async def get_landing(request: Request):
     """The landing page. Otherwise called the funnel page."""
     return templates.TemplateResponse(
         f"{template_prefix}landing.html",
-        {"request": request, "title": "Majibu"},
+        {"request": request, "title": "Welcome"},
     )
 
 
