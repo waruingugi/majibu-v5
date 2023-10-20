@@ -249,3 +249,22 @@ input[type='radio'] {
   color: #D20D42;
   border-color: #f0134d;
 }
+
+#intro-section {
+  background-image: url("../../assets/img/header.jpg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  min-height: 70vh;
+  text-align: center;
+  color: #002962;
+}
+
+#content-info {
+  font-size: 19px !important;
+}
+
+#content-title {
+  color: #002962;
+  text-align: center;
+}

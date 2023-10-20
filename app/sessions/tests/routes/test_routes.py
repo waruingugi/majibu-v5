@@ -118,3 +118,12 @@ def test_get_sessions_history_returns_correct_data(
 
     assert "sessions_history" in response.context
     assert response.template.name == "sessions/templates/history.html"
+
+
+def test_get_landing_page_shows_correctly(
+    db: Session,
+    client: TestClient,
+) -> None:
+    """Test that the landing page shows correctly"""
+    response = client.get("/session/")
+    assert response.template.name == "sessions/templates/landing.html"

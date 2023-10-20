@@ -39,6 +39,13 @@ template_prefix = "sessions/templates/"
 #         f"{template_prefix}home.html",
 #         {"request": request, "title": "Home", "categories": Categories.list_()},
 #     )
+@router.get("/", response_class=HTMLResponse)
+async def get_landing(request: Request):
+    """The landing page. Otherwise called the funnel page."""
+    return templates.TemplateResponse(
+        f"{template_prefix}landing.html",
+        {"request": request, "title": "Majibu"},
+    )
 
 
 @router.get("/home/", response_class=HTMLResponse)
