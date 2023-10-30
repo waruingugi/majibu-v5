@@ -48,7 +48,8 @@ SESSION_LOSS_MESSAGE = (
 SESSION_REFUND_MESSAGE = (
     f"You've received a {int(settings.SESSION_REFUND_RATIO * 100)}% refund of "
     "KES {} for your {} session. "
-    "Thank you for choosing Majibu and best of luck on your next session!"
+    "Thank you for choosing Majibu and best of luck on your next session! "
+    "Click here to join Majibu whatsapp group: https://bit.ly/mjbu"
 )
 
 # SMS message sent to user on partial refund
@@ -63,7 +64,7 @@ MPESA_PAYMENT_WITHDRAW = (
     "You've successfully withdrawn Ksh{} for your account {}. "
     f"Transaction cost Ksh{settings.MPESA_B2C_CHARGE}. "
     "New balance is Ksh{}. "
-    "Thank your for choosing Majibu!"
+    "Click here to join Majibu whatsapp group: https://bit.ly/mjbu"
 )
 
 # SMS message to user on wallet deduction to play a session
@@ -71,7 +72,8 @@ WALLET_DEDUCTION_FOR_SESSION = (
     "{} Confirmed. "
     f"Withdraw Ksh{settings.SESSION_AMOUNT} from account "
     "{} for Majibu session. "
-    "New balance is Ksh{}."
+    "New balance is Ksh{}. "
+    "Click here to join Majibu whatsapp group: https://bit.ly/mjbu"
 )
 
 
