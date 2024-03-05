@@ -1,0 +1,28 @@
+# Ignore the venv folder
+/venv
+
+# Ignore stored secrets
+.env
+
+# Ignore git files
+.git
+.gitignore
+
+# Ignore python files
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.tox
+.coverage
+.coverage.*
+.cache
+dist
+docs
+env
+nosetests.xml
+src/{{ project_name }}/settings/local.py
+coverage.xml
+*.cover
+*.log
+.mypy_cache

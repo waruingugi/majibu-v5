@@ -2,7 +2,7 @@
 
 # Uncomment command below if you are having 
 # ´ModuleNotFoundError: No module named 'app´ errors 
-export PYTHONPATH=$PWD
+# export PYTHONPATH=$PWD
 
 # Start redis server and run it in the background
 echo "Starting redis server in the background..."
